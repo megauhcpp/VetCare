@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vetcare-app
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./.env:/var/www/html/.env
+    ports:
+      - "8000:8000"
+    networks:
+      - vetnet
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: vetcare-mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: vetcare
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - vetnet
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: vetcare-phpmyadmin
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - vetnet
+
+networks:
+  vetnet:
+    driver: bridge
+
+volumes:
+  mysql_data: 
