@@ -5,11 +5,12 @@ import '../styles/Register.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        name: '',
+        nombre: '',
+        apellido: '',
         email: '',
         password: '',
         password_confirmation: '',
-        role: 'cliente' // Por defecto, los nuevos usuarios son clientes
+        rol: 'cliente'
     });
     const [error, setError] = useState('');
     const { register } = useAuth();
@@ -28,7 +29,7 @@ const Register = () => {
             await register(formData);
             navigate('/dashboard');
         } catch (err) {
-            setError('Error al registrar usuario');
+            setError(err.response?.data?.message || 'Error al registrar usuario');
         }
     };
 
@@ -40,12 +41,23 @@ const Register = () => {
                 {error && <div className="error-message">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="name">Nombre Completo</label>
+                        <label htmlFor="nombre">Nombre</label>
                         <input
                             type="text"
-                            id="name"
-                            name="name"
-                            value={formData.name}
+                            id="nombre"
+                            name="nombre"
+                            value={formData.nombre}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="apellido">Apellido</label>
+                        <input
+                            type="text"
+                            id="apellido"
+                            name="apellido"
+                            value={formData.apellido}
                             onChange={handleChange}
                             required
                         />
