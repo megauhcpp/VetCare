@@ -12,7 +12,7 @@ const Register = () => {
         password_confirmation: '',
         rol: 'cliente'
     });
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -21,15 +21,44 @@ const Register = () => {
             ...formData,
             [e.target.name]: e.target.value
         });
+        // Limpiar error del campo cuando el usuario empiece a escribir
+        if (errors[e.target.name]) {
+            setErrors({
+                ...errors,
+                [e.target.name]: ''
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Validaciones del lado del cliente
+            if (formData.password.length < 8) {
+                setErrors({
+                    ...errors,
+                    password: 'La contraseña debe tener al menos 8 caracteres'
+                });
+                return;
+            }
+            if (formData.password !== formData.password_confirmation) {
+                setErrors({
+                    ...errors,
+                    password_confirmation: 'Las contraseñas no coinciden'
+                });
+                return;
+            }
+
             await register(formData);
             navigate('/dashboard');
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al registrar usuario');
+            if (err.errors) {
+                setErrors(err.errors);
+            } else {
+                setErrors({
+                    general: err.message || 'Error al registrar usuario'
+                });
+            }
         }
     };
 
@@ -38,7 +67,7 @@ const Register = () => {
             <div className="register-form">
                 <h1>VetCare</h1>
                 <h2>Registro</h2>
-                {error && <div className="error-message">{error}</div>}
+                {errors.general && <div className="error-message">{errors.general}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label htmlFor="nombre">Nombre</label>
@@ -50,6 +79,7 @@ const Register = () => {
                             onChange={handleChange}
                             required
                         />
+                        {errors.nombre && <span className="error-text">{errors.nombre}</span>}
                     </div>
                     <div className="form-group">
                         <label htmlFor="apellido">Apellido</label>
@@ -61,6 +91,7 @@ const Register = () => {
                             onChange={handleChange}
                             required
                         />
+                        {errors.apellido && <span className="error-text">{errors.apellido}</span>}
                     </div>
                     <div className="form-group">
                         <label htmlFor="email">Correo Electrónico</label>
@@ -72,6 +103,7 @@ const Register = () => {
                             onChange={handleChange}
                             required
                         />
+                        {errors.email && <span className="error-text">{errors.email}</span>}
                     </div>
                     <div className="form-group">
                         <label htmlFor="password">Contraseña</label>
@@ -82,7 +114,9 @@ const Register = () => {
                             value={formData.password}
                             onChange={handleChange}
                             required
+                            minLength="8"
                         />
+                        {errors.password && <span className="error-text">{errors.password}</span>}
                     </div>
                     <div className="form-group">
                         <label htmlFor="password_confirmation">Confirmar Contraseña</label>
@@ -93,7 +127,24 @@ const Register = () => {
                             value={formData.password_confirmation}
                             onChange={handleChange}
                             required
+                            minLength="8"
                         />
+                        {errors.password_confirmation && <span className="error-text">{errors.password_confirmation}</span>}
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="rol">Rol</label>
+                        <select
+                            id="rol"
+                            name="rol"
+                            value={formData.rol}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="cliente">Cliente</option>
+                            <option value="veterinario">Veterinario</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        {errors.rol && <span className="error-text">{errors.rol}</span>}
                     </div>
                     <button type="submit" className="register-button">
                         Registrarse
