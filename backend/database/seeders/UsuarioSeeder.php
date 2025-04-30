@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Usuario;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UsuarioSeeder extends Seeder
@@ -13,34 +13,31 @@ class UsuarioSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('usuarios')->insert([
-            [
-                'nombre' => 'Juan',
-                'apellido' => 'Pérez',
-                'email' => 'juan@example.com',
-                'password' => Hash::make('password123'),
-                'rol' => 'admin',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nombre' => 'María',
-                'apellido' => 'García',
-                'email' => 'maria@example.com',
-                'password' => Hash::make('password123'),
-                'rol' => 'veterinario',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nombre' => 'Carlos',
-                'apellido' => 'López',
-                'email' => 'carlos@example.com',
-                'password' => Hash::make('password123'),
-                'rol' => 'cliente',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+        // Crear un administrador
+        Usuario::create([
+            'nombre' => 'Admin',
+            'apellido' => 'Sistema',
+            'email' => 'admin@vetcare.com',
+            'password' => Hash::make('password123'),
+            'rol' => 'admin',
+        ]);
+
+        // Crear un veterinario
+        Usuario::create([
+            'nombre' => 'Juan',
+            'apellido' => 'Pérez',
+            'email' => 'juan.perez@vetcare.com',
+            'password' => Hash::make('password123'),
+            'rol' => 'veterinario',
+        ]);
+
+        // Crear un cliente
+        Usuario::create([
+            'nombre' => 'María',
+            'apellido' => 'García',
+            'email' => 'maria.garcia@vetcare.com',
+            'password' => Hash::make('password123'),
+            'rol' => 'cliente',
         ]);
     }
 }
