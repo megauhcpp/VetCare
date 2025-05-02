@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Register.css';
+import { CalendarCheck, PawPrint, Bell } from 'lucide-react';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -71,15 +72,15 @@ const Register = () => {
                         <p className="subtitle">Gestión de Citas Veterinarias</p>
                         <div className="features">
                             <div className="feature">
-                                <i className="fas fa-calendar-check"></i>
+                                <span className="icon-lucide"><CalendarCheck size={28} /></span>
                                 <span>Gestiona tus citas</span>
                             </div>
                             <div className="feature">
-                                <i className="fas fa-paw"></i>
+                                <span className="icon-lucide"><PawPrint size={28} /></span>
                                 <span>Historial de mascotas</span>
                             </div>
                             <div className="feature">
-                                <i className="fas fa-bell"></i>
+                                <span className="icon-lucide"><Bell size={28} /></span>
                                 <span>Recordatorios automáticos</span>
                             </div>
                         </div>
