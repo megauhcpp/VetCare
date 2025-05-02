@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Login.css';
+import { useState } from 'react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -83,4 +83,4 @@ const Login = () => {
     );
 };
 
-export default Login; 
+export default Login;
