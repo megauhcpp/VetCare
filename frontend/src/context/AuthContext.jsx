@@ -20,6 +20,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -36,12 +37,14 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.get('/api/user');
             if (response.data) {
                 setUser(response.data);
+                setIsAuthenticated(true);
             }
         } catch (error) {
             console.error('Error fetching user:', error);
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
             setUser(null);
+            setIsAuthenticated(false);
         } finally {
             setLoading(false);
         }
@@ -59,29 +62,13 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('token', token);
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 setUser(usuario);
+                setIsAuthenticated(true);
                 return usuario;
             }
-            throw new Error('Respuesta inválida del servidor: No se recibió token');
+            throw new Error('Respuesta inválida del servidor');
         } catch (error) {
             console.error('Error completo:', error);
-            
-            if (error.response) {
-                console.error('Datos de error:', error.response.data);
-                
-                if (error.response.status === 422) {
-                    throw new Error(error.response.data.message || 'Datos de entrada inválidos');
-                } else if (error.response.status === 401) {
-                    throw new Error('Credenciales inválidas');
-                } else {
-                    throw new Error(error.response.data.message || 'Error en el servidor');
-                }
-            } else if (error.request) {
-                console.error('No se recibió respuesta:', error.request);
-                throw new Error('No se recibió respuesta del servidor');
-            } else {
-                console.error('Error de configuración:', error.message);
-                throw new Error('Error al configurar la solicitud: ' + error.message);
-            }
+            throw new Error(error.response?.data?.message || 'Error al iniciar sesión');
         }
     };
 
@@ -94,14 +81,12 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('token', token);
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 setUser(usuario);
+                setIsAuthenticated(true);
                 return usuario;
             }
             throw new Error('Respuesta inválida del servidor');
         } catch (error) {
-            if (error.response) {
-                throw new Error(error.response.data.message || 'Error en el registro');
-            }
-            throw error;
+            throw new Error(error.response?.data?.message || 'Error en el registro');
         }
     };
 
@@ -114,6 +99,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
             setUser(null);
+            setIsAuthenticated(false);
         }
     };
 
@@ -131,6 +117,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         loading,
+        isAuthenticated,
         login,
         register,
         logout,

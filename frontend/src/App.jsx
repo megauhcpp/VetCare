@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminPets from './pages/admin/Pets';
@@ -16,18 +17,19 @@ import ClientAppointments from './pages/client/Appointments';
 import ClientTreatments from './pages/client/Treatments';
 import ClientProfile from './pages/client/Profile';
 
-const PrivateRoute = ({ children, role }) => {
-  const { user } = useAuth();
-  
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-  
-  if (role && user.role !== role) {
-    return <Navigate to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} />;
-  }
-  
-  return children;
+// Componente de ruta protegida
+const ProtectedRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return <div className="loading">Cargando...</div>;
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" />;
+    }
+
+    return children;
 };
 
 const App = () => {
@@ -41,70 +43,70 @@ const App = () => {
           
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={
-            <PrivateRoute role="admin">
+            <ProtectedRoute>
               <AdminDashboard />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/admin/users" element={
-            <PrivateRoute role="admin">
+            <ProtectedRoute>
               <AdminUsers />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/admin/pets" element={
-            <PrivateRoute role="admin">
+            <ProtectedRoute>
               <AdminPets />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/admin/treatments" element={
-            <PrivateRoute role="admin">
+            <ProtectedRoute>
               <AdminTreatments />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/admin/appointments" element={
-            <PrivateRoute role="admin">
+            <ProtectedRoute>
               <AdminAppointments />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/admin/settings" element={
-            <PrivateRoute role="admin">
+            <ProtectedRoute>
               <AdminSettings />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/admin/profile" element={
-            <PrivateRoute role="admin">
+            <ProtectedRoute>
               <AdminProfile />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           
           {/* Client Routes */}
           <Route path="/dashboard" element={
-            <PrivateRoute role="client">
-              <ClientDashboard />
-            </PrivateRoute>
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
           } />
           <Route path="/pets" element={
-            <PrivateRoute role="client">
+            <ProtectedRoute>
               <ClientPets />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/appointments" element={
-            <PrivateRoute role="client">
+            <ProtectedRoute>
               <ClientAppointments />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/treatments" element={
-            <PrivateRoute role="client">
+            <ProtectedRoute>
               <ClientTreatments />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           <Route path="/profile" element={
-            <PrivateRoute role="client">
+            <ProtectedRoute>
               <ClientProfile />
-            </PrivateRoute>
+            </ProtectedRoute>
           } />
           
           {/* Default Route */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Router>
     </AuthProvider>

@@ -31,15 +31,11 @@ const Login = () => {
             });
             
             if (user) {
-                if (user.role === 'admin') {
-                    navigate('/admin/dashboard');
-                } else {
-                    navigate('/dashboard');
-                }
+                navigate('/dashboard');
             }
         } catch (err) {
             console.error('Error en login:', err);
-            setError(err.response?.data?.message || 'Error al iniciar sesión');
+            setError(err.message || 'Error al iniciar sesión');
         }
     };
 
