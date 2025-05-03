@@ -9,13 +9,26 @@ class Cors
 {
     public function handle(Request $request, Closure $next)
     {
-        $response = $next($request);
+        $origin = $request->header('Origin');
+        $allowedOrigins = ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8000'];
 
-        $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:5173');
-        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN');
-        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        if (in_array($origin, $allowedOrigins)) {
+            $response = $next($request);
+            
+            // Handle preflight requests
+            if ($request->isMethod('OPTIONS')) {
+                $response = response()->json();
+            }
 
-        return $response;
+            $response->headers->set('Access-Control-Allow-Origin', $origin);
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN');
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            $response->headers->set('Access-Control-Max-Age', '86400'); // 24 hours
+
+            return $response;
+        }
+
+        return $next($request);
     }
 } 

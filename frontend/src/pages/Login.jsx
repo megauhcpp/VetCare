@@ -1,22 +1,45 @@
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Login.css';
-import { useState } from 'react';
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+
         try {
-            await login(email, password);
-            navigate('/dashboard');
+            const user = await login({
+                email: formData.email,
+                password: formData.password
+            });
+            
+            if (user) {
+                if (user.role === 'admin') {
+                    navigate('/admin/dashboard');
+                } else {
+                    navigate('/dashboard');
+                }
+            }
         } catch (err) {
-            setError('Credenciales incorrectas');
+            console.error('Error en login:', err);
+            setError(err.response?.data?.message || 'Error al iniciar sesión');
         }
     };
 
@@ -52,9 +75,9 @@ const Login = () => {
                             <div className="form-group">
                                 <input
                                     type="email"
-                                    id="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     placeholder="Correo Electrónico"
                                     required
                                 />
@@ -62,9 +85,9 @@ const Login = () => {
                             <div className="form-group">
                                 <input
                                     type="password"
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     placeholder="Contraseña"
                                     required
                                 />
