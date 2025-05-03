@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppProvider } from './context/AppContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -16,6 +17,7 @@ import ClientPets from './pages/client/Pets';
 import ClientAppointments from './pages/client/Appointments';
 import ClientTreatments from './pages/client/Treatments';
 import ClientProfile from './pages/client/Profile';
+import ClientLayout from './layouts/ClientLayout';
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children }) => {
@@ -35,80 +37,63 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/dashboard" element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/users" element={
-            <ProtectedRoute>
-              <AdminUsers />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/pets" element={
-            <ProtectedRoute>
-              <AdminPets />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/treatments" element={
-            <ProtectedRoute>
-              <AdminTreatments />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/appointments" element={
-            <ProtectedRoute>
-              <AdminAppointments />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/settings" element={
-            <ProtectedRoute>
-              <AdminSettings />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/profile" element={
-            <ProtectedRoute>
-              <AdminProfile />
-            </ProtectedRoute>
-          } />
-          
-          {/* Client Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/pets" element={
-            <ProtectedRoute>
-              <ClientPets />
-            </ProtectedRoute>
-          } />
-          <Route path="/appointments" element={
-            <ProtectedRoute>
-              <ClientAppointments />
-            </ProtectedRoute>
-          } />
-          <Route path="/treatments" element={
-            <ProtectedRoute>
-              <ClientTreatments />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <ClientProfile />
-            </ProtectedRoute>
-          } />
-          
-          {/* Default Route */}
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </Router>
+      <AppProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute>
+                <AdminUsers />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/pets" element={
+              <ProtectedRoute>
+                <AdminPets />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/treatments" element={
+              <ProtectedRoute>
+                <AdminTreatments />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/appointments" element={
+              <ProtectedRoute>
+                <AdminAppointments />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <ProtectedRoute>
+                <AdminSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/profile" element={
+              <ProtectedRoute>
+                <AdminProfile />
+              </ProtectedRoute>
+            } />
+            
+            {/* Client Layout & Routes */}
+            <Route element={<ClientLayout />}>
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/pets" element={<ProtectedRoute><ClientPets /></ProtectedRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute><ClientAppointments /></ProtectedRoute>} />
+              <Route path="/treatments" element={<ProtectedRoute><ClientTreatments /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ClientProfile /></ProtectedRoute>} />
+            </Route>
+            {/* Default Route */}
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </Router>
+      </AppProvider>
     </AuthProvider>
   );
 };
