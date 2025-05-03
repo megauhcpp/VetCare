@@ -7,10 +7,6 @@ use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\MascotaController;
 use App\Http\Controllers\Api\CitaController;
 use App\Http\Controllers\Api\TratamientoController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\PetController;
-use App\Http\Controllers\Api\AppointmentController;
-use App\Http\Controllers\Api\TreatmentController;
 use App\Http\Controllers\Api\AdminController;
 
 // Rutas públicas
@@ -49,28 +45,6 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Tratamientos
     Route::apiResource('tratamientos', TratamientoController::class);
-
-    // User Routes
-    Route::get('/user', [UserController::class, 'getUser']);
-    Route::put('/user', [UserController::class, 'updateUser']);
-    
-    // Pet Routes
-    Route::get('/pets', [PetController::class, 'index']);
-    Route::post('/pets', [PetController::class, 'store']);
-    Route::put('/pets/{pet}', [PetController::class, 'update']);
-    Route::delete('/pets/{pet}', [PetController::class, 'destroy']);
-    
-    // Appointment Routes
-    Route::get('/appointments', [AppointmentController::class, 'index']);
-    Route::post('/appointments', [AppointmentController::class, 'store']);
-    Route::put('/appointments/{appointment}', [AppointmentController::class, 'update']);
-    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy']);
-    
-    // Treatment Routes
-    Route::get('/treatments', [TreatmentController::class, 'index']);
-    Route::post('/treatments', [TreatmentController::class, 'store']);
-    Route::put('/treatments/{treatment}', [TreatmentController::class, 'update']);
-    Route::delete('/treatments/{treatment}', [TreatmentController::class, 'destroy']);
     
     // Admin Routes
     Route::middleware('admin')->group(function () {

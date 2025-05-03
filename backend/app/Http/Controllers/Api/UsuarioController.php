@@ -135,4 +135,26 @@ class UsuarioController extends Controller
 
         return response()->json(['message' => 'Contraseña actualizada correctamente']);
     }
+
+    // Obtener el usuario autenticado
+    public function getUser(Request $request)
+    {
+        return response()->json($request->user());
+    }
+
+    // Actualizar el usuario autenticado
+    public function updateUser(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'nombre' => 'sometimes|required|string|max:255',
+            'apellido' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,' . $user->id_usuario,
+        ]);
+
+        $user->update($request->all());
+
+        return response()->json($user);
+    }
 }
