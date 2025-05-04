@@ -103,13 +103,13 @@ const Appointments = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">My Appointments</Typography>
+        <Typography variant="h4">Mis Citas</Typography>
         <Button
           variant="contained"
           color="primary"
           onClick={handleOpenDialog}
         >
-          Schedule New Appointment
+          Agendar Nueva Cita
         </Button>
       </Box>
 
@@ -118,7 +118,7 @@ const Appointments = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Upcoming Appointments
+                Próximas Citas
               </Typography>
               <List>
                 {upcomingAppointments.length > 0 ? (
@@ -162,7 +162,7 @@ const Appointments = () => {
                   ))
                 ) : (
                   <ListItem>
-                    <ListItemText primary="No upcoming appointments" />
+                    <ListItemText primary="No hay citas próximas" />
                   </ListItem>
                 )}
               </List>
@@ -174,7 +174,7 @@ const Appointments = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Past Appointments
+                Citas Pasadas
               </Typography>
               <List>
                 {pastAppointments.length > 0 ? (
@@ -208,7 +208,7 @@ const Appointments = () => {
                   ))
                 ) : (
                   <ListItem>
-                    <ListItemText primary="No past appointments" />
+                    <ListItemText primary="No hay citas anteriores" />
                   </ListItem>
                 )}
               </List>
@@ -218,14 +218,14 @@ const Appointments = () => {
       </Grid>
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Schedule New Appointment</DialogTitle>
+        <DialogTitle>Agendar Nueva Cita</DialogTitle>
         <DialogContent>
           <FormControl fullWidth margin="dense">
-            <InputLabel>Pet</InputLabel>
+            <InputLabel>Mascota</InputLabel>
             <Select
               value={formData.petId}
               onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
-              label="Pet"
+              label="Mascota"
             >
               {pets.map((pet) => (
                 <MenuItem key={pet.id} value={pet.id}>
@@ -236,7 +236,7 @@ const Appointments = () => {
           </FormControl>
           <TextField
             margin="dense"
-            label="Date"
+            label="Fecha"
             type="date"
             fullWidth
             value={formData.date}
@@ -245,7 +245,7 @@ const Appointments = () => {
           />
           <TextField
             margin="dense"
-            label="Time"
+            label="Hora"
             type="time"
             fullWidth
             value={formData.time}
@@ -253,22 +253,22 @@ const Appointments = () => {
             InputLabelProps={{ shrink: true }}
           />
           <FormControl fullWidth margin="dense">
-            <InputLabel>Type</InputLabel>
+            <InputLabel>Tipo</InputLabel>
             <Select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              label="Type"
+              label="Tipo"
             >
-              <MenuItem value="checkup">Checkup</MenuItem>
-              <MenuItem value="vaccination">Vaccination</MenuItem>
-              <MenuItem value="surgery">Surgery</MenuItem>
-              <MenuItem value="grooming">Grooming</MenuItem>
-              <MenuItem value="other">Other</MenuItem>
+              <MenuItem value="checkup">Chequeo</MenuItem>
+              <MenuItem value="vaccination">Vacunación</MenuItem>
+              <MenuItem value="surgery">Cirugía</MenuItem>
+              <MenuItem value="grooming">Estética</MenuItem>
+              <MenuItem value="other">Otro</MenuItem>
             </Select>
           </FormControl>
           <TextField
             margin="dense"
-            label="Notes"
+            label="Notas"
             fullWidth
             multiline
             rows={3}
@@ -277,9 +277,9 @@ const Appointments = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog}>Cancelar</Button>
           <Button onClick={handleSubmit} color="primary">
-            Schedule
+            Guardar
           </Button>
         </DialogActions>
       </Dialog>

@@ -30,7 +30,7 @@ const Treatments = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Treatments
+        Tratamientos
       </Typography>
 
       <Grid container spacing={3}>
@@ -38,7 +38,7 @@ const Treatments = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Active Treatments
+                Tratamientos Activos
               </Typography>
               <List>
                 {activeTreatments.length > 0 ? (
@@ -61,13 +61,13 @@ const Treatments = () => {
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                Started: {new Date(treatment.startDate).toLocaleDateString()}
+                                Inicio: {new Date(treatment.startDate).toLocaleDateString()}
                               </Typography>
                             </>
                           }
                         />
                         <Chip
-                          label="Active"
+                          label="Activo"
                           color="primary"
                           size="small"
                         />
@@ -77,7 +77,7 @@ const Treatments = () => {
                   ))
                 ) : (
                   <ListItem>
-                    <ListItemText primary="No active treatments" />
+                    <ListItemText primary="No hay tratamientos activos" />
                   </ListItem>
                 )}
               </List>
@@ -89,7 +89,7 @@ const Treatments = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Completed Treatments
+                Tratamientos Completados
               </Typography>
               <List>
                 {completedTreatments.length > 0 ? (
@@ -112,13 +112,13 @@ const Treatments = () => {
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                Completed: {new Date(treatment.endDate).toLocaleDateString()}
+                                Completado: {new Date(treatment.endDate).toLocaleDateString()}
                               </Typography>
                             </>
                           }
                         />
                         <Chip
-                          label="Completed"
+                          label="Completado"
                           color="success"
                           size="small"
                         />
@@ -128,7 +128,7 @@ const Treatments = () => {
                   ))
                 ) : (
                   <ListItem>
-                    <ListItemText primary="No completed treatments" />
+                    <ListItemText primary="No hay tratamientos completados" />
                   </ListItem>
                 )}
               </List>
@@ -140,7 +140,7 @@ const Treatments = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Cancelled Treatments
+                Tratamientos Cancelados
               </Typography>
               <List>
                 {cancelledTreatments.length > 0 ? (
@@ -163,13 +163,13 @@ const Treatments = () => {
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                Cancelled: {new Date(treatment.endDate).toLocaleDateString()}
+                                Cancelado: {new Date(treatment.endDate).toLocaleDateString()}
                               </Typography>
                             </>
                           }
                         />
                         <Chip
-                          label="Cancelled"
+                          label="Cancelado"
                           color="error"
                           size="small"
                         />
@@ -179,7 +179,7 @@ const Treatments = () => {
                   ))
                 ) : (
                   <ListItem>
-                    <ListItemText primary="No cancelled treatments" />
+                    <ListItemText primary="No hay tratamientos cancelados" />
                   </ListItem>
                 )}
               </List>

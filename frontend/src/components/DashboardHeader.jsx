@@ -13,7 +13,7 @@ const DashboardHeader = () => {
         </div>
         <Link to="/profile" className="profile-btn">
           <User size={18} />
-          <span>Profile</span>
+          <span>Perfil</span>
         </Link>
       </div>
     </header>

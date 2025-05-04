@@ -9,10 +9,10 @@ const Sidebar = () => {
 
   const navItems = [
     { label: 'Dashboard', icon: <Calendar />, to: '/dashboard' },
-    { label: 'My Pets', icon: <PawPrint />, to: '/pets' },
-    { label: 'Appointments', icon: <Calendar />, to: '/appointments' },
-    { label: 'Treatments', icon: <Stethoscope />, to: '/treatments' },
-    { label: 'Profile', icon: <User />, to: '/profile' },
+    { label: 'Mis Mascotas', icon: <PawPrint />, to: '/pets' },
+    { label: 'Citas', icon: <Calendar />, to: '/appointments' },
+    { label: 'Tratamientos', icon: <Stethoscope />, to: '/treatments' },
+    { label: 'Perfil', icon: <User />, to: '/profile' },
   ];
 
   return (
@@ -46,7 +46,7 @@ const Sidebar = () => {
       </nav>
       <div className="sidebar-footer">
         <button className="sidebar-logout" onClick={logout}>
-          <LogOut size={18} /> Logout
+          <LogOut size={18} /> Cerrar sesión
         </button>
       </div>
     </aside>

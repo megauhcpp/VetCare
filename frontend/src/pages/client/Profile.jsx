@@ -37,7 +37,7 @@ const Profile = () => {
     e.preventDefault();
     try {
       await updateUser(formData);
-      setSuccess('Profile updated successfully');
+      setSuccess('Perfil actualizado correctamente');
       setError('');
     } catch (err) {
       setError(err.message);
@@ -48,7 +48,7 @@ const Profile = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Profile
+        Perfil
       </Typography>
 
       <Grid container spacing={3}>
@@ -82,19 +82,19 @@ const Profile = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Edit Profile
+                Editar Perfil
               </Typography>
               <Divider sx={{ mb: 3 }} />
 
               {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
+                  {error === 'Network Error' ? 'Error de red. Intenta de nuevo.' : error}
                 </Alert>
               )}
 
               {success && (
                 <Alert severity="success" sx={{ mb: 2 }}>
-                  {success}
+                  Perfil actualizado correctamente
                 </Alert>
               )}
 
@@ -103,7 +103,7 @@ const Profile = () => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Name"
+                      label="Nombre"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
@@ -113,7 +113,7 @@ const Profile = () => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Email"
+                      label="Correo electrónico"
                       name="email"
                       type="email"
                       value={formData.email}
@@ -124,7 +124,7 @@ const Profile = () => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Phone"
+                      label="Teléfono"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
@@ -133,7 +133,7 @@ const Profile = () => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Address"
+                      label="Dirección"
                       name="address"
                       value={formData.address}
                       onChange={handleChange}
@@ -148,7 +148,7 @@ const Profile = () => {
                       color="primary"
                       fullWidth
                     >
-                      Update Profile
+                      Actualizar Perfil
                     </Button>
                   </Grid>
                 </Grid>

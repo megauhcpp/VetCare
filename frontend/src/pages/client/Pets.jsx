@@ -109,13 +109,13 @@ const Pets = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">My Pets</Typography>
+        <Typography variant="h4">Mis Mascotas</Typography>
         <Button
           variant="contained"
           color="primary"
           onClick={() => handleOpenDialog()}
         >
-          Add New Pet
+          Agregar Mascota
         </Button>
       </Box>
 
@@ -139,20 +139,20 @@ const Pets = () => {
                   {pet.species} - {pet.breed}
                 </Typography>
                 <Typography variant="body2">
-                  Age: {pet.age} years
+                  Edad: {pet.age} años
                 </Typography>
                 <Typography variant="body2">
-                  Weight: {pet.weight} kg
+                  Peso: {pet.weight} kg
                 </Typography>
                 {pet.medicalHistory && (
                   <Typography variant="body2" sx={{ mt: 1 }}>
-                    Medical History: {pet.medicalHistory}
+                    Historial Médico: {pet.medicalHistory}
                   </Typography>
                 )}
               </CardContent>
               <CardActions>
                 <Button size="small" color="primary">
-                  View Medical Records
+                  Ver Historial Médico
                 </Button>
               </CardActions>
             </Card>
@@ -162,34 +162,34 @@ const Pets = () => {
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>
-          {selectedPet ? 'Edit Pet' : 'Add New Pet'}
+          {selectedPet ? 'Editar Mascota' : 'Agregar Mascota'}
         </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Name"
+            label="Nombre"
             fullWidth
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
           <TextField
             margin="dense"
-            label="Species"
+            label="Especie"
             fullWidth
             value={formData.species}
             onChange={(e) => setFormData({ ...formData, species: e.target.value })}
           />
           <TextField
             margin="dense"
-            label="Breed"
+            label="Raza"
             fullWidth
             value={formData.breed}
             onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
           />
           <TextField
             margin="dense"
-            label="Age"
+            label="Edad"
             type="number"
             fullWidth
             value={formData.age}
@@ -197,7 +197,7 @@ const Pets = () => {
           />
           <TextField
             margin="dense"
-            label="Weight (kg)"
+            label="Peso (kg)"
             type="number"
             fullWidth
             value={formData.weight}
@@ -205,7 +205,7 @@ const Pets = () => {
           />
           <TextField
             margin="dense"
-            label="Medical History"
+            label="Historial Médico"
             fullWidth
             multiline
             rows={3}
@@ -214,9 +214,9 @@ const Pets = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog}>Cancelar</Button>
           <Button onClick={handleSubmit} color="primary">
-            {selectedPet ? 'Update' : 'Create'}
+            {selectedPet ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
       </Dialog>
