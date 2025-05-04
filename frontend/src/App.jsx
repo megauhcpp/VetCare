@@ -83,7 +83,7 @@ const App = () => {
             
             {/* Client Layout & Routes */}
             <Route element={<ClientLayout />}>
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
               <Route path="/pets" element={<ProtectedRoute><ClientPets /></ProtectedRoute>} />
               <Route path="/appointments" element={<ProtectedRoute><ClientAppointments /></ProtectedRoute>} />
               <Route path="/treatments" element={<ProtectedRoute><ClientTreatments /></ProtectedRoute>} />
