@@ -22,13 +22,13 @@ class UsuarioSeeder extends Seeder
             'rol' => 'admin',
         ]);
 
-        // Crear un veterinario
+        // Crear un cliente
         Usuario::create([
             'nombre' => 'Juan',
             'apellido' => 'Pérez',
             'email' => 'juan.perez@vetcare.com',
             'password' => Hash::make('password123'),
-            'rol' => 'veterinario',
+            'rol' => 'cliente',
         ]);
 
         // Crear un cliente
