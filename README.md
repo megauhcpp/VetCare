@@ -1,6 +1,6 @@
 # VetCare - Sistema de Gestión Veterinaria
 
-Este es un proyecto full-stack para la gestión de una clínica veterinaria, desarrollado con React para el frontend y Laravel 11 para el backend.
+Este es un proyecto full-stack para la gestión de una clínica veterinaria, desarrollado con React para el frontend y Laravel 12 para el backend.
 
 ## Estructura del Proyecto
 
@@ -103,14 +103,12 @@ VetCare/
 - React
 - React Router
 - Axios
-- Tailwind CSS
 - React Query
 
 ### Backend
-- Laravel 11
+- Laravel 12
 - MySQL
 - Laravel Sanctum (Authentication)
-- Laravel Passport (API Authentication)
 
 ## Getting Started
 
