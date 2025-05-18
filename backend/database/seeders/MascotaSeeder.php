@@ -18,8 +18,7 @@ class MascotaSeeder extends Seeder
             'nombre' => 'Max',
             'especie' => 'Perro',
             'raza' => 'Labrador',
-            'edad' => 3,
-            'peso' => 25.5,
+            'fecha_nacimiento' => now()->subYears(3),
             'id_usuario' => $cliente->id_usuario,
         ]);
 
@@ -27,8 +26,7 @@ class MascotaSeeder extends Seeder
             'nombre' => 'Luna',
             'especie' => 'Gato',
             'raza' => 'Siamés',
-            'edad' => 2,
-            'peso' => 4.2,
+            'fecha_nacimiento' => now()->subYears(2),
             'id_usuario' => $cliente->id_usuario,
         ]);
 
@@ -36,8 +34,7 @@ class MascotaSeeder extends Seeder
             'nombre' => 'Rocky',
             'especie' => 'Perro',
             'raza' => 'Bulldog',
-            'edad' => 5,
-            'peso' => 18.0,
+            'fecha_nacimiento' => now()->subYears(5),
             'id_usuario' => $cliente->id_usuario,
         ]);
     }

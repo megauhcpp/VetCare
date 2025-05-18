@@ -22,27 +22,24 @@ class CitaSeeder extends Seeder
 
         // Crear citas
         Cita::create([
-            'fecha' => now()->addDays(1)->format('Y-m-d'),
-            'hora' => '10:00',
-            'motivo' => 'Consulta general',
+            'fecha_hora' => now()->addDays(1)->setTime(10, 0),
+            'motivo_consulta' => 'Consulta general',
             'estado' => 'pendiente',
             'id_mascota' => $mascotas[0]->id_mascota,
             'id_veterinario' => $veterinario->id_usuario,
         ]);
 
         Cita::create([
-            'fecha' => now()->addDays(2)->format('Y-m-d'),
-            'hora' => '15:30',
-            'motivo' => 'Vacunación anual',
+            'fecha_hora' => now()->addDays(2)->setTime(15, 30),
+            'motivo_consulta' => 'Vacunación anual',
             'estado' => 'confirmada',
             'id_mascota' => $mascotas[1]->id_mascota,
             'id_veterinario' => $veterinario->id_usuario,
         ]);
 
         Cita::create([
-            'fecha' => now()->addDays(3)->format('Y-m-d'),
-            'hora' => '11:15',
-            'motivo' => 'Control de peso',
+            'fecha_hora' => now()->addDays(3)->setTime(11, 15),
+            'motivo_consulta' => 'Control de peso',
             'estado' => 'completada',
             'id_mascota' => $mascotas[2]->id_mascota,
             'id_veterinario' => $veterinario->id_usuario,
