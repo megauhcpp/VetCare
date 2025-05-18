@@ -154,20 +154,6 @@ const Register = () => {
                                 />
                                 {errors.password_confirmation && <span className="error-text">{errors.password_confirmation}</span>}
                             </div>
-                            <div className="form-group">
-                                <select
-                                    id="rol"
-                                    name="rol"
-                                    value={formData.rol}
-                                    onChange={handleChange}
-                                    required
-                                >
-                                    <option value="cliente">Cliente</option>
-                                    <option value="veterinario">Veterinario</option>
-                                    <option value="admin">Administrador</option>
-                                </select>
-                                {errors.rol && <span className="error-text">{errors.rol}</span>}
-                            </div>
                             <button type="submit" className="register-button">
                                 Registrarse
                             </button>

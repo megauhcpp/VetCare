@@ -7,10 +7,7 @@ const DashboardHeader = () => {
     <header className="dashboard-topbar">
       <div className="dashboard-title">Client Dashboard</div>
       <div className="dashboard-actions">
-        <div className="dashboard-search">
-          <Search size={18} className="search-icon" />
-          <input type="text" placeholder="Search..." className="search-input" />
-        </div>
+        
         <Link to="/profile" className="profile-btn">
           <User size={18} />
           <span>Perfil</span>
