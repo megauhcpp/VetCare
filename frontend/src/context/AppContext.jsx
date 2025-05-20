@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
+const API_URL = 'http://localhost:8000/api';
+
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [pets, setPets] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [treatments, setTreatments] = useState([]);
@@ -15,15 +17,26 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (user) {
+        if (user && token) {
+          const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          };
+
           if (user.role === 'admin') {
             // Fetch all data for admin
             const [petsRes, appointmentsRes, treatmentsRes, usersRes] = await Promise.all([
-              fetch('/api/pets'),
-              fetch('/api/appointments'),
-              fetch('/api/treatments'),
-              fetch('/api/users')
+              fetch(`${API_URL}/mascotas`, { headers }),
+              fetch(`${API_URL}/citas`, { headers }),
+              fetch(`${API_URL}/tratamientos`, { headers }),
+              fetch(`${API_URL}/usuarios`, { headers })
             ]);
+            
+            if (!petsRes.ok) throw new Error('Error fetching pets');
+            if (!appointmentsRes.ok) throw new Error('Error fetching appointments');
+            if (!treatmentsRes.ok) throw new Error('Error fetching treatments');
+            if (!usersRes.ok) throw new Error('Error fetching users');
             
             setPets(await petsRes.json());
             setAppointments(await appointmentsRes.json());
@@ -32,10 +45,14 @@ export const AppProvider = ({ children }) => {
           } else {
             // Fetch only user-specific data for clients
             const [petsRes, appointmentsRes, treatmentsRes] = await Promise.all([
-              fetch(`/api/pets?userId=${user.id}`),
-              fetch(`/api/appointments?userId=${user.id}`),
-              fetch(`/api/treatments?userId=${user.id}`)
+              fetch(`${API_URL}/mascotas`, { headers }),
+              fetch(`${API_URL}/citas`, { headers }),
+              fetch(`${API_URL}/tratamientos`, { headers })
             ]);
+            
+            if (!petsRes.ok) throw new Error('Error fetching pets');
+            if (!appointmentsRes.ok) throw new Error('Error fetching appointments');
+            if (!treatmentsRes.ok) throw new Error('Error fetching treatments');
             
             setPets(await petsRes.json());
             setAppointments(await appointmentsRes.json());
@@ -50,7 +67,7 @@ export const AppProvider = ({ children }) => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, token]);
 
   const value = {
     pets,

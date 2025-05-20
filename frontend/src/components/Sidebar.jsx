@@ -1,11 +1,12 @@
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LogOut, User, Calendar, PawPrint, Stethoscope } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Sidebar.css';
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { label: 'Dashboard', icon: <Calendar />, to: '/dashboard' },
@@ -28,8 +29,8 @@ const Sidebar = () => {
           <User size={32} />
         </div>
         <div className="user-info">
-          <span className="user-name">{user?.name || 'Usuario'}</span>
-          <span className="user-role">{user?.role || 'Client'}</span>
+          <span className="user-name">{user?.nombre || 'Usuario'}</span>
+          <span className="user-role">{user?.rol || 'Cliente'}</span>
         </div>
       </div>
       <nav className="sidebar-nav">

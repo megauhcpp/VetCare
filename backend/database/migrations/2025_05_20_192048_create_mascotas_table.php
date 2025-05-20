@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('especie');
             $table->string('raza');
             $table->date('fecha_nacimiento');
+            $table->string('sexo');
+            $table->text('notas')->nullable();
             $table->timestamps();
         });
     }

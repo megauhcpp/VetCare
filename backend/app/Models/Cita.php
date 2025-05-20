@@ -16,27 +16,28 @@ class Cita extends Model
     protected $fillable = [
         'id_mascota',
         'id_veterinario',
-        'motivo_consulta',
         'fecha_hora',
-        'estado',
+        'tipo_consulta',
+        'observaciones',
+        'estado'
     ];
 
     protected $casts = [
-        'fecha_hora' => 'datetime',
+        'fecha_hora' => 'datetime'
     ];
 
     public function mascota()
     {
-        return $this->belongsTo(Mascota::class, 'id_mascota');
+        return $this->belongsTo(Mascota::class, 'id_mascota', 'id_mascota');
     }
 
     public function veterinario()
     {
-        return $this->belongsTo(Usuario::class, 'id_veterinario');
+        return $this->belongsTo(Usuario::class, 'id_veterinario', 'id_usuario');
     }
 
     public function tratamientos()
     {
-        return $this->hasMany(Tratamiento::class, 'id_cita');
+        return $this->hasMany(Tratamiento::class, 'id_cita', 'id_cita');
     }
 }

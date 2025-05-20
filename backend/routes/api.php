@@ -27,7 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/usuarios/{usuario}/citas', [UsuarioController::class, 'getCitasVeterinario']);
     Route::post('/usuarios/{usuario}/cambiar-password', [UsuarioController::class, 'cambiarPassword']);
     
-    // Mascotas
+    // Mascotas (Español)
     Route::apiResource('mascotas', MascotaController::class);
     Route::get('/mascotas/especie/{especie}', [MascotaController::class, 'getByEspecie']);
     Route::get('/mascotas/raza/{raza}', [MascotaController::class, 'getByRaza']);
@@ -35,7 +35,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/mascotas/{mascota}/proximas-citas', [MascotaController::class, 'getProximasCitas']);
     Route::get('/mascotas/buscar/{nombre}', [MascotaController::class, 'buscarPorNombre']);
     
-    // Citas
+    // Pets (English)
+    Route::get('/pets', [MascotaController::class, 'index']);
+    Route::post('/pets', [MascotaController::class, 'store']);
+    Route::get('/pets/{id}', [MascotaController::class, 'show']);
+    Route::put('/pets/{id}', [MascotaController::class, 'update']);
+    Route::delete('/pets/{id}', [MascotaController::class, 'destroy']);
+    
+    // Citas (Español)
     Route::apiResource('citas', CitaController::class);
     Route::get('/citas/estado/{estado}', [CitaController::class, 'getByEstado']);
     Route::get('/citas/fecha/{fecha}', [CitaController::class, 'getByFecha']);
@@ -43,8 +50,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/citas/{cita}/estado', [CitaController::class, 'cambiarEstado']);
     Route::get('/citas/disponibilidad', [CitaController::class, 'getDisponibilidadVeterinario']);
     
-    // Tratamientos
+    // Appointments (English)
+    Route::get('/appointments', [CitaController::class, 'index']);
+    Route::post('/appointments', [CitaController::class, 'store']);
+    Route::get('/appointments/{id}', [CitaController::class, 'show']);
+    Route::put('/appointments/{id}', [CitaController::class, 'update']);
+    Route::delete('/appointments/{id}', [CitaController::class, 'destroy']);
+    
+    // Tratamientos (Español)
     Route::apiResource('tratamientos', TratamientoController::class);
+    
+    // Treatments (English)
+    Route::get('/treatments', [TratamientoController::class, 'index']);
+    Route::post('/treatments', [TratamientoController::class, 'store']);
+    Route::get('/treatments/{id}', [TratamientoController::class, 'show']);
+    Route::put('/treatments/{id}', [TratamientoController::class, 'update']);
+    Route::delete('/treatments/{id}', [TratamientoController::class, 'destroy']);
     
     // Admin Routes
     Route::middleware('admin')->group(function () {

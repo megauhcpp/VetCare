@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('tratamientos', function (Blueprint $table) {
             $table->id('id_tratamiento');
             $table->foreignId('id_cita')->constrained('citas', 'id_cita');
+            $table->string('nombre');
             $table->text('descripcion');
-            $table->date('fecha_realizacion');
-            $table->text('observaciones');
+            $table->decimal('precio', 10, 2);
+            $table->date('fecha_inicio');
+            $table->date('fecha_fin')->nullable();
+            $table->string('estado');
             $table->timestamps();
         });
     }

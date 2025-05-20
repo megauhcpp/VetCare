@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id('id_cita');
             $table->foreignId('id_mascota')->constrained('mascotas', 'id_mascota');
             $table->foreignId('id_veterinario')->constrained('usuarios', 'id_usuario');
-            $table->text('motivo_consulta');
             $table->dateTime('fecha_hora');
+            $table->string('tipo_consulta');
+            $table->text('observaciones')->nullable();
             $table->string('estado');
             $table->timestamps();
         });

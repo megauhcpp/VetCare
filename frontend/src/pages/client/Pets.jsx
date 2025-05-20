@@ -22,34 +22,34 @@ const Pets = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    species: '',
-    breed: '',
-    age: '',
-    weight: '',
-    medicalHistory: ''
+    nombre: '',
+    especie: '',
+    raza: '',
+    fecha_nacimiento: '',
+    sexo: '',
+    notas: ''
   });
 
   const handleOpenDialog = (pet = null) => {
     if (pet) {
       setSelectedPet(pet);
       setFormData({
-        name: pet.name,
-        species: pet.species,
-        breed: pet.breed,
-        age: pet.age,
-        weight: pet.weight,
-        medicalHistory: pet.medicalHistory
+        nombre: pet.nombre,
+        especie: pet.especie,
+        raza: pet.raza,
+        fecha_nacimiento: pet.fecha_nacimiento.split('T')[0],
+        sexo: pet.sexo,
+        notas: pet.notas || ''
       });
     } else {
       setSelectedPet(null);
       setFormData({
-        name: '',
-        species: '',
-        breed: '',
-        age: '',
-        weight: '',
-        medicalHistory: ''
+        nombre: '',
+        especie: '',
+        raza: '',
+        fecha_nacimiento: '',
+        sexo: '',
+        notas: ''
       });
     }
     setOpenDialog(true);
@@ -63,8 +63,8 @@ const Pets = () => {
   const handleSubmit = async () => {
     try {
       const url = selectedPet 
-        ? `/api/pets/${selectedPet.id}`
-        : '/api/pets';
+        ? `/api/mascotas/${selectedPet.id_mascota}`
+        : '/api/mascotas';
       
       const method = selectedPet ? 'PUT' : 'POST';
       
@@ -72,6 +72,7 @@ const Pets = () => {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(formData),
       });
@@ -79,7 +80,7 @@ const Pets = () => {
       if (response.ok) {
         const updatedPet = await response.json();
         if (selectedPet) {
-          setPets(pets.map(p => p.id === updatedPet.id ? updatedPet : p));
+          setPets(pets.map(p => p.id_mascota === updatedPet.id_mascota ? updatedPet : p));
         } else {
           setPets([...pets, updatedPet]);
         }
@@ -91,14 +92,17 @@ const Pets = () => {
   };
 
   const handleDelete = async (petId) => {
-    if (window.confirm('Are you sure you want to delete this pet?')) {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta mascota?')) {
       try {
-        const response = await fetch(`/api/pets/${petId}`, {
+        const response = await fetch(`/api/mascotas/${petId}`, {
           method: 'DELETE',
+          headers: {
+            'Accept': 'application/json'
+          }
         });
 
         if (response.ok) {
-          setPets(pets.filter(p => p.id !== petId));
+          setPets(pets.filter(p => p.id_mascota !== petId));
         }
       } catch (error) {
         console.error('Error deleting pet:', error);
@@ -119,46 +123,52 @@ const Pets = () => {
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {pets.map((pet) => (
-          <Grid item xs={12} sm={6} md={4} key={pet.id}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6">{pet.name}</Typography>
-                  <Box>
-                    <IconButton onClick={() => handleOpenDialog(pet)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(pet.id)}>
-                      <DeleteIcon />
-                    </IconButton>
+      {pets.length === 0 ? (
+        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
+          No tienes mascotas registradas. ¡Agrega una nueva mascota!
+        </Typography>
+      ) : (
+        <Grid container spacing={3}>
+          {pets.map((pet) => (
+            <Grid item xs={12} sm={6} md={4} key={pet.id_mascota}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6">{pet.nombre}</Typography>
+                    <Box>
+                      <IconButton onClick={() => handleOpenDialog(pet)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(pet.id_mascota)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   </Box>
-                </Box>
-                <Typography color="text.secondary" gutterBottom>
-                  {pet.species} - {pet.breed}
-                </Typography>
-                <Typography variant="body2">
-                  Edad: {pet.age} años
-                </Typography>
-                <Typography variant="body2">
-                  Peso: {pet.weight} kg
-                </Typography>
-                {pet.medicalHistory && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    Historial Médico: {pet.medicalHistory}
+                  <Typography color="text.secondary" gutterBottom>
+                    {pet.especie} - {pet.raza}
                   </Typography>
-                )}
-              </CardContent>
-              <CardActions>
-                <Button size="small" color="primary">
-                  Ver Historial Médico
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                  <Typography variant="body2">
+                    Fecha de Nacimiento: {new Date(pet.fecha_nacimiento).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="body2">
+                    Sexo: {pet.sexo}
+                  </Typography>
+                  {pet.notas && (
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Notas: {pet.notas}
+                    </Typography>
+                  )}
+                </CardContent>
+                <CardActions>
+                  <Button size="small" color="primary">
+                    Ver Historial Médico
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>
@@ -170,47 +180,47 @@ const Pets = () => {
             margin="dense"
             label="Nombre"
             fullWidth
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            value={formData.nombre}
+            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
           />
           <TextField
             margin="dense"
             label="Especie"
             fullWidth
-            value={formData.species}
-            onChange={(e) => setFormData({ ...formData, species: e.target.value })}
+            value={formData.especie}
+            onChange={(e) => setFormData({ ...formData, especie: e.target.value })}
           />
           <TextField
             margin="dense"
             label="Raza"
             fullWidth
-            value={formData.breed}
-            onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
+            value={formData.raza}
+            onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
           />
           <TextField
             margin="dense"
-            label="Edad"
-            type="number"
+            label="Fecha de Nacimiento"
+            type="date"
             fullWidth
-            value={formData.age}
-            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            value={formData.fecha_nacimiento}
+            onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
+            InputLabelProps={{ shrink: true }}
           />
           <TextField
             margin="dense"
-            label="Peso (kg)"
-            type="number"
+            label="Sexo"
             fullWidth
-            value={formData.weight}
-            onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+            value={formData.sexo}
+            onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
           />
           <TextField
             margin="dense"
-            label="Historial Médico"
+            label="Notas"
             fullWidth
             multiline
             rows={3}
-            value={formData.medicalHistory}
-            onChange={(e) => setFormData({ ...formData, medicalHistory: e.target.value })}
+            value={formData.notas}
+            onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
           />
         </DialogContent>
         <DialogActions>

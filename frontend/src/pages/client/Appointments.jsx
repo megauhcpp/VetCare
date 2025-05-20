@@ -3,9 +3,11 @@ import { useApp } from '../../context/AppContext';
 import {
   Box,
   Typography,
-  Grid,
-  Card,
-  CardContent,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
   Button,
   Dialog,
   DialogTitle,
@@ -13,21 +15,15 @@ import {
   DialogActions,
   TextField,
   MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Chip
+  Chip,
+  Stack
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 const Appointments = () => {
-  const { appointments, setAppointments, pets } = useApp();
+  const { appointments, pets, setAppointments } = useApp();
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [formData, setFormData] = useState({
     petId: '',
     date: '',
@@ -36,69 +32,102 @@ const Appointments = () => {
     notes: ''
   });
 
-  const handleOpenDialog = () => {
+  const handleOpenDialog = (appointment = null) => {
+    if (appointment) {
+      setSelectedAppointment(appointment);
+      setFormData({
+        petId: appointment.id_mascota,
+        date: appointment.fecha_hora.split('T')[0],
+        time: appointment.fecha_hora.split('T')[1].substring(0, 5),
+        type: appointment.tipo_consulta,
+        notes: appointment.observaciones || ''
+      });
+    } else {
+      setSelectedAppointment(null);
+      setFormData({
+        petId: '',
+        date: '',
+        time: '',
+        type: '',
+        notes: ''
+      });
+    }
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setFormData({
-      petId: '',
-      date: '',
-      time: '',
-      type: '',
-      notes: ''
-    });
+    setSelectedAppointment(null);
   };
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
+      const url = selectedAppointment 
+        ? `/api/citas/${selectedAppointment.id_cita}`
+        : '/api/citas';
+      
+      const method = selectedAppointment ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          id_mascota: formData.petId,
+          fecha_hora: `${formData.date}T${formData.time}:00`,
+          tipo_consulta: formData.type,
+          observaciones: formData.notes,
+          estado: 'pendiente'
+        }),
       });
 
       if (response.ok) {
-        const newAppointment = await response.json();
-        setAppointments([...appointments, newAppointment]);
+        const updatedAppointment = await response.json();
+        if (selectedAppointment) {
+          setAppointments(appointments.map(a => a.id_cita === updatedAppointment.id_cita ? updatedAppointment : a));
+        } else {
+          setAppointments([...appointments, updatedAppointment]);
+        }
         handleCloseDialog();
       }
     } catch (error) {
-      console.error('Error creating appointment:', error);
+      console.error('Error saving appointment:', error);
     }
   };
 
-  const handleCancel = async (appointmentId) => {
-    if (window.confirm('Are you sure you want to cancel this appointment?')) {
+  const handleDelete = async (appointmentId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
       try {
-        const response = await fetch(`/api/appointments/${appointmentId}`, {
+        const response = await fetch(`/api/citas/${appointmentId}`, {
           method: 'DELETE',
+          headers: {
+            'Accept': 'application/json'
+          }
         });
 
         if (response.ok) {
-          setAppointments(appointments.filter(a => a.id !== appointmentId));
+          setAppointments(appointments.filter(a => a.id_cita !== appointmentId));
         }
       } catch (error) {
-        console.error('Error canceling appointment:', error);
+        console.error('Error deleting appointment:', error);
       }
     }
   };
 
-  const getPetName = (petId) => {
-    const pet = pets.find(p => p.id === petId);
-    return pet ? pet.name : 'Unknown';
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pendiente':
+        return 'warning';
+      case 'confirmada':
+        return 'success';
+      case 'cancelada':
+        return 'error';
+      default:
+        return 'default';
+    }
   };
-
-  const upcomingAppointments = appointments
-    .filter(a => new Date(a.date) >= new Date())
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  const pastAppointments = appointments
-    .filter(a => new Date(a.date) < new Date())
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <Box sx={{ p: 3 }}>
@@ -107,133 +136,89 @@ const Appointments = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={handleOpenDialog}
+          onClick={() => handleOpenDialog()}
         >
-          Agendar Nueva Cita
+          Agendar Cita
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Próximas Citas
-              </Typography>
-              <List>
-                {upcomingAppointments.length > 0 ? (
-                  upcomingAppointments.map((appointment) => (
-                    <ListItem key={appointment.id}>
-                      <ListItemText
-                        primary={new Date(appointment.date).toLocaleDateString()}
-                        secondary={
-                          <>
-                            <Typography component="span" variant="body2">
-                              {appointment.time} - {getPetName(appointment.petId)}
-                            </Typography>
-                            <br />
-                            <Typography component="span" variant="body2" color="text.secondary">
-                              {appointment.type}
-                            </Typography>
-                          </>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <Chip
-                          label={appointment.status}
-                          color={
-                            appointment.status === 'scheduled' ? 'primary' :
-                            appointment.status === 'completed' ? 'success' :
-                            appointment.status === 'cancelled' ? 'error' : 'default'
-                          }
-                          size="small"
-                          sx={{ mr: 1 }}
-                        />
-                        {appointment.status === 'scheduled' && (
-                          <IconButton
-                            edge="end"
-                            onClick={() => handleCancel(appointment.id)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        )}
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))
-                ) : (
-                  <ListItem>
-                    <ListItemText primary="No hay citas próximas" />
-                  </ListItem>
-                )}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Citas Pasadas
-              </Typography>
-              <List>
-                {pastAppointments.length > 0 ? (
-                  pastAppointments.map((appointment) => (
-                    <ListItem key={appointment.id}>
-                      <ListItemText
-                        primary={new Date(appointment.date).toLocaleDateString()}
-                        secondary={
-                          <>
-                            <Typography component="span" variant="body2">
-                              {appointment.time} - {getPetName(appointment.petId)}
-                            </Typography>
-                            <br />
-                            <Typography component="span" variant="body2" color="text.secondary">
-                              {appointment.type}
-                            </Typography>
-                          </>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <Chip
-                          label={appointment.status}
-                          color={
-                            appointment.status === 'completed' ? 'success' :
-                            appointment.status === 'cancelled' ? 'error' : 'default'
-                          }
-                          size="small"
-                        />
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))
-                ) : (
-                  <ListItem>
-                    <ListItemText primary="No hay citas anteriores" />
-                  </ListItem>
-                )}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {appointments.length === 0 ? (
+        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
+          No tienes citas programadas. ¡Agenda una nueva cita!
+        </Typography>
+      ) : (
+        <List>
+          {appointments.map((appointment) => (
+            <ListItem
+              key={appointment.id_cita}
+              sx={{
+                mb: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Typography variant="h6">
+                      {pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
+                    </Typography>
+                    <Chip
+                      label={appointment.estado}
+                      color={getStatusColor(appointment.estado)}
+                      size="small"
+                    />
+                  </Stack>
+                }
+                secondary={
+                  <Box sx={{ mt: 1 }}>
+                    <Box sx={{ mb: 0.5 }}>
+                      Fecha: {new Date(appointment.fecha_hora).toLocaleString()}
+                    </Box>
+                    <Box sx={{ mb: 0.5 }}>
+                      Tipo de Consulta: {appointment.tipo_consulta}
+                    </Box>
+                    {appointment.observaciones && (
+                      <Box>
+                        Observaciones: {appointment.observaciones}
+                      </Box>
+                    )}
+                  </Box>
+                }
+              />
+              <ListItemSecondaryAction>
+                <IconButton onClick={() => handleOpenDialog(appointment)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton onClick={() => handleDelete(appointment.id_cita)}>
+                  <DeleteIcon />
+                </IconButton>
+              </ListItemSecondaryAction>
+            </ListItem>
+          ))}
+        </List>
+      )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Agendar Nueva Cita</DialogTitle>
+        <DialogTitle>
+          {selectedAppointment ? 'Editar Cita' : 'Agendar Cita'}
+        </DialogTitle>
         <DialogContent>
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Mascota</InputLabel>
-            <Select
-              value={formData.petId}
-              onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
-              label="Mascota"
-            >
-              {pets.map((pet) => (
-                <MenuItem key={pet.id} value={pet.id}>
-                  {pet.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <TextField
+            select
+            margin="dense"
+            label="Mascota"
+            fullWidth
+            value={formData.petId}
+            onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
+          >
+            {pets.map((pet) => (
+              <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
+                {pet.nombre}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             margin="dense"
             label="Fecha"
@@ -252,23 +237,22 @@ const Appointments = () => {
             onChange={(e) => setFormData({ ...formData, time: e.target.value })}
             InputLabelProps={{ shrink: true }}
           />
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Tipo</InputLabel>
-            <Select
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              label="Tipo"
-            >
-              <MenuItem value="checkup">Chequeo</MenuItem>
-              <MenuItem value="vaccination">Vacunación</MenuItem>
-              <MenuItem value="surgery">Cirugía</MenuItem>
-              <MenuItem value="grooming">Estética</MenuItem>
-              <MenuItem value="other">Otro</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField
+            select
+            margin="dense"
+            label="Tipo de Consulta"
+            fullWidth
+            value={formData.type}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          >
+            <MenuItem value="consulta_general">Consulta General</MenuItem>
+            <MenuItem value="vacunacion">Vacunación</MenuItem>
+            <MenuItem value="cirugia">Cirugía</MenuItem>
+            <MenuItem value="urgencia">Urgencia</MenuItem>
+          </TextField>
           <TextField
             margin="dense"
-            label="Notas"
+            label="Observaciones"
             fullWidth
             multiline
             rows={3}
@@ -279,7 +263,7 @@ const Appointments = () => {
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancelar</Button>
           <Button onClick={handleSubmit} color="primary">
-            Guardar
+            {selectedAppointment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
       </Dialog>

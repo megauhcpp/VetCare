@@ -19,18 +19,18 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
         if (token) {
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             fetchUser();
         } else {
             setLoading(false);
         }
-    }, []);
+    }, [token]);
 
     const fetchUser = async () => {
         try {
@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }) => {
             console.error('Error fetching user:', error);
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
+            setToken(null);
             setUser(null);
             setIsAuthenticated(false);
         } finally {
@@ -60,6 +61,7 @@ export const AuthProvider = ({ children }) => {
             if (response.data && response.data.token) {
                 const { token, usuario } = response.data;
                 localStorage.setItem('token', token);
+                setToken(token);
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 setUser(usuario);
                 setIsAuthenticated(true);
@@ -79,6 +81,7 @@ export const AuthProvider = ({ children }) => {
             if (response.data && response.data.token) {
                 const { token, usuario } = response.data;
                 localStorage.setItem('token', token);
+                setToken(token);
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 setUser(usuario);
                 setIsAuthenticated(true);
@@ -98,6 +101,7 @@ export const AuthProvider = ({ children }) => {
         } finally {
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
+            setToken(null);
             setUser(null);
             setIsAuthenticated(false);
         }
@@ -116,6 +120,7 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         user,
+        token,
         loading,
         isAuthenticated,
         login,

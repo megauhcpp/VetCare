@@ -19,6 +19,8 @@ class Mascota extends Model
         'especie',
         'raza',
         'fecha_nacimiento',
+        'sexo',
+        'notas'
     ];
 
     protected $casts = [
@@ -27,11 +29,11 @@ class Mascota extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
     }
 
     public function citas()
     {
-        return $this->hasMany(Cita::class, 'id_mascota');
+        return $this->hasMany(Cita::class, 'id_mascota', 'id_mascota');
     }
 }
