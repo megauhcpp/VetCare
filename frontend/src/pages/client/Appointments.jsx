@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Box,
   Typography,
@@ -22,6 +23,7 @@ import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 const Appointments = () => {
   const { appointments, pets, setAppointments } = useApp();
+  const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [formData, setFormData] = useState({
@@ -29,8 +31,16 @@ const Appointments = () => {
     date: '',
     time: '',
     type: '',
-    notes: ''
+    motivo: ''
   });
+
+  // Filtrar las mascotas del usuario actual
+  const userPets = pets.filter(pet => pet.id_usuario === user?.id_usuario);
+
+  // Filtrar las citas que corresponden a las mascotas del usuario
+  const filteredAppointments = appointments.filter(appointment => 
+    userPets.some(pet => pet.id_mascota === appointment.id_mascota)
+  );
 
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
@@ -40,7 +50,7 @@ const Appointments = () => {
         date: appointment.fecha_hora.split('T')[0],
         time: appointment.fecha_hora.split('T')[1].substring(0, 5),
         type: appointment.tipo_consulta,
-        notes: appointment.observaciones || ''
+        motivo: appointment.motivo_consulta || ''
       });
     } else {
       setSelectedAppointment(null);
@@ -49,7 +59,7 @@ const Appointments = () => {
         date: '',
         time: '',
         type: '',
-        notes: ''
+        motivo: ''
       });
     }
     setOpenDialog(true);
@@ -62,25 +72,34 @@ const Appointments = () => {
 
   const handleSubmit = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No hay token de autenticación');
+        return;
+      }
+
       const url = selectedAppointment 
         ? `/api/citas/${selectedAppointment.id_cita}`
         : '/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
+      const appointmentData = {
+        id_mascota: formData.petId,
+        fecha_hora: `${formData.date}T${formData.time}:00`,
+        tipo_consulta: formData.type,
+        motivo_consulta: formData.motivo,
+        estado: 'pendiente'
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          id_mascota: formData.petId,
-          fecha_hora: `${formData.date}T${formData.time}:00`,
-          tipo_consulta: formData.type,
-          observaciones: formData.notes,
-          estado: 'pendiente'
-        }),
+        body: JSON.stringify(appointmentData),
       });
 
       if (response.ok) {
@@ -91,6 +110,9 @@ const Appointments = () => {
           setAppointments([...appointments, updatedAppointment]);
         }
         handleCloseDialog();
+      } else {
+        const errorData = await response.json();
+        console.error('Error al guardar la cita:', errorData);
       }
     } catch (error) {
       console.error('Error saving appointment:', error);
@@ -100,15 +122,24 @@ const Appointments = () => {
   const handleDelete = async (appointmentId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No hay token de autenticación');
+          return;
+        }
+
         const response = await fetch(`/api/citas/${appointmentId}`, {
           method: 'DELETE',
           headers: {
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         });
 
         if (response.ok) {
           setAppointments(appointments.filter(a => a.id_cita !== appointmentId));
+        } else {
+          console.error('Error al eliminar la cita:', await response.text());
         }
       } catch (error) {
         console.error('Error deleting appointment:', error);
@@ -142,13 +173,13 @@ const Appointments = () => {
         </Button>
       </Box>
 
-      {appointments.length === 0 ? (
+      {filteredAppointments.length === 0 ? (
         <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
           No tienes citas programadas. ¡Agenda una nueva cita!
         </Typography>
       ) : (
         <List>
-          {appointments.map((appointment) => (
+          {filteredAppointments.map((appointment) => (
             <ListItem
               key={appointment.id_cita}
               sx={{
@@ -162,7 +193,7 @@ const Appointments = () => {
                 primary={
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Typography variant="h6">
-                      {pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
+                      {userPets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
                     </Typography>
                     <Chip
                       label={appointment.estado}
@@ -172,19 +203,19 @@ const Appointments = () => {
                   </Stack>
                 }
                 secondary={
-                  <Box sx={{ mt: 1 }}>
-                    <Box sx={{ mb: 0.5 }}>
+                  <Typography component="div" variant="body2">
+                    <Typography component="div" sx={{ mb: 0.5 }}>
                       Fecha: {new Date(appointment.fecha_hora).toLocaleString()}
-                    </Box>
-                    <Box sx={{ mb: 0.5 }}>
+                    </Typography>
+                    <Typography component="div" sx={{ mb: 0.5 }}>
                       Tipo de Consulta: {appointment.tipo_consulta}
-                    </Box>
-                    {appointment.observaciones && (
-                      <Box>
-                        Observaciones: {appointment.observaciones}
-                      </Box>
+                    </Typography>
+                    {appointment.motivo_consulta && (
+                      <Typography component="div">
+                        Motivo: {appointment.motivo_consulta}
+                      </Typography>
                     )}
-                  </Box>
+                  </Typography>
                 }
               />
               <ListItemSecondaryAction>
@@ -212,8 +243,9 @@ const Appointments = () => {
             fullWidth
             value={formData.petId}
             onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
+            required
           >
-            {pets.map((pet) => (
+            {userPets.map((pet) => (
               <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
                 {pet.nombre}
               </MenuItem>
@@ -227,6 +259,7 @@ const Appointments = () => {
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             InputLabelProps={{ shrink: true }}
+            required
           />
           <TextField
             margin="dense"
@@ -236,6 +269,7 @@ const Appointments = () => {
             value={formData.time}
             onChange={(e) => setFormData({ ...formData, time: e.target.value })}
             InputLabelProps={{ shrink: true }}
+            required
           />
           <TextField
             select
@@ -244,6 +278,7 @@ const Appointments = () => {
             fullWidth
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            required
           >
             <MenuItem value="consulta_general">Consulta General</MenuItem>
             <MenuItem value="vacunacion">Vacunación</MenuItem>
@@ -252,12 +287,13 @@ const Appointments = () => {
           </TextField>
           <TextField
             margin="dense"
-            label="Observaciones"
+            label="Motivo de la Consulta"
             fullWidth
             multiline
-            rows={3}
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={2}
+            value={formData.motivo}
+            onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
+            required
           />
         </DialogContent>
         <DialogActions>

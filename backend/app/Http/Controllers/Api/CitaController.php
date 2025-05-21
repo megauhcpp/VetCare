@@ -15,7 +15,18 @@ class CitaController extends Controller
      */
     public function index()
     {
-        $citas = Cita::with(['mascota.usuario', 'veterinario'])->get();
+        $user = Auth::user();
+        
+        // Si es un veterinario, mostrar todas las citas
+        if ($user->rol === 'veterinario') {
+            $citas = Cita::with(['mascota.usuario', 'veterinario'])->get();
+        } else {
+            // Si es un cliente, mostrar solo las citas de sus mascotas
+            $citas = Cita::whereHas('mascota', function($query) use ($user) {
+                $query->where('id_usuario', $user->id_usuario);
+            })->with(['mascota.usuario', 'veterinario'])->get();
+        }
+        
         return response()->json($citas);
     }
 
@@ -26,14 +37,22 @@ class CitaController extends Controller
     {
         $request->validate([
             'id_mascota' => 'required|exists:mascotas,id_mascota',
-            'id_veterinario' => 'required|exists:usuarios,id_usuario',
             'motivo_consulta' => 'required|string',
             'fecha_hora' => 'required|date',
+            'tipo_consulta' => 'required|string|in:consulta_general,vacunacion,cirugia,urgencia',
             'estado' => 'required|string|in:pendiente,confirmada,completada,cancelada',
         ]);
 
+        // Obtener el veterinario disponible (primer usuario con rol veterinario)
+        $veterinario = Usuario::where('rol', 'veterinario')->first();
+        if (!$veterinario) {
+            return response()->json([
+                'error' => 'No hay veterinarios disponibles'
+            ], 404);
+        }
+
         // Verificar que el veterinario esté disponible
-        $citaExistente = Cita::where('id_veterinario', $request->id_veterinario)
+        $citaExistente = Cita::where('id_usuario', $veterinario->id_usuario)
             ->where('fecha_hora', $request->fecha_hora)
             ->where('estado', '!=', 'cancelada')
             ->first();
@@ -44,7 +63,20 @@ class CitaController extends Controller
             ], 422);
         }
 
-        $cita = Cita::create($request->all());
+        // Obtener el último ID de cita
+        $ultimaCita = Cita::orderBy('id_cita', 'desc')->first();
+        $nuevoId = $ultimaCita ? $ultimaCita->id_cita + 1 : 1;
+
+        $cita = new Cita();
+        $cita->id_cita = $nuevoId;
+        $cita->id_mascota = $request->id_mascota;
+        $cita->id_usuario = $veterinario->id_usuario;
+        $cita->fecha_hora = $request->fecha_hora;
+        $cita->tipo_consulta = $request->tipo_consulta;
+        $cita->motivo_consulta = $request->motivo_consulta;
+        $cita->estado = $request->estado;
+        $cita->save();
+
         $cita->load(['mascota.usuario', 'veterinario']);
 
         return response()->json($cita, 201);
@@ -66,14 +98,14 @@ class CitaController extends Controller
     {
         $request->validate([
             'id_mascota' => 'sometimes|required|exists:mascotas,id_mascota',
-            'id_veterinario' => 'sometimes|required|exists:usuarios,id_usuario',
             'motivo_consulta' => 'sometimes|required|string',
             'fecha_hora' => 'sometimes|required|date',
+            'tipo_consulta' => 'sometimes|required|string|in:consulta_general,vacunacion,cirugia,urgencia',
             'estado' => 'sometimes|required|string|in:pendiente,confirmada,completada,cancelada',
         ]);
 
         if ($request->has('fecha_hora') && $request->fecha_hora !== $cita->fecha_hora) {
-            $citaExistente = Cita::where('id_veterinario', $cita->id_veterinario)
+            $citaExistente = Cita::where('id_usuario', $cita->id_usuario)
                 ->where('fecha_hora', $request->fecha_hora)
                 ->where('estado', '!=', 'cancelada')
                 ->where('id_cita', '!=', $cita->id_cita)
@@ -161,11 +193,11 @@ class CitaController extends Controller
     public function getDisponibilidadVeterinario(Request $request)
     {
         $request->validate([
-            'id_veterinario' => 'required|exists:usuarios,id_usuario',
+            'id_usuario' => 'required|exists:usuarios,id_usuario',
             'fecha' => 'required|date',
         ]);
 
-        $citas = Cita::where('id_veterinario', $request->id_veterinario)
+        $citas = Cita::where('id_usuario', $request->id_usuario)
             ->whereDate('fecha_hora', $request->fecha)
             ->where('estado', '!=', 'cancelada')
             ->orderBy('fecha_hora', 'asc')

@@ -14,11 +14,12 @@ class Cita extends Model
     public $timestamps = true;
 
     protected $fillable = [
+        'id_cita',
         'id_mascota',
-        'id_veterinario',
+        'id_usuario',
         'fecha_hora',
         'tipo_consulta',
-        'observaciones',
+        'motivo_consulta',
         'estado'
     ];
 
@@ -33,7 +34,7 @@ class Cita extends Model
 
     public function veterinario()
     {
-        return $this->belongsTo(Usuario::class, 'id_veterinario', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
     }
 
     public function tratamientos()

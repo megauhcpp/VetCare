@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Mascota;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MascotaController extends Controller
 {
@@ -14,7 +15,14 @@ class MascotaController extends Controller
      */
     public function index()
     {
-        $mascotas = Mascota::with('usuario')->get();
+        $user = Auth::user();
+        
+        if ($user->rol === 'admin') {
+            $mascotas = Mascota::with('usuario')->get();
+        } else {
+            $mascotas = Mascota::where('id_usuario', $user->id_usuario)->get();
+        }
+        
         return response()->json($mascotas);
     }
 
@@ -24,14 +32,30 @@ class MascotaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_usuario' => 'required|exists:usuarios,id_usuario',
             'nombre' => 'required|string|max:255',
             'especie' => 'required|string|max:255',
             'raza' => 'required|string|max:255',
             'fecha_nacimiento' => 'required|date',
+            'sexo' => 'required|string|max:10',
+            'notas' => 'nullable|string'
         ]);
 
-        $mascota = Mascota::create($request->all());
+        $user = Auth::user();
+        
+        // Obtener el último ID de mascota
+        $ultimaMascota = Mascota::orderBy('id_mascota', 'desc')->first();
+        $nuevoId = $ultimaMascota ? $ultimaMascota->id_mascota + 1 : 1;
+
+        $mascota = new Mascota();
+        $mascota->id_mascota = $nuevoId;
+        $mascota->id_usuario = $user->id_usuario;
+        $mascota->nombre = $request->nombre;
+        $mascota->especie = $request->especie;
+        $mascota->raza = $request->raza;
+        $mascota->fecha_nacimiento = $request->fecha_nacimiento;
+        $mascota->sexo = $request->sexo;
+        $mascota->notas = $request->notas;
+        $mascota->save();
 
         return response()->json($mascota, 201);
     }
@@ -41,6 +65,12 @@ class MascotaController extends Controller
      */
     public function show(Mascota $mascota)
     {
+        $user = Auth::user();
+        
+        if ($user->rol !== 'admin' && $mascota->id_usuario !== $user->id_usuario) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+        
         $mascota->load('usuario', 'citas.tratamientos');
         return response()->json($mascota);
     }
@@ -50,12 +80,19 @@ class MascotaController extends Controller
      */
     public function update(Request $request, Mascota $mascota)
     {
+        $user = Auth::user();
+        
+        if ($user->rol !== 'admin' && $mascota->id_usuario !== $user->id_usuario) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
         $request->validate([
-            'id_usuario' => 'sometimes|required|exists:usuarios,id_usuario',
             'nombre' => 'sometimes|required|string|max:255',
             'especie' => 'sometimes|required|string|max:255',
             'raza' => 'sometimes|required|string|max:255',
             'fecha_nacimiento' => 'sometimes|required|date',
+            'sexo' => 'sometimes|required|string|max:10',
+            'notas' => 'nullable|string'
         ]);
 
         $mascota->update($request->all());
@@ -68,6 +105,12 @@ class MascotaController extends Controller
      */
     public function destroy(Mascota $mascota)
     {
+        $user = Auth::user();
+        
+        if ($user->rol !== 'admin' && $mascota->id_usuario !== $user->id_usuario) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
         $mascota->delete();
         return response()->json(null, 204);
     }

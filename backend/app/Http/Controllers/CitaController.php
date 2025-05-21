@@ -4,35 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\Cita;
 use App\Models\Mascota;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CitaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $userId = $request->query('userId');
-        
-        if ($userId && $userId !== 'undefined') {
-            $citas = Cita::where('id_veterinario', $userId)
-                ->orWhereHas('mascota', function($query) use ($userId) {
-                    $query->where('id_usuario', $userId);
-                })
-                ->with(['mascota', 'tratamientos'])
-                ->get();
-        } else {
-            $citas = Cita::where('id_veterinario', Auth::user()->id_usuario)
-                ->orWhereHas('mascota', function($query) {
-                    $query->where('id_usuario', Auth::user()->id_usuario);
-                })
-                ->with(['mascota', 'tratamientos'])
-                ->get();
+        try {
+            $user = Auth::user();
+            $citas = Cita::whereHas('mascota', function($query) use ($user) {
+                $query->where('id_usuario', $user->id);
+            })->get();
+            
+            return response()->json($citas);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener citas: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al obtener las citas'], 500);
         }
-        
-        return response()->json($citas);
     }
 
     /**
@@ -48,29 +42,51 @@ class CitaController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'id_mascota' => 'required|exists:mascotas,id_mascota',
-            'fecha_hora' => 'required|date',
-            'tipo_consulta' => 'required|string',
-            'observaciones' => 'nullable|string',
-            'estado' => 'required|string'
-        ]);
+        try {
+            $request->validate([
+                'id_mascota' => 'required|exists:mascotas,id_mascota',
+                'fecha_hora' => 'required|date',
+                'tipo_consulta' => 'required|string',
+                'motivo_consulta' => 'required|string',
+                'estado' => 'required|string'
+            ]);
 
-        // Verificar que la mascota pertenece al usuario
-        $mascota = Mascota::where('id_usuario', Auth::user()->id_usuario)
-            ->where('id_mascota', $request->id_mascota)
-            ->firstOrFail();
+            $user = Auth::user();
+            
+            // Verificar que la mascota pertenece al usuario
+            $mascota = Mascota::where('id_mascota', $request->id_mascota)
+                            ->where('id_usuario', $user->id)
+                            ->first();
+            
+            if (!$mascota) {
+                return response()->json(['error' => 'La mascota no pertenece al usuario'], 403);
+            }
 
-        $cita = new Cita();
-        $cita->id_mascota = $request->id_mascota;
-        $cita->id_veterinario = Auth::user()->id_usuario;
-        $cita->fecha_hora = $request->fecha_hora;
-        $cita->tipo_consulta = $request->tipo_consulta;
-        $cita->observaciones = $request->observaciones;
-        $cita->estado = $request->estado;
-        $cita->save();
+            // Obtener el veterinario disponible (primer usuario con rol veterinario)
+            $veterinario = Usuario::where('rol', 'veterinario')->first();
+            if (!$veterinario) {
+                return response()->json(['error' => 'No hay veterinarios disponibles'], 404);
+            }
 
-        return response()->json($cita, 201);
+            // Obtener el último ID de cita
+            $ultimaCita = Cita::orderBy('id_cita', 'desc')->first();
+            $nuevoId = $ultimaCita ? $ultimaCita->id_cita + 1 : 1;
+
+            $cita = new Cita();
+            $cita->id_cita = $nuevoId;
+            $cita->id_mascota = $request->id_mascota;
+            $cita->id_usuario = $veterinario->id_usuario;
+            $cita->fecha_hora = $request->fecha_hora;
+            $cita->tipo_consulta = $request->tipo_consulta;
+            $cita->motivo_consulta = $request->motivo_consulta;
+            $cita->estado = $request->estado;
+            $cita->save();
+
+            return response()->json($cita, 201);
+        } catch (\Exception $e) {
+            Log::error('Error al crear cita: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al crear la cita'], 500);
+        }
     }
 
     /**
@@ -78,17 +94,17 @@ class CitaController extends Controller
      */
     public function show($id)
     {
-        $cita = Cita::where('id_cita', $id)
-            ->where(function($query) {
-                $query->where('id_veterinario', Auth::user()->id_usuario)
-                    ->orWhereHas('mascota', function($q) {
-                        $q->where('id_usuario', Auth::user()->id_usuario);
-                    });
-            })
-            ->with(['mascota', 'tratamientos'])
-            ->firstOrFail();
-        
-        return response()->json($cita);
+        try {
+            $user = Auth::user();
+            $cita = Cita::whereHas('mascota', function($query) use ($user) {
+                $query->where('id_usuario', $user->id);
+            })->findOrFail($id);
+            
+            return response()->json($cita);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener cita: ' . $e->getMessage());
+            return response()->json(['error' => 'Cita no encontrada'], 404);
+        }
     }
 
     /**
@@ -104,25 +120,42 @@ class CitaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'fecha_hora' => 'required|date',
-            'tipo_consulta' => 'required|string',
-            'observaciones' => 'nullable|string',
-            'estado' => 'required|string'
-        ]);
+        try {
+            $request->validate([
+                'id_mascota' => 'required|exists:mascotas,id_mascota',
+                'fecha_hora' => 'required|date',
+                'tipo_consulta' => 'required|string',
+                'motivo_consulta' => 'required|string',
+                'estado' => 'required|string'
+            ]);
 
-        $cita = Cita::where('id_cita', $id)
-            ->where(function($query) {
-                $query->where('id_veterinario', Auth::user()->id_usuario)
-                    ->orWhereHas('mascota', function($q) {
-                        $q->where('id_usuario', Auth::user()->id_usuario);
-                    });
-            })
-            ->firstOrFail();
+            $user = Auth::user();
+            
+            // Verificar que la mascota pertenece al usuario
+            $mascota = Mascota::where('id_mascota', $request->id_mascota)
+                            ->where('id_usuario', $user->id)
+                            ->first();
+            
+            if (!$mascota) {
+                return response()->json(['error' => 'La mascota no pertenece al usuario'], 403);
+            }
 
-        $cita->update($request->all());
+            $cita = Cita::whereHas('mascota', function($query) use ($user) {
+                $query->where('id_usuario', $user->id);
+            })->findOrFail($id);
 
-        return response()->json($cita);
+            $cita->id_mascota = $request->id_mascota;
+            $cita->fecha_hora = $request->fecha_hora;
+            $cita->tipo_consulta = $request->tipo_consulta;
+            $cita->motivo_consulta = $request->motivo_consulta;
+            $cita->estado = $request->estado;
+            $cita->save();
+
+            return response()->json($cita);
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar cita: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al actualizar la cita'], 500);
+        }
     }
 
     /**
@@ -130,17 +163,17 @@ class CitaController extends Controller
      */
     public function destroy($id)
     {
-        $cita = Cita::where('id_cita', $id)
-            ->where(function($query) {
-                $query->where('id_veterinario', Auth::user()->id_usuario)
-                    ->orWhereHas('mascota', function($q) {
-                        $q->where('id_usuario', Auth::user()->id_usuario);
-                    });
-            })
-            ->firstOrFail();
-        
-        $cita->delete();
-
-        return response()->json(null, 204);
+        try {
+            $user = Auth::user();
+            $cita = Cita::whereHas('mascota', function($query) use ($user) {
+                $query->where('id_usuario', $user->id);
+            })->findOrFail($id);
+            
+            $cita->delete();
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar cita: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al eliminar la cita'], 500);
+        }
     }
 }

@@ -24,7 +24,7 @@ export const AppProvider = ({ children }) => {
             'Accept': 'application/json'
           };
 
-          if (user.role === 'admin') {
+          if (user.rol === 'admin') {
             // Fetch all data for admin
             const [petsRes, appointmentsRes, treatmentsRes, usersRes] = await Promise.all([
               fetch(`${API_URL}/mascotas`, { headers }),
@@ -54,9 +54,15 @@ export const AppProvider = ({ children }) => {
             if (!appointmentsRes.ok) throw new Error('Error fetching appointments');
             if (!treatmentsRes.ok) throw new Error('Error fetching treatments');
             
-            setPets(await petsRes.json());
-            setAppointments(await appointmentsRes.json());
-            setTreatments(await treatmentsRes.json());
+            const petsData = await petsRes.json();
+            const appointmentsData = await appointmentsRes.json();
+            const treatmentsData = await treatmentsRes.json();
+
+            // Filtrar mascotas por el usuario actual
+            const userPets = petsData.filter(pet => pet.id_usuario === user.id_usuario);
+            setPets(userPets);
+            setAppointments(appointmentsData);
+            setTreatments(treatmentsData);
           }
         }
       } catch (error) {

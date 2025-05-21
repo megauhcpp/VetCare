@@ -38,10 +38,13 @@ export const AuthProvider = ({ children }) => {
             if (response.data) {
                 setUser(response.data);
                 setIsAuthenticated(true);
+                // Guardar el ID del usuario en localStorage para uso posterior
+                localStorage.setItem('userId', response.data.id_usuario);
             }
         } catch (error) {
             console.error('Error fetching user:', error);
             localStorage.removeItem('token');
+            localStorage.removeItem('userId');
             delete axios.defaults.headers.common['Authorization'];
             setToken(null);
             setUser(null);
@@ -61,6 +64,7 @@ export const AuthProvider = ({ children }) => {
             if (response.data && response.data.token) {
                 const { token, usuario } = response.data;
                 localStorage.setItem('token', token);
+                localStorage.setItem('userId', usuario.id_usuario);
                 setToken(token);
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 setUser(usuario);
@@ -81,6 +85,7 @@ export const AuthProvider = ({ children }) => {
             if (response.data && response.data.token) {
                 const { token, usuario } = response.data;
                 localStorage.setItem('token', token);
+                localStorage.setItem('userId', usuario.id_usuario);
                 setToken(token);
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 setUser(usuario);
@@ -100,6 +105,7 @@ export const AuthProvider = ({ children }) => {
             console.error('Logout error:', error);
         } finally {
             localStorage.removeItem('token');
+            localStorage.removeItem('userId');
             delete axios.defaults.headers.common['Authorization'];
             setToken(null);
             setUser(null);
