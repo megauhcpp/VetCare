@@ -14,6 +14,7 @@ class Mascota extends Model
     public $timestamps = true;
 
     protected $fillable = [
+        'id_mascota',
         'id_usuario',
         'nombre',
         'especie',

@@ -64,15 +64,20 @@ class MascotaController extends Controller
                 return response()->json(['error' => 'Usuario no autenticado'], 401);
             }
 
-            $mascota = Mascota::create([
-                'id_usuario' => $user->id_usuario,
-                'nombre' => $request->nombre,
-                'especie' => $request->especie,
-                'raza' => $request->raza,
-                'fecha_nacimiento' => $request->fecha_nacimiento,
-                'sexo' => $request->sexo,
-                'notas' => $request->notas
-            ]);
+            // Obtener el último ID de mascota
+            $ultimaMascota = Mascota::orderBy('id_mascota', 'desc')->first();
+            $nuevoId = $ultimaMascota ? $ultimaMascota->id_mascota + 1 : 1;
+
+            $mascota = new Mascota();
+            $mascota->id_mascota = $nuevoId;
+            $mascota->id_usuario = $user->id_usuario;
+            $mascota->nombre = $request->nombre;
+            $mascota->especie = $request->especie;
+            $mascota->raza = $request->raza;
+            $mascota->fecha_nacimiento = $request->fecha_nacimiento;
+            $mascota->sexo = $request->sexo;
+            $mascota->notas = $request->notas;
+            $mascota->save();
 
             return response()->json($mascota, 201);
         } catch (\Exception $e) {
