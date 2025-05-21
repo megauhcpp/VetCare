@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Box,
   Typography,
@@ -13,14 +14,17 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  IconButton
+  IconButton,
+  Alert
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 const Pets = () => {
   const { pets, setPets } = useApp();
+  const { token, user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     nombre: '',
     especie: '',
@@ -29,6 +33,9 @@ const Pets = () => {
     sexo: '',
     notas: ''
   });
+
+  // Filtrar mascotas del usuario actual
+  const userPets = pets.filter(pet => pet.id_usuario === user?.id_usuario);
 
   const handleOpenDialog = (pet = null) => {
     if (pet) {
@@ -62,19 +69,36 @@ const Pets = () => {
 
   const handleSubmit = async () => {
     try {
+      if (!token) {
+        setError('No hay token de autenticación');
+        return;
+      }
+
+      if (!user) {
+        setError('No hay usuario autenticado');
+        return;
+      }
+
       const url = selectedPet 
-        ? `/api/mascotas/${selectedPet.id_mascota}`
-        : '/api/mascotas';
+        ? `http://localhost:8000/api/mascotas/${selectedPet.id_mascota}`
+        : 'http://localhost:8000/api/mascotas';
       
       const method = selectedPet ? 'PUT' : 'POST';
+      
+      const requestData = {
+        ...formData,
+        id_usuario: user.id_usuario
+      };
       
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestData),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -85,33 +109,55 @@ const Pets = () => {
           setPets([...pets, updatedPet]);
         }
         handleCloseDialog();
+        setError('');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Error al guardar la mascota');
       }
     } catch (error) {
       console.error('Error saving pet:', error);
+      setError('Error al guardar la mascota');
     }
   };
 
   const handleDelete = async (petId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta mascota?')) {
       try {
-        const response = await fetch(`/api/mascotas/${petId}`, {
+        if (!token) {
+          setError('No hay token de autenticación');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:8000/api/mascotas/${petId}`, {
           method: 'DELETE',
           headers: {
-            'Accept': 'application/json'
-          }
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          credentials: 'include'
         });
 
         if (response.ok) {
           setPets(pets.filter(p => p.id_mascota !== petId));
+          setError('');
+        } else {
+          const errorData = await response.json();
+          setError(errorData.message || 'Error al eliminar la mascota');
         }
       } catch (error) {
         console.error('Error deleting pet:', error);
+        setError('Error al eliminar la mascota');
       }
     }
   };
 
   return (
     <Box sx={{ p: 3 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Mis Mascotas</Typography>
         <Button
@@ -123,13 +169,13 @@ const Pets = () => {
         </Button>
       </Box>
 
-      {pets.length === 0 ? (
+      {userPets.length === 0 ? (
         <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
           No tienes mascotas registradas. ¡Agrega una nueva mascota!
         </Typography>
       ) : (
         <Grid container spacing={3}>
-          {pets.map((pet) => (
+          {userPets.map((pet) => (
             <Grid item xs={12} sm={6} md={4} key={pet.id_mascota}>
               <Card>
                 <CardContent>

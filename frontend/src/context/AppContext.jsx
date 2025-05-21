@@ -78,7 +78,8 @@ export const AppProvider = ({ children }) => {
     setTreatments,
     users,
     setUsers,
-    loading
+    loading,
+    token
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

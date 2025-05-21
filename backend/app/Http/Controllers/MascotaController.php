@@ -20,8 +20,19 @@ class MascotaController extends Controller
      */
     public function index()
     {
-        \Log::info('PRUEBA DE LOG');
-        throw new \Exception('Error de prueba');
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+
+            $mascotas = Mascota::where('id_usuario', $user->id_usuario)->get();
+            return response()->json($mascotas);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener mascotas:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Error al obtener las mascotas'], 500);
+        }
     }
 
     /**
