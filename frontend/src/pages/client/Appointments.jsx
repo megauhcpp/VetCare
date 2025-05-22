@@ -19,7 +19,7 @@ import {
   Chip,
   Stack
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon } from '@mui/icons-material';
 
 const Appointments = () => {
   const { appointments, pets, setAppointments } = useApp();
@@ -231,74 +231,133 @@ const Appointments = () => {
         </List>
       )}
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white',
+          py: 2,
+          px: 3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <EventIcon />
           {selectedAppointment ? 'Editar Cita' : 'Agendar Cita'}
         </DialogTitle>
-        <DialogContent>
-          <TextField
-            select
-            margin="dense"
-            label="Mascota"
-            fullWidth
-            value={formData.petId}
-            onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
-            required
-          >
-            {userPets.map((pet) => (
-              <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
-                {pet.nombre}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            margin="dense"
-            label="Fecha"
-            type="date"
-            fullWidth
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-            required
-          />
-          <TextField
-            margin="dense"
-            label="Hora"
-            type="time"
-            fullWidth
-            value={formData.time}
-            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-            required
-          />
-          <TextField
-            select
-            margin="dense"
-            label="Tipo de Consulta"
-            fullWidth
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-            required
-          >
-            <MenuItem value="consulta_general">Consulta General</MenuItem>
-            <MenuItem value="vacunacion">Vacunación</MenuItem>
-            <MenuItem value="cirugia">Cirugía</MenuItem>
-            <MenuItem value="urgencia">Urgencia</MenuItem>
-          </TextField>
-          <TextField
-            margin="dense"
-            label="Motivo de la Consulta"
-            fullWidth
-            multiline
-            rows={2}
-            value={formData.motivo}
-            onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
-            required
-          />
+        <DialogContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              select
+              label="Mascota"
+              fullWidth
+              value={formData.petId}
+              onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
+              required
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            >
+              {userPets.map((pet) => (
+                <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
+                  {pet.nombre}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Fecha"
+              type="date"
+              fullWidth
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              required
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            />
+            <TextField
+              label="Hora"
+              type="time"
+              fullWidth
+              value={formData.time}
+              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              required
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            />
+            <TextField
+              select
+              label="Tipo de Consulta"
+              fullWidth
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              required
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            >
+              <MenuItem value="consulta_general">Consulta General</MenuItem>
+              <MenuItem value="vacunacion">Vacunación</MenuItem>
+              <MenuItem value="cirugia">Cirugía</MenuItem>
+              <MenuItem value="urgencia">Urgencia</MenuItem>
+            </TextField>
+            <TextField
+              label="Motivo de la Consulta"
+              fullWidth
+              multiline
+              rows={2}
+              value={formData.motivo}
+              onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
+              required
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            />
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} color="primary">
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={handleCloseDialog}
+            variant="outlined"
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              '&:hover': {
+                bgcolor: 'grey.100'
+              }
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained"
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              '&:hover': {
+                bgcolor: 'primary.dark'
+              }
+            }}
+          >
             {selectedAppointment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

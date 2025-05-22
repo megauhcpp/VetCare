@@ -15,9 +15,12 @@ import {
   DialogActions,
   TextField,
   IconButton,
-  Alert
+  Alert,
+  MenuItem
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import PetsIcon from '@mui/icons-material/Pets';
+import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
 
 const Pets = () => {
   const { pets, setPets } = useApp();
@@ -151,6 +154,16 @@ const Pets = () => {
     }
   };
 
+  // Manejar el cambio de especie
+  const handleEspecieChange = (e) => {
+    const nuevaEspecie = e.target.value;
+    setFormData({
+      ...formData,
+      especie: nuevaEspecie,
+      raza: '' // Resetear la raza cuando cambia la especie
+    });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       {error && (
@@ -216,62 +229,151 @@ const Pets = () => {
         </Grid>
       )}
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white',
+          py: 2,
+          px: 3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <PetsIcon />
           {selectedPet ? 'Editar Mascota' : 'Agregar Mascota'}
         </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Nombre"
-            fullWidth
-            value={formData.nombre}
-            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Especie"
-            fullWidth
-            value={formData.especie}
-            onChange={(e) => setFormData({ ...formData, especie: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Raza"
-            fullWidth
-            value={formData.raza}
-            onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Fecha de Nacimiento"
-            type="date"
-            fullWidth
-            value={formData.fecha_nacimiento}
-            onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            margin="dense"
-            label="Sexo"
-            fullWidth
-            value={formData.sexo}
-            onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Notas"
-            fullWidth
-            multiline
-            rows={3}
-            value={formData.notas}
-            onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-          />
+        <DialogContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              autoFocus
+              label="Nombre"
+              fullWidth
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            />
+            <TextField
+              select
+              label="Especie"
+              fullWidth
+              value={formData.especie}
+              onChange={handleEspecieChange}
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            >
+              {Object.entries(categoriasEspecies).map(([categoria, especiesList]) => [
+                <MenuItem key={categoria} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
+                  {categoria}
+                </MenuItem>,
+                ...especiesList.map(especie => (
+                  <MenuItem key={especie} value={especie} sx={{ pl: 4 }}>
+                    {especie.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </MenuItem>
+                ))
+              ])}
+            </TextField>
+            <TextField
+              select
+              label="Raza"
+              fullWidth
+              value={formData.raza}
+              onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
+              variant="outlined"
+              disabled={!formData.especie}
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            >
+              {formData.especie && especies[formData.especie].map((raza) => (
+                <MenuItem key={raza} value={raza}>
+                  {raza}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Fecha de Nacimiento"
+              type="date"
+              fullWidth
+              value={formData.fecha_nacimiento}
+              onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            />
+            <TextField
+              select
+              label="Sexo"
+              fullWidth
+              value={formData.sexo}
+              onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            >
+              {sexos.map((sexo) => (
+                <MenuItem key={sexo} value={sexo}>
+                  {sexo}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Notas"
+              fullWidth
+              multiline
+              rows={3}
+              value={formData.notas}
+              onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            />
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} color="primary">
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={handleCloseDialog}
+            variant="outlined"
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              '&:hover': {
+                bgcolor: 'grey.100'
+              }
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained"
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              '&:hover': {
+                bgcolor: 'primary.dark'
+              }
+            }}
+          >
             {selectedPet ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
