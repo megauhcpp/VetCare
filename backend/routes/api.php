@@ -58,14 +58,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/appointments/{id}', [CitaController::class, 'destroy']);
     
     // Tratamientos (Español)
-    Route::apiResource('tratamientos', TratamientoController::class);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('tratamientos', TratamientoController::class);
+        Route::patch('/tratamientos/{id}/estado', [TratamientoController::class, 'updateEstado']);
+    });
     
     // Treatments (English)
-    Route::get('/treatments', [TratamientoController::class, 'index']);
-    Route::post('/treatments', [TratamientoController::class, 'store']);
-    Route::get('/treatments/{id}', [TratamientoController::class, 'show']);
-    Route::put('/treatments/{id}', [TratamientoController::class, 'update']);
-    Route::delete('/treatments/{id}', [TratamientoController::class, 'destroy']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/treatments', [TratamientoController::class, 'index']);
+        Route::post('/treatments', [TratamientoController::class, 'store']);
+        Route::get('/treatments/{id}', [TratamientoController::class, 'show']);
+        Route::put('/treatments/{id}', [TratamientoController::class, 'update']);
+        Route::delete('/treatments/{id}', [TratamientoController::class, 'destroy']);
+    });
     
     // Admin Routes
     Route::middleware('admin')->group(function () {

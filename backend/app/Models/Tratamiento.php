@@ -15,17 +15,27 @@ class Tratamiento extends Model
 
     protected $fillable = [
         'id_cita',
+        'nombre',
         'descripcion',
-        'fecha_realizacion',
-        'observaciones',
+        'precio',
+        'fecha_inicio',
+        'fecha_fin',
+        'estado'
     ];
 
     protected $casts = [
-        'fecha_realizacion' => 'date',
+        'fecha_inicio' => 'date',
+        'fecha_fin' => 'date',
+        'precio' => 'decimal:2'
     ];
 
     public function cita()
     {
-        return $this->belongsTo(Cita::class, 'id_cita');
+        return $this->belongsTo(Cita::class, 'id_cita', 'id_cita');
+    }
+
+    public function mascota()
+    {
+        return $this->hasOneThrough(Mascota::class, Cita::class, 'id_cita', 'id_mascota', 'id_cita', 'id_mascota');
     }
 }

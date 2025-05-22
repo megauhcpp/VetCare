@@ -27,12 +27,18 @@ const ClientDashboard = () => {
   const { pets, appointments, treatments } = useApp();
   const { user } = useAuth();
   const hoy = new Date();
+  
+  // Asegurarse de que treatments.data existe y es un array
+  const treatmentsData = treatments?.data || [];
+  
+  // Filtrar citas próximas
   const upcomingAppointments = appointments
-    .filter(a => new Date(a.date) >= hoy)
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .filter(a => new Date(a.fecha_hora) >= hoy)
+    .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
     .slice(0, 2);
-  const activeTreatments = treatments
-    .filter(t => t.status === 'active')
+    
+  const activeTreatments = treatmentsData
+    .filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso')
     .slice(0, 2);
 
   // Calendario
@@ -59,7 +65,7 @@ const ClientDashboard = () => {
   return (
     <Box sx={{ p: 3, background: '#f8f9fb', minHeight: '100vh' }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-        ¡Bienvenido/a, {user?.name}!
+        ¡Bienvenido/a, {user?.nombre}!
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
         Aquí tienes un resumen de la salud de tus mascotas y tus próximas citas.
@@ -76,7 +82,7 @@ const ClientDashboard = () => {
         <Card sx={{ flex: 1, minWidth: 220, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>Citas</Typography>
           <Typography variant="body2" color="text.secondary">Próximas citas</Typography>
-          <Typography variant="h4" sx={{ fontWeight: 700, my: 1 }}>{upcomingAppointments.length}</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 700, my: 1 }}>{appointments.filter(a => new Date(a.fecha_hora) >= hoy).length}</Typography>
           <Button href="/appointments" size="small" sx={{ pl: 0 }}>Ver todas las citas →</Button>
         </Card>
         <Card sx={{ flex: 1, minWidth: 220, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
@@ -102,19 +108,19 @@ const ClientDashboard = () => {
           <List>
             {upcomingAppointments.length > 0 ? (
               upcomingAppointments.map((appointment) => (
-                <ListItem key={appointment.id} sx={{ mb: 1, border: '1px solid #e5e7eb', borderRadius: 2, background: '#f9fafb' }}>
+                <ListItem key={appointment.id_cita} sx={{ mb: 1, border: '1px solid #e5e7eb', borderRadius: 2, background: '#f9fafb' }}>
                   <ListItemIcon>
                     <EventIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={<span style={{ fontWeight: 600 }}>{pets.find(p => p.id === appointment.petId)?.name || ''} - {appointment.type}</span>}
+                    primary={<span style={{ fontWeight: 600 }}>{appointment.mascota?.nombre || ''} - {appointment.tipo_consulta}</span>}
                     secondary={<>
-                      <span style={{ color: '#555' }}>{new Date(appointment.date).toLocaleDateString()} &nbsp;·&nbsp; {appointment.time}</span>
+                      <span style={{ color: '#555' }}>{new Date(appointment.fecha_hora).toLocaleDateString()} &nbsp;·&nbsp; {new Date(appointment.fecha_hora).toLocaleTimeString()}</span>
                     </>}
                   />
                   <Chip
-                    label={appointment.status === 'confirmed' ? 'confirmada' : appointment.status === 'pending' ? 'pendiente' : appointment.status}
-                    color={appointment.status === 'confirmed' ? 'success' : appointment.status === 'pending' ? 'warning' : 'default'}
+                    label={appointment.estado === 'confirmada' ? 'confirmada' : appointment.estado === 'pendiente' ? 'pendiente' : appointment.estado}
+                    color={appointment.estado === 'confirmada' ? 'success' : appointment.estado === 'pendiente' ? 'warning' : 'default'}
                     size="small"
                     sx={{ textTransform: 'capitalize' }}
                   />
@@ -167,19 +173,19 @@ const ClientDashboard = () => {
         <List>
           {activeTreatments.length > 0 ? (
             activeTreatments.map((treatment) => (
-              <ListItem key={treatment.id} sx={{ mb: 1, border: '1px solid #e5e7eb', borderRadius: 2, background: '#f9fafb', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <ListItem key={treatment.id_tratamiento} sx={{ mb: 1, border: '1px solid #e5e7eb', borderRadius: 2, background: '#f9fafb', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                   <ListItemIcon>
                     <TreatmentIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={<span style={{ fontWeight: 600 }}>{pets.find(p => p.id === treatment.petId)?.name || ''} - {treatment.name}</span>}
-                    secondary={<span style={{ color: '#555' }}>{treatment.description}</span>}
+                    primary={<span style={{ fontWeight: 600 }}>{treatment.cita.mascota.nombre} - {treatment.nombre}</span>}
+                    secondary={<span style={{ color: '#555' }}>{treatment.descripcion}</span>}
                   />
                 </Box>
-                {treatment.startDate && treatment.endDate && (
+                {treatment.fecha_inicio && treatment.fecha_fin && (
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 1, ml: 5 }}>
-                    {new Date(treatment.startDate).toLocaleDateString()} a {new Date(treatment.endDate).toLocaleDateString()}
+                    {new Date(treatment.fecha_inicio).toLocaleDateString()} a {new Date(treatment.fecha_fin).toLocaleDateString()}
                   </Typography>
                 )}
               </ListItem>

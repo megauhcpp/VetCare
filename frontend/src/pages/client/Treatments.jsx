@@ -16,16 +16,14 @@ import {
 import { LocalHospital as TreatmentIcon } from '@mui/icons-material';
 
 const Treatments = () => {
-  const { treatments, pets } = useApp();
+  const { treatments } = useApp();
+  
+  // Asegurarse de que treatments.data existe y es un array
+  const treatmentsData = treatments?.data || [];
 
-  const getPetName = (petId) => {
-    const pet = pets.find(p => p.id === petId);
-    return pet ? pet.name : 'Unknown';
-  };
-
-  const activeTreatments = treatments.filter(t => t.status === 'active');
-  const completedTreatments = treatments.filter(t => t.status === 'completed');
-  const cancelledTreatments = treatments.filter(t => t.status === 'cancelled');
+  const activeTreatments = treatmentsData.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso');
+  const completedTreatments = treatmentsData.filter(t => t.estado === 'completado');
+  const cancelledTreatments = treatmentsData.filter(t => t.estado === 'cancelado');
 
   return (
     <Box sx={{ p: 3 }}>
@@ -43,32 +41,32 @@ const Treatments = () => {
               <List>
                 {activeTreatments.length > 0 ? (
                   activeTreatments.map((treatment) => (
-                    <React.Fragment key={treatment.id}>
+                    <React.Fragment key={treatment.id_tratamiento}>
                       <ListItem>
                         <ListItemIcon>
                           <TreatmentIcon />
                         </ListItemIcon>
                         <ListItemText
-                          primary={treatment.name}
+                          primary={treatment.nombre}
                           secondary={
                             <>
                               <Typography component="span" variant="body2">
-                                {getPetName(treatment.petId)}
+                                {treatment.cita.mascota.nombre}
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                {treatment.description}
+                                {treatment.descripcion}
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                Inicio: {new Date(treatment.startDate).toLocaleDateString()}
+                                Inicio: {new Date(treatment.fecha_inicio).toLocaleDateString()}
                               </Typography>
                             </>
                           }
                         />
                         <Chip
-                          label="Activo"
-                          color="primary"
+                          label={treatment.estado === 'pendiente' ? 'Pendiente' : 'En Progreso'}
+                          color={treatment.estado === 'pendiente' ? 'warning' : 'primary'}
                           size="small"
                         />
                       </ListItem>
@@ -94,25 +92,25 @@ const Treatments = () => {
               <List>
                 {completedTreatments.length > 0 ? (
                   completedTreatments.map((treatment) => (
-                    <React.Fragment key={treatment.id}>
+                    <React.Fragment key={treatment.id_tratamiento}>
                       <ListItem>
                         <ListItemIcon>
                           <TreatmentIcon />
                         </ListItemIcon>
                         <ListItemText
-                          primary={treatment.name}
+                          primary={treatment.nombre}
                           secondary={
                             <>
                               <Typography component="span" variant="body2">
-                                {getPetName(treatment.petId)}
+                                {treatment.cita.mascota.nombre}
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                {treatment.description}
+                                {treatment.descripcion}
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                Completado: {new Date(treatment.endDate).toLocaleDateString()}
+                                Completado: {new Date(treatment.fecha_fin).toLocaleDateString()}
                               </Typography>
                             </>
                           }
@@ -145,25 +143,25 @@ const Treatments = () => {
               <List>
                 {cancelledTreatments.length > 0 ? (
                   cancelledTreatments.map((treatment) => (
-                    <React.Fragment key={treatment.id}>
+                    <React.Fragment key={treatment.id_tratamiento}>
                       <ListItem>
                         <ListItemIcon>
                           <TreatmentIcon />
                         </ListItemIcon>
                         <ListItemText
-                          primary={treatment.name}
+                          primary={treatment.nombre}
                           secondary={
                             <>
                               <Typography component="span" variant="body2">
-                                {getPetName(treatment.petId)}
+                                {treatment.cita.mascota.nombre}
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                {treatment.description}
+                                {treatment.descripcion}
                               </Typography>
                               <br />
                               <Typography component="span" variant="body2" color="text.secondary">
-                                Cancelado: {new Date(treatment.endDate).toLocaleDateString()}
+                                Cancelado: {new Date(treatment.fecha_fin).toLocaleDateString()}
                               </Typography>
                             </>
                           }

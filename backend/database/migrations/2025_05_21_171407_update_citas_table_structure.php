@@ -13,22 +13,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('citas', function (Blueprint $table) {
-            // Intentamos eliminar la restricción de clave foránea si existe
-            try {
+            // Primero eliminamos la columna id_veterinario si existe
+            if (Schema::hasColumn('citas', 'id_veterinario')) {
                 $table->dropForeign(['id_veterinario']);
-            } catch (\Exception $e) {
-                // Si falla, asumimos que la restricción no existe y continuamos
+                $table->dropColumn('id_veterinario');
             }
             
-            // Renombramos las columnas
-            $table->renameColumn('id_veterinario', 'id_usuario');
-            $table->renameColumn('observaciones', 'motivo_consulta');
+            // Luego agregamos la nueva columna id_usuario si no existe
+            if (!Schema::hasColumn('citas', 'id_usuario')) {
+                $table->foreignId('id_usuario')->after('id_mascota')->constrained('usuarios', 'id_usuario');
+            }
             
-            // Hacemos que motivo_consulta sea requerido
-            $table->text('motivo_consulta')->nullable(false)->change();
-            
-            // Agregamos la nueva restricción de clave foránea
-            $table->foreign('id_usuario')->references('id_usuario')->on('usuarios');
+            // Renombramos la columna observaciones a motivo_consulta si existe
+            if (Schema::hasColumn('citas', 'observaciones')) {
+                $table->renameColumn('observaciones', 'motivo_consulta');
+            }
         });
     }
 
@@ -38,22 +37,21 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('citas', function (Blueprint $table) {
-            // Intentamos eliminar la restricción de clave foránea si existe
-            try {
+            // Eliminamos la columna id_usuario si existe
+            if (Schema::hasColumn('citas', 'id_usuario')) {
                 $table->dropForeign(['id_usuario']);
-            } catch (\Exception $e) {
-                // Si falla, asumimos que la restricción no existe y continuamos
+                $table->dropColumn('id_usuario');
             }
             
-            // Revertimos los nombres de las columnas
-            $table->renameColumn('id_usuario', 'id_veterinario');
-            $table->renameColumn('motivo_consulta', 'observaciones');
+            // Agregamos la columna id_veterinario si no existe
+            if (!Schema::hasColumn('citas', 'id_veterinario')) {
+                $table->foreignId('id_veterinario')->after('id_mascota')->constrained('usuarios', 'id_usuario');
+            }
             
-            // Hacemos que observaciones sea nullable
-            $table->text('observaciones')->nullable()->change();
-            
-            // Restauramos la restricción de clave foránea original
-            $table->foreign('id_veterinario')->references('id_usuario')->on('usuarios');
+            // Renombramos la columna motivo_consulta a observaciones si existe
+            if (Schema::hasColumn('citas', 'motivo_consulta')) {
+                $table->renameColumn('motivo_consulta', 'observaciones');
+            }
         });
     }
 };

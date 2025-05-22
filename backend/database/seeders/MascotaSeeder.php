@@ -9,11 +9,9 @@ class MascotaSeeder extends Seeder
 {
     public function run(): void
     {
-        // Usuario 1 no tiene mascotas
-
-        // Usuario 2 tiene las dos primeras mascotas
+        // Mascota para Gabriel (usuario 5)
         Mascota::create([
-            'id_usuario' => 2,
+            'id_usuario' => 5,
             'nombre' => 'Luna',
             'especie' => 'Perro',
             'raza' => 'Labrador',
@@ -22,8 +20,9 @@ class MascotaSeeder extends Seeder
             'notas' => 'Mascota muy activa'
         ]);
 
+        // Mascota para Joan (usuario 6)
         Mascota::create([
-            'id_usuario' => 2,
+            'id_usuario' => 6,
             'nombre' => 'Rocky',
             'especie' => 'Perro',
             'raza' => 'Pastor Alemán',
@@ -32,13 +31,13 @@ class MascotaSeeder extends Seeder
             'notas' => 'Mascota tranquila'
         ]);
 
-        // Usuario 3 tiene la última mascota
+        // Mascota para Jesús (usuario 7)
         Mascota::create([
-            'id_usuario' => 3,
+            'id_usuario' => 7,
             'nombre' => 'Milo',
             'especie' => 'Gato',
             'raza' => 'Siamés',
-            'fecha_nacimiento' => '2021-08-10',
+            'fecha_nacimiento' => '2021-01-10',
             'sexo' => 'Macho',
             'notas' => 'Mascota juguetona'
         ]);
