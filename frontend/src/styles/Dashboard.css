@@ -328,3 +328,16 @@
       padding: 0;
     }
   }
+
+.dashboard-content {
+  margin-left: 250px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 0;
+  background: transparent;
+}

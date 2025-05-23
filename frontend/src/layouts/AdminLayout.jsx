@@ -6,16 +6,16 @@ import { useAuth } from '../context/AuthContext';
 
 const SIDEBAR_WIDTH = 250;
 
-const ClientLayout = () => {
+const AdminLayout = () => {
   const { user } = useAuth();
-  
+
   return (
     <div className="dashboard-layout" style={{ minHeight: '100vh', display: 'flex' }}>
       <div style={{ width: SIDEBAR_WIDTH, flexShrink: 0 }}>
-        <Sidebar isAdmin={false} />
+        <Sidebar isAdmin={true} />
       </div>
       <div className="dashboard-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'auto' }}>
-        <DashboardHeader isAdmin={false} />
+        <DashboardHeader isAdmin={true} />
         <main className="dashboard-main" style={{ flex: 1, overflow: 'auto', padding: 0 }}>
           <Outlet />
         </main>
@@ -24,4 +24,4 @@ const ClientLayout = () => {
   );
 };
 
-export default ClientLayout; 
+export default AdminLayout; 

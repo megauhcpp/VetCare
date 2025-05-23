@@ -16,14 +16,23 @@ import {
   TextField,
   IconButton,
   Alert,
-  MenuItem
+  MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import PetsIcon from '@mui/icons-material/Pets';
 import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
 
 const Pets = () => {
-  const { pets, setPets } = useApp();
+  const { pets, setPets, addPet, updatePet, deletePet } = useApp();
   const { token, user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
@@ -36,6 +45,15 @@ const Pets = () => {
     sexo: '',
     notas: ''
   });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  if (!Array.isArray(pets)) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   // Filtrar mascotas del usuario actual
   const userPets = pets.filter(pet => pet.id_usuario === user?.id_usuario);
@@ -113,6 +131,7 @@ const Pets = () => {
         }
         handleCloseDialog();
         setError('');
+        setSnackbar({ open: true, message: 'Mascota guardada correctamente', severity: 'success' });
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Error al guardar la mascota');
@@ -143,6 +162,7 @@ const Pets = () => {
         if (response.ok) {
           setPets(pets.filter(p => p.id_mascota !== petId));
           setError('');
+          setSnackbar({ open: true, message: 'Mascota eliminada correctamente', severity: 'success' });
         } else {
           const errorData = await response.json();
           setError(errorData.message || 'Error al eliminar la mascota');
@@ -378,6 +398,16 @@ const Pets = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

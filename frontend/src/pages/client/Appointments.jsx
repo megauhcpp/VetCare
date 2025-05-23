@@ -17,12 +17,22 @@ import {
   TextField,
   MenuItem,
   Chip,
-  Stack
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Snackbar,
+  Alert,
+  CircularProgress
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon, Add as AddIcon } from '@mui/icons-material';
 
 const Appointments = () => {
-  const { appointments, pets, setAppointments } = useApp();
+  const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment } = useApp();
   const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -31,8 +41,18 @@ const Appointments = () => {
     date: '',
     time: '',
     type: '',
-    motivo: ''
+    motivo: '',
+    estado: 'pendiente'
   });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  if (!Array.isArray(appointments) || !Array.isArray(pets)) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   // Filtrar las mascotas del usuario actual
   const userPets = pets.filter(pet => pet.id_usuario === user?.id_usuario);
@@ -50,7 +70,8 @@ const Appointments = () => {
         date: appointment.fecha_hora.split('T')[0],
         time: appointment.fecha_hora.split('T')[1].substring(0, 5),
         type: appointment.tipo_consulta,
-        motivo: appointment.motivo_consulta || ''
+        motivo: appointment.motivo_consulta || '',
+        estado: appointment.estado
       });
     } else {
       setSelectedAppointment(null);
@@ -59,7 +80,8 @@ const Appointments = () => {
         date: '',
         time: '',
         type: '',
-        motivo: ''
+        motivo: '',
+        estado: 'pendiente'
       });
     }
     setOpenDialog(true);
@@ -89,7 +111,7 @@ const Appointments = () => {
         fecha_hora: `${formData.date}T${formData.time}:00`,
         tipo_consulta: formData.type,
         motivo_consulta: formData.motivo,
-        estado: 'pendiente'
+        estado: formData.estado
       };
 
       const response = await fetch(url, {
@@ -110,12 +132,15 @@ const Appointments = () => {
           setAppointments([...appointments, updatedAppointment]);
         }
         handleCloseDialog();
+        setSnackbar({ open: true, message: 'Cita guardada correctamente', severity: 'success' });
       } else {
         const errorData = await response.json();
         console.error('Error al guardar la cita:', errorData);
+        setSnackbar({ open: true, message: 'Error al guardar la cita', severity: 'error' });
       }
     } catch (error) {
       console.error('Error saving appointment:', error);
+      setSnackbar({ open: true, message: 'Error al guardar la cita', severity: 'error' });
     }
   };
 
@@ -138,11 +163,14 @@ const Appointments = () => {
 
         if (response.ok) {
           setAppointments(appointments.filter(a => a.id_cita !== appointmentId));
+          setSnackbar({ open: true, message: 'Cita eliminada correctamente', severity: 'success' });
         } else {
           console.error('Error al eliminar la cita:', await response.text());
+          setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
         }
       } catch (error) {
         console.error('Error deleting appointment:', error);
+        setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
       }
     }
   };
@@ -331,6 +359,22 @@ const Appointments = () => {
                 sx: { borderRadius: 2 }
               }}
             />
+            <TextField
+              select
+              label="Estado"
+              fullWidth
+              value={formData.estado}
+              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+              required
+              variant="outlined"
+              InputProps={{
+                sx: { borderRadius: 2 }
+              }}
+            >
+              <MenuItem value="pendiente">Pendiente</MenuItem>
+              <MenuItem value="confirmada">Confirmada</MenuItem>
+              <MenuItem value="cancelada">Cancelada</MenuItem>
+            </TextField>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
@@ -362,6 +406,16 @@ const Appointments = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -38,10 +38,17 @@ export const AppProvider = ({ children }) => {
             if (!treatmentsRes.ok) throw new Error('Error fetching treatments');
             if (!usersRes.ok) throw new Error('Error fetching users');
             
-            setPets(await petsRes.json());
-            setAppointments(await appointmentsRes.json());
-            setTreatments(await treatmentsRes.json());
-            setUsers(await usersRes.json());
+            const petsData = await petsRes.json();
+            const appointmentsData = await appointmentsRes.json();
+            const treatmentsData = await treatmentsRes.json();
+            const usersData = await usersRes.json();
+
+            console.log('ADMIN DATA:', { petsData, appointmentsData, treatmentsData, usersData });
+
+            setPets(petsData);
+            setAppointments(appointmentsData);
+            setTreatments(Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []));
+            setUsers(usersData);
           } else {
             // Fetch only user-specific data for clients
             const [petsRes, appointmentsRes, treatmentsRes] = await Promise.all([
@@ -58,11 +65,14 @@ export const AppProvider = ({ children }) => {
             const appointmentsData = await appointmentsRes.json();
             const treatmentsData = await treatmentsRes.json();
 
+            console.log('CLIENTE DATA RAW:', { petsData, appointmentsData, treatmentsData });
+
             // Filtrar mascotas por el usuario actual
             const userPets = petsData.filter(pet => pet.id_usuario === user.id_usuario);
+            console.log('CLIENTE userPets:', userPets);
             setPets(userPets);
             setAppointments(appointmentsData);
-            setTreatments(treatmentsData);
+            setTreatments(Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []));
           }
         }
       } catch (error) {

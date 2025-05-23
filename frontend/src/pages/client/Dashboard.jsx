@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -13,7 +13,8 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import {
   Pets as PetsIcon,
@@ -27,22 +28,33 @@ const ClientDashboard = () => {
   const { pets, appointments, treatments } = useApp();
   const { user } = useAuth();
   const hoy = new Date();
-  
-  // Asegurarse de que treatments.data existe y es un array
-  const treatmentsData = treatments?.data || [];
-  
-  // Filtrar citas próximas
-  const upcomingAppointments = appointments
-    .filter(a => new Date(a.fecha_hora) >= hoy)
-    .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
-    .slice(0, 2);
-    
-  const activeTreatments = treatmentsData
-    .filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso')
-    .slice(0, 2);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Mover hooks antes del return temprano
+  const treatmentsData = useMemo(() => treatments?.data || [], [treatments]);
+  const upcomingAppointments = useMemo(() =>
+    Array.isArray(appointments)
+      ? appointments
+        .filter(a => new Date(a.fecha_hora) >= hoy)
+        .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+        .slice(0, 2)
+      : []
+  , [appointments]);
+  const activeTreatments = useMemo(() =>
+    Array.isArray(treatmentsData)
+      ? treatmentsData.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso').slice(0, 2)
+      : []
+  , [treatmentsData]);
+
+  if (!Array.isArray(pets) || !Array.isArray(appointments) || !Array.isArray(treatments)) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   // Calendario
-  const [currentDate, setCurrentDate] = React.useState(new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
@@ -62,10 +74,46 @@ const ClientDashboard = () => {
   while (week.length < 7) week.push(null);
   weeks.push(week);
 
+  const stats = [
+    {
+      title: 'Mis Mascotas',
+      subtitle: 'Total de mascotas registradas',
+      value: pets.length,
+      icon: <PetsIcon sx={{ fontSize: 40 }} />,
+      link: '/pets',
+      linkText: 'VER TODAS LAS MASCOTAS →'
+    },
+    {
+      title: 'Citas',
+      subtitle: 'Próximas citas',
+      value: appointments.length,
+      icon: <EventIcon sx={{ fontSize: 40 }} />,
+      link: '/appointments',
+      linkText: 'VER TODAS LAS CITAS →'
+    },
+    {
+      title: 'Tratamientos',
+      subtitle: 'Tratamientos activos',
+      value: treatments.length,
+      icon: <TreatmentIcon sx={{ fontSize: 40 }} />,
+      link: '/treatments',
+      linkText: 'VER TODOS LOS TRATAMIENTOS →'
+    },
+    {
+      title: 'Nueva Cita',
+      subtitle: 'Programar una visita',
+      value: null,
+      icon: null,
+      link: '/appointments',
+      linkText: 'RESERVAR AHORA',
+      isButton: true
+    }
+  ];
+
   return (
     <Box sx={{ p: 3, background: '#f8f9fb', minHeight: '100vh' }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-        ¡Bienvenido/a, {user?.nombre}!
+        ¡Bienvenido/a, {user?.nombre || 'Cliente'}!
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
         Aquí tienes un resumen de la salud de tus mascotas y tus próximas citas.
@@ -73,29 +121,42 @@ const ClientDashboard = () => {
 
       {/* Bloques resumen en display flex */}
       <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
-        <Card sx={{ flex: 1, minWidth: 220, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>Mis Mascotas</Typography>
-          <Typography variant="body2" color="text.secondary">Total de mascotas registradas</Typography>
-          <Typography variant="h4" sx={{ fontWeight: 700, my: 1 }}>{pets.length}</Typography>
-          <Button href="/pets" size="small" sx={{ pl: 0 }}>Ver todas las mascotas →</Button>
-        </Card>
-        <Card sx={{ flex: 1, minWidth: 220, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>Citas</Typography>
-          <Typography variant="body2" color="text.secondary">Próximas citas</Typography>
-          <Typography variant="h4" sx={{ fontWeight: 700, my: 1 }}>{appointments.filter(a => new Date(a.fecha_hora) >= hoy).length}</Typography>
-          <Button href="/appointments" size="small" sx={{ pl: 0 }}>Ver todas las citas →</Button>
-        </Card>
-        <Card sx={{ flex: 1, minWidth: 220, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>Tratamientos</Typography>
-          <Typography variant="body2" color="text.secondary">Tratamientos activos</Typography>
-          <Typography variant="h4" sx={{ fontWeight: 700, my: 1 }}>{activeTreatments.length}</Typography>
-          <Button href="/treatments" size="small" sx={{ pl: 0 }}>Ver todos los tratamientos →</Button>
-        </Card>
-        <Card sx={{ flex: 1, minWidth: 220, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>Nueva Cita</Typography>
-          <Typography variant="body2" color="text.secondary">Programar una visita</Typography>
-          <Button href="/appointments" variant="contained" fullWidth sx={{ mt: 2 }}>Reservar ahora</Button>
-        </Card>
+        {stats.map((stat, index) => (
+          <Box
+            key={index}
+            sx={{
+              flex: 1,
+              minWidth: 260,
+              maxWidth: 370,
+              height: 180,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #e5e7eb',
+              borderRadius: 2,
+              background: '#fff',
+              boxShadow: 'none',
+              px: 3,
+              py: 2,
+              transition: 'box-shadow 0.2s',
+              '&:hover': { boxShadow: 3 }
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 700, textAlign: 'center', mb: 0.5, color: 'text.primary' }}>{stat.title}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 1 }}>{stat.subtitle}</Typography>
+            {typeof stat.value !== 'undefined' && stat.value !== null && (
+              <Typography variant="h3" sx={{ fontWeight: 700, my: 0.5, textAlign: 'center', color: 'text.primary' }}>{stat.value}</Typography>
+            )}
+            {stat.isButton ? (
+              <Button href={stat.link} variant="contained" fullWidth sx={{ mt: 1, py: 1.2, fontSize: '1rem', fontWeight: 600, borderRadius: 1 }}>
+                {stat.linkText}
+              </Button>
+            ) : (
+              <Button href={stat.link} size="small" sx={{ pl: 0, fontWeight: 600 }}>{stat.linkText}</Button>
+            )}
+          </Box>
+        ))}
       </Box>
 
       {/* Bloques de visitas programadas y calendario */}

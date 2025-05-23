@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import {
   Box,
-  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
   Table,
   TableBody,
   TableCell,
@@ -10,33 +14,40 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Button,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
+  Alert,
+  Snackbar,
+  FormControl,
+  InputLabel,
+  Select,
   MenuItem
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { useApp } from '../../context/AppContext';
 
-const Users = () => {
-  const { users, setUsers } = useApp();
-  const [openDialog, setOpenDialog] = useState(false);
+const AdminUsers = () => {
+  const { users, addUser, updateUser, deleteUser } = useApp();
+  const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'client'
   });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  const handleOpenDialog = (user = null) => {
+  const handleOpen = (user = null) => {
     if (user) {
       setSelectedUser(user);
       setFormData({
         name: user.name,
         email: user.email,
+        password: '',
         role: user.role
       });
     } else {
@@ -44,73 +55,80 @@ const Users = () => {
       setFormData({
         name: '',
         email: '',
+        password: '',
         role: 'client'
       });
     }
-    setOpenDialog(true);
+    setOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
+  const handleClose = () => {
+    setOpen(false);
     setSelectedUser(null);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      role: 'client'
+    });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const url = selectedUser 
-        ? `/api/users/${selectedUser.id}`
-        : '/api/users';
-      
-      const method = selectedUser ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const updatedUser = await response.json();
-        if (selectedUser) {
-          setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
-        } else {
-          setUsers([...users, updatedUser]);
-        }
-        handleCloseDialog();
+      if (selectedUser) {
+        await updateUser(selectedUser.id, formData);
+        setSnackbar({
+          open: true,
+          message: 'Usuario actualizado correctamente',
+          severity: 'success'
+        });
+      } else {
+        await addUser(formData);
+        setSnackbar({
+          open: true,
+          message: 'Usuario creado correctamente',
+          severity: 'success'
+        });
       }
+      handleClose();
     } catch (error) {
-      console.error('Error saving user:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al procesar el usuario',
+        severity: 'error'
+      });
     }
   };
 
-  const handleDelete = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        const response = await fetch(`/api/users/${userId}`, {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          setUsers(users.filter(u => u.id !== userId));
-        }
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
+  const handleDelete = async (id) => {
+    try {
+      await deleteUser(id);
+      setSnackbar({
+        open: true,
+        message: 'Usuario eliminado correctamente',
+        severity: 'success'
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Error al eliminar el usuario',
+        severity: 'error'
+      });
     }
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Users Management</Typography>
+        <h1>Gestión de Usuarios</h1>
         <Button
           variant="contained"
           color="primary"
-          onClick={() => handleOpenDialog()}
+          startIcon={<AddIcon />}
+          onClick={() => handleOpen()}
         >
-          Add New User
+          Nuevo Usuario
         </Button>
       </Box>
 
@@ -118,10 +136,10 @@ const Users = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
+              <TableCell>Nombre</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>Rol</TableCell>
+              <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -129,12 +147,12 @@ const Users = () => {
               <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>{user.role === 'admin' ? 'Administrador' : 'Cliente'}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleOpenDialog(user)}>
+                  <IconButton onClick={() => handleOpen(user)} color="primary">
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(user.id)}>
+                  <IconButton onClick={() => handleDelete(user.id)} color="error">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -144,48 +162,75 @@ const Users = () => {
         </Table>
       </TableContainer>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <Dialog open={open} onClose={handleClose}>
         <DialogTitle>
-          {selectedUser ? 'Edit User' : 'Add New User'}
+          {selectedUser ? 'Editar Usuario' : 'Nuevo Usuario'}
         </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Name"
-            fullWidth
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Email"
-            type="email"
-            fullWidth
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Role"
-            select
-            fullWidth
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-          >
-            <MenuItem value="admin">Admin</MenuItem>
-            <MenuItem value="client">Client</MenuItem>
-          </TextField>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Nombre"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Contraseña"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              margin="normal"
+              required={!selectedUser}
+              helperText={selectedUser ? "Dejar en blanco para mantener la contraseña actual" : ""}
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Rol</InputLabel>
+              <Select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                label="Rol"
+                required
+              >
+                <MenuItem key="admin" value="admin">Administrador</MenuItem>
+                <MenuItem key="client" value="client">Cliente</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} color="primary">
-            {selectedUser ? 'Update' : 'Create'}
+          <Button onClick={handleClose}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            {selectedUser ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
 
-export default Users; 
+export default AdminUsers; 

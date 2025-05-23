@@ -4,7 +4,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import AdminLayout from './layouts/AdminLayout';
+import ClientLayout from './layouts/ClientLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminPets from './pages/admin/Pets';
@@ -17,21 +18,30 @@ import ClientPets from './pages/client/Pets';
 import ClientAppointments from './pages/client/Appointments';
 import ClientTreatments from './pages/client/Treatments';
 import ClientProfile from './pages/client/Profile';
-import ClientLayout from './layouts/ClientLayout';
 
 // Componente de ruta protegida
-const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  const { isAuthenticated, loading, user } = useAuth();
 
-    if (loading) {
-        return <div className="loading">Cargando...</div>;
-    }
+  if (loading) {
+    return <div className="loading">Cargando...</div>;
+  }
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" />;
-    }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
-    return children;
+  if (requireAdmin && user?.rol !== 'admin') {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
+
+// Componente para redirigir según el rol
+const RootRedirect = () => {
+  const { user } = useAuth();
+  return user?.rol === 'admin' ? <Navigate to="/admin/dashboard" /> : <Navigate to="/dashboard" />;
 };
 
 const App = () => {
@@ -45,52 +55,35 @@ const App = () => {
             <Route path="/register" element={<Register />} />
             
             {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute>
-                <AdminDashboard />
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminLayout />
               </ProtectedRoute>
-            } />
-            <Route path="/admin/users" element={
-              <ProtectedRoute>
-                <AdminUsers />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/pets" element={
-              <ProtectedRoute>
-                <AdminPets />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/treatments" element={
-              <ProtectedRoute>
-                <AdminTreatments />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/appointments" element={
-              <ProtectedRoute>
-                <AdminAppointments />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/settings" element={
-              <ProtectedRoute>
-                <AdminSettings />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/profile" element={
-              <ProtectedRoute>
-                <AdminProfile />
-              </ProtectedRoute>
-            } />
-            
-            {/* Client Layout & Routes */}
-            <Route element={<ClientLayout />}>
-              <Route path="/dashboard" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
-              <Route path="/pets" element={<ProtectedRoute><ClientPets /></ProtectedRoute>} />
-              <Route path="/appointments" element={<ProtectedRoute><ClientAppointments /></ProtectedRoute>} />
-              <Route path="/treatments" element={<ProtectedRoute><ClientTreatments /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><ClientProfile /></ProtectedRoute>} />
+            }>
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="pets" element={<AdminPets />} />
+              <Route path="treatments" element={<AdminTreatments />} />
+              <Route path="appointments" element={<AdminAppointments />} />
+              <Route path="settings" element={<AdminSettings />} />
+              <Route path="profile" element={<AdminProfile />} />
             </Route>
-            {/* Default Route */}
-            <Route path="/" element={<Navigate to="/dashboard" />} />
+            
+            {/* Client Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <ClientLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={<ClientDashboard />} />
+              <Route path="pets" element={<ClientPets />} />
+              <Route path="appointments" element={<ClientAppointments />} />
+              <Route path="treatments" element={<ClientTreatments />} />
+              <Route path="profile" element={<ClientProfile />} />
+            </Route>
+
+            {/* Redirect root to appropriate dashboard */}
+            <Route path="/" element={<RootRedirect />} />
           </Routes>
         </Router>
       </AppProvider>

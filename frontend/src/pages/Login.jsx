@@ -31,7 +31,12 @@ const Login = () => {
             });
             
             if (user) {
-                navigate('/dashboard');
+                // Redirigir según el rol del usuario
+                if (user.rol === 'admin') {
+                    navigate('/admin/dashboard');
+                } else {
+                    navigate('/dashboard');
+                }
             }
         } catch (err) {
             console.error('Error en login:', err);

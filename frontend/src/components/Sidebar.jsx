@@ -1,20 +1,31 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, User, Calendar, PawPrint, Stethoscope } from 'lucide-react';
+import { LogOut, User, Calendar, PawPrint, Stethoscope, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isAdmin }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const navItems = [
+  const adminNavItems = [
+    { label: 'Dashboard', icon: <Calendar />, to: '/admin/dashboard' },
+    { label: 'Mascotas', icon: <PawPrint />, to: '/admin/pets' },
+    { label: 'Citas', icon: <Calendar />, to: '/admin/appointments' },
+    { label: 'Tratamientos', icon: <Stethoscope />, to: '/admin/treatments' },
+    { label: 'Usuarios', icon: <Users />, to: '/admin/users' },
+    { label: 'Perfil', icon: <User />, to: '/admin/profile' },
+  ];
+
+  const clientNavItems = [
     { label: 'Dashboard', icon: <Calendar />, to: '/dashboard' },
     { label: 'Mis Mascotas', icon: <PawPrint />, to: '/pets' },
     { label: 'Citas', icon: <Calendar />, to: '/appointments' },
     { label: 'Tratamientos', icon: <Stethoscope />, to: '/treatments' },
     { label: 'Perfil', icon: <User />, to: '/profile' },
   ];
+
+  const navItems = isAdmin ? adminNavItems : clientNavItems;
 
   return (
     <aside className="sidebar">
@@ -30,7 +41,7 @@ const Sidebar = () => {
         </div>
         <div className="user-info">
           <span className="user-name">{user?.nombre || 'Usuario'}</span>
-          <span className="user-role">{user?.rol || 'Cliente'}</span>
+          <span className="user-role">{isAdmin ? 'Administrador' : 'Cliente'}</span>
         </div>
       </div>
       <nav className="sidebar-nav">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Box,
@@ -11,19 +11,65 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
-  Chip
+  Chip,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Snackbar,
+  Alert,
+  CircularProgress
 } from '@mui/material';
-import { LocalHospital as TreatmentIcon } from '@mui/icons-material';
+import { LocalHospital as TreatmentIcon, Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 
 const Treatments = () => {
-  const { treatments } = useApp();
-  
-  // Asegurarse de que treatments.data existe y es un array
-  const treatmentsData = treatments?.data || [];
+  const { treatments, addTreatment, updateTreatment, deleteTreatment } = useApp();
+  const [open, setOpen] = useState(false);
+  const [selectedTreatment, setSelectedTreatment] = useState(null);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    descripcion: '',
+    duracion: '',
+    costo: '',
+    estado: 'activo'
+  });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const activeTreatments = treatmentsData.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso');
-  const completedTreatments = treatmentsData.filter(t => t.estado === 'completado');
-  const cancelledTreatments = treatmentsData.filter(t => t.estado === 'cancelado');
+  // Mover hooks antes del return temprano
+  const treatmentsData = useMemo(() => treatments?.data || [], [treatments]);
+  const activeTreatments = useMemo(() =>
+    Array.isArray(treatmentsData)
+      ? treatmentsData.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso')
+      : []
+  , [treatmentsData]);
+  const completedTreatments = useMemo(() =>
+    Array.isArray(treatmentsData)
+      ? treatmentsData.filter(t => t.estado === 'completado')
+      : []
+  , [treatmentsData]);
+  const cancelledTreatments = useMemo(() =>
+    Array.isArray(treatmentsData)
+      ? treatmentsData.filter(t => t.estado === 'cancelado')
+      : []
+  , [treatmentsData]);
+
+  if (!Array.isArray(treatments)) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 3 }}>

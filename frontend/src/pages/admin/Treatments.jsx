@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import {
   Box,
-  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
   Table,
   TableBody,
   TableCell,
@@ -10,124 +14,134 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Button,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
+  Alert,
+  Snackbar,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  MenuItem,
+  CircularProgress
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { useApp } from '../../context/AppContext';
 
-const Treatments = () => {
-  const { treatments, setTreatments, pets } = useApp();
-  const [openDialog, setOpenDialog] = useState(false);
+const AdminTreatments = () => {
+  const { treatments, addTreatment, updateTreatment, deleteTreatment } = useApp();
+  const [open, setOpen] = useState(false);
   const [selectedTreatment, setSelectedTreatment] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    petId: '',
-    status: 'active',
-    startDate: '',
-    endDate: ''
+    nombre: '',
+    descripcion: '',
+    duracion: '',
+    costo: '',
+    estado: 'activo'
+  });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
   });
 
-  const handleOpenDialog = (treatment = null) => {
+  if (!treatments) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const handleOpen = (treatment = null) => {
     if (treatment) {
       setSelectedTreatment(treatment);
       setFormData({
-        name: treatment.name,
-        description: treatment.description,
-        petId: treatment.petId,
-        status: treatment.status,
-        startDate: treatment.startDate,
-        endDate: treatment.endDate
+        nombre: treatment.nombre,
+        descripcion: treatment.descripcion,
+        duracion: treatment.duracion,
+        costo: treatment.costo,
+        estado: treatment.estado
       });
     } else {
       setSelectedTreatment(null);
       setFormData({
-        name: '',
-        description: '',
-        petId: '',
-        status: 'active',
-        startDate: '',
-        endDate: ''
+        nombre: '',
+        descripcion: '',
+        duracion: '',
+        costo: '',
+        estado: 'activo'
       });
     }
-    setOpenDialog(true);
+    setOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
+  const handleClose = () => {
+    setOpen(false);
     setSelectedTreatment(null);
+    setFormData({
+      nombre: '',
+      descripcion: '',
+      duracion: '',
+      costo: '',
+      estado: 'activo'
+    });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const url = selectedTreatment 
-        ? `/api/treatments/${selectedTreatment.id}`
-        : '/api/treatments';
-      
-      const method = selectedTreatment ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const updatedTreatment = await response.json();
-        if (selectedTreatment) {
-          setTreatments(treatments.map(t => t.id === updatedTreatment.id ? updatedTreatment : t));
-        } else {
-          setTreatments([...treatments, updatedTreatment]);
-        }
-        handleCloseDialog();
-      }
-    } catch (error) {
-      console.error('Error saving treatment:', error);
-    }
-  };
-
-  const handleDelete = async (treatmentId) => {
-    if (window.confirm('Are you sure you want to delete this treatment?')) {
-      try {
-        const response = await fetch(`/api/treatments/${treatmentId}`, {
-          method: 'DELETE',
+      if (selectedTreatment) {
+        await updateTreatment(selectedTreatment.id, formData);
+        setSnackbar({
+          open: true,
+          message: 'Tratamiento actualizado exitosamente',
+          severity: 'success'
         });
-
-        if (response.ok) {
-          setTreatments(treatments.filter(t => t.id !== treatmentId));
-        }
-      } catch (error) {
-        console.error('Error deleting treatment:', error);
+      } else {
+        await addTreatment(formData);
+        setSnackbar({
+          open: true,
+          message: 'Tratamiento creado exitosamente',
+          severity: 'success'
+        });
       }
+      handleClose();
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error al procesar el tratamiento',
+        severity: 'error'
+      });
     }
   };
 
-  const getPetName = (petId) => {
-    const pet = pets.find(p => p.id === petId);
-    return pet ? pet.name : 'Unknown';
+  const handleDelete = async (id) => {
+    try {
+      await deleteTreatment(id);
+      setSnackbar({
+        open: true,
+        message: 'Tratamiento eliminado exitosamente',
+        severity: 'success'
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error al eliminar el tratamiento',
+        severity: 'error'
+      });
+    }
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Treatments Management</Typography>
+        <h2>Gestión de Tratamientos</h2>
         <Button
           variant="contained"
           color="primary"
-          onClick={() => handleOpenDialog()}
+          startIcon={<AddIcon />}
+          onClick={() => handleOpen()}
         >
-          Add New Treatment
+          Nuevo Tratamiento
         </Button>
       </Box>
 
@@ -135,29 +149,27 @@ const Treatments = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Pet</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Start Date</TableCell>
-              <TableCell>End Date</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>Nombre</TableCell>
+              <TableCell>Descripción</TableCell>
+              <TableCell>Duración</TableCell>
+              <TableCell>Costo</TableCell>
+              <TableCell>Estado</TableCell>
+              <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {treatments.map((treatment) => (
+            {Array.isArray(treatments) && treatments.map((treatment) => (
               <TableRow key={treatment.id}>
-                <TableCell>{treatment.name}</TableCell>
-                <TableCell>{treatment.description}</TableCell>
-                <TableCell>{getPetName(treatment.petId)}</TableCell>
-                <TableCell>{treatment.status}</TableCell>
-                <TableCell>{new Date(treatment.startDate).toLocaleDateString()}</TableCell>
-                <TableCell>{treatment.endDate ? new Date(treatment.endDate).toLocaleDateString() : 'Ongoing'}</TableCell>
+                <TableCell>{treatment.nombre}</TableCell>
+                <TableCell>{treatment.descripcion}</TableCell>
+                <TableCell>{treatment.duracion}</TableCell>
+                <TableCell>${treatment.costo}</TableCell>
+                <TableCell>{treatment.estado}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleOpenDialog(treatment)}>
+                  <IconButton onClick={() => handleOpen(treatment)} color="primary">
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(treatment.id)}>
+                  <IconButton onClick={() => handleDelete(treatment.id)} color="error">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -167,82 +179,84 @@ const Treatments = () => {
         </Table>
       </TableContainer>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <Dialog open={open} onClose={handleClose}>
         <DialogTitle>
-          {selectedTreatment ? 'Edit Treatment' : 'Add New Treatment'}
+          {selectedTreatment ? 'Editar Tratamiento' : 'Nuevo Tratamiento'}
         </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Name"
-            fullWidth
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Description"
-            fullWidth
-            multiline
-            rows={3}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          />
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Pet</InputLabel>
-            <Select
-              value={formData.petId}
-              onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
-              label="Pet"
-            >
-              {pets.map((pet) => (
-                <MenuItem key={pet.id} value={pet.id}>
-                  {pet.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              label="Status"
-            >
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
-              <MenuItem value="cancelled">Cancelled</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            margin="dense"
-            label="Start Date"
-            type="date"
-            fullWidth
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            margin="dense"
-            label="End Date"
-            type="date"
-            fullWidth
-            value={formData.endDate}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Nombre"
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Descripción"
+              value={formData.descripcion}
+              onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+              margin="normal"
+              multiline
+              rows={3}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Duración"
+              value={formData.duracion}
+              onChange={(e) => setFormData({ ...formData, duracion: e.target.value })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Costo"
+              type="number"
+              value={formData.costo}
+              onChange={(e) => setFormData({ ...formData, costo: e.target.value })}
+              margin="normal"
+              required
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={formData.estado}
+                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                label="Estado"
+                required
+              >
+                <MenuItem value="activo">Activo</MenuItem>
+                <MenuItem value="inactivo">Inactivo</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} color="primary">
-            {selectedTreatment ? 'Update' : 'Create'}
+          <Button onClick={handleClose}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            {selectedTreatment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
 
-export default Treatments; 
+export default AdminTreatments; 
