@@ -7,6 +7,7 @@ use App\Models\Cita;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CitaController extends Controller
 {
@@ -15,19 +16,114 @@ class CitaController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        
-        // Si es un veterinario, mostrar todas las citas
-        if ($user->rol === 'veterinario') {
-            $citas = Cita::with(['mascota.usuario', 'veterinario'])->get();
-        } else {
-            // Si es un cliente, mostrar solo las citas de sus mascotas
-            $citas = Cita::whereHas('mascota', function($query) use ($user) {
-                $query->where('id_usuario', $user->id_usuario);
-            })->with(['mascota.usuario', 'veterinario'])->get();
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            Log::info('Fetching appointments for user:', ['user_id' => $user->id_usuario, 'role' => $user->rol]);
+
+            // Si es admin, obtener todas las citas
+            if ($user->rol === 'admin') {
+                $citas = Cita::with([
+                    'mascota' => function($query) {
+                        $query->select('id_mascota', 'id_usuario', 'nombre', 'especie', 'raza', 'fecha_nacimiento', 'sexo', 'notas');
+                    },
+                    'mascota.usuario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    },
+                    'veterinario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    },
+                    'tratamientos' => function($query) {
+                        $query->select('id_tratamiento', 'id_cita', 'nombre', 'descripcion', 'estado', 'fecha_inicio', 'fecha_fin');
+                    }
+                ])->get();
+            } else {
+                // Si es cliente, obtener solo sus citas
+                $citas = Cita::whereHas('mascota', function($query) use ($user) {
+                    $query->where('id_usuario', $user->id_usuario);
+                })
+                ->with([
+                    'mascota' => function($query) {
+                        $query->select('id_mascota', 'id_usuario', 'nombre', 'especie', 'raza', 'fecha_nacimiento', 'sexo', 'notas');
+                    },
+                    'mascota.usuario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    },
+                    'veterinario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    },
+                    'tratamientos' => function($query) {
+                        $query->select('id_tratamiento', 'id_cita', 'nombre', 'descripcion', 'estado', 'fecha_inicio', 'fecha_fin');
+                    }
+                ])
+                ->get();
+            }
+
+            Log::info('Found appointments:', ['count' => $citas->count()]);
+
+            $formattedAppointments = $citas->map(function ($cita) {
+                return [
+                    'id_cita' => $cita->id_cita,
+                    'fecha_hora' => $cita->fecha_hora,
+                    'tipo_consulta' => $cita->tipo_consulta,
+                    'motivo_consulta' => $cita->motivo_consulta,
+                    'estado' => $cita->estado,
+                    'mascota' => [
+                        'id_mascota' => $cita->mascota->id_mascota,
+                        'nombre' => $cita->mascota->nombre,
+                        'especie' => $cita->mascota->especie,
+                        'raza' => $cita->mascota->raza,
+                        'usuario' => [
+                            'id_usuario' => $cita->mascota->usuario->id_usuario,
+                            'nombre' => $cita->mascota->usuario->nombre,
+                            'apellido' => $cita->mascota->usuario->apellido,
+                            'email' => $cita->mascota->usuario->email
+                        ]
+                    ],
+                    'veterinario' => [
+                        'id_usuario' => $cita->veterinario->id_usuario,
+                        'nombre' => $cita->veterinario->nombre,
+                        'apellido' => $cita->veterinario->apellido,
+                        'email' => $cita->veterinario->email
+                    ],
+                    'tratamientos' => $cita->tratamientos->map(function ($tratamiento) {
+                        return [
+                            'id_tratamiento' => $tratamiento->id_tratamiento,
+                            'nombre' => $tratamiento->nombre,
+                            'descripcion' => $tratamiento->descripcion,
+                            'estado' => $tratamiento->estado,
+                            'fecha_inicio' => $tratamiento->fecha_inicio,
+                            'fecha_fin' => $tratamiento->fecha_fin
+                        ];
+                    })
+                ];
+            });
+
+            Log::info('Formatted appointments:', ['count' => $formattedAppointments->count()]);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $formattedAppointments
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al obtener citas:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al obtener las citas',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json($citas);
     }
 
     /**
