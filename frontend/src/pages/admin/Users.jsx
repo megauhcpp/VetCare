@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Box,
@@ -10,11 +10,51 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  CircularProgress
+  CircularProgress,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton,
+  Tooltip,
+  Alert,
+  Snackbar,
+  Chip,
+  InputAdornment
 } from '@mui/material';
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  Search as SearchIcon
+} from '@mui/icons-material';
 
 const AdminUsers = () => {
   const { users } = useApp();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    apellido: '',
+    email: '',
+    password: '',
+    rol: 'cliente'
+  });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  // Extraer los usuarios del objeto de respuesta
+  const usersData = useMemo(() => {
+    console.log('Raw users:', users);
+    return Array.isArray(users) ? users : (users?.data || []);
+  }, [users]);
 
   if (!Array.isArray(users)) {
     return (
@@ -24,11 +64,166 @@ const AdminUsers = () => {
     );
   }
 
+  const handleOpenDialog = (user = null) => {
+    if (user) {
+      setSelectedUser(user);
+      setFormData({
+        nombre: user.nombre,
+        apellido: user.apellido,
+        email: user.email,
+        password: '', // No mostramos la contraseña actual
+        rol: user.rol
+      });
+    } else {
+      setSelectedUser(null);
+      setFormData({
+        nombre: '',
+        apellido: '',
+        email: '',
+        password: '',
+        rol: 'cliente'
+      });
+    }
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedUser(null);
+  };
+
+  const handleOpenDeleteDialog = (user) => {
+    setSelectedUser(user);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setSelectedUser(null);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const url = selectedUser
+        ? `/api/admin/users/${selectedUser.id_usuario}`
+        : '/api/admin/users';
+      
+      const method = selectedUser ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error('Error al guardar el usuario');
+
+      setSnackbar({
+        open: true,
+        message: `Usuario ${selectedUser ? 'actualizado' : 'creado'} exitosamente`,
+        severity: 'success'
+      });
+      
+      handleCloseDialog();
+      // Aquí deberías actualizar la lista de usuarios
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/admin/users/${selectedUser.id_usuario}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar el usuario');
+
+      setSnackbar({
+        open: true,
+        message: 'Usuario eliminado exitosamente',
+        severity: 'success'
+      });
+      
+      handleCloseDeleteDialog();
+      // Aquí deberías actualizar la lista de usuarios
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
+    }
+  };
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'admin':
+        return 'error';
+      case 'veterinario':
+        return 'primary';
+      case 'cliente':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
+  const filteredUsers = usersData.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.nombre?.toLowerCase().includes(searchLower) ||
+      user.apellido?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.rol?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Gestión de Usuarios
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Gestión de Usuarios
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+        >
+          Nuevo Usuario
+        </Button>
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Buscar usuarios..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
 
       <TableContainer component={Paper}>
         <Table>
@@ -37,19 +232,138 @@ const AdminUsers = () => {
               <TableCell>Nombre</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Rol</TableCell>
+              <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id_usuario}>
-                <TableCell>{user.nombre} {user.apellido}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.rol}</TableCell>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id_usuario}>
+                  <TableCell>{user.nombre} {user.apellido}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.rol}
+                      color={getRoleColor(user.rol)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Editar">
+                        <IconButton size="small" onClick={() => handleOpenDialog(user)}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar">
+                        <IconButton size="small" onClick={() => handleOpenDeleteDialog(user)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  No hay usuarios registrados
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Modal para crear/editar usuario */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {selectedUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+            <TextField
+              name="nombre"
+              label="Nombre"
+              value={formData.nombre}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              name="apellido"
+              label="Apellido"
+              value={formData.apellido}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              name="email"
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              name="password"
+              label={selectedUser ? "Nueva Contraseña (dejar en blanco para mantener la actual)" : "Contraseña"}
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <FormControl fullWidth>
+              <InputLabel>Rol</InputLabel>
+              <Select
+                name="rol"
+                value={formData.rol}
+                onChange={handleInputChange}
+                label="Rol"
+              >
+                <MenuItem value="admin">Administrador</MenuItem>
+                <MenuItem value="veterinario">Veterinario</MenuItem>
+                <MenuItem value="cliente">Cliente</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained">
+            {selectedUser ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de confirmación para eliminar */}
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <Typography>
+            ¿Estás seguro de que deseas eliminar al usuario {selectedUser?.nombre} {selectedUser?.apellido}?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>Cancelar</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
