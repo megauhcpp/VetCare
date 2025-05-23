@@ -45,10 +45,10 @@ export const AppProvider = ({ children }) => {
 
             console.log('ADMIN DATA:', { petsData, appointmentsData, treatmentsData, usersData });
 
-            setPets(petsData);
-            setAppointments(appointmentsData);
+            setPets(Array.isArray(petsData) ? petsData : (petsData.data || []));
+            setAppointments(Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []));
             setTreatments(Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []));
-            setUsers(usersData);
+            setUsers(Array.isArray(usersData) ? usersData : (usersData.data || []));
           } else {
             // Fetch only user-specific data for clients
             const [petsRes, appointmentsRes, treatmentsRes] = await Promise.all([

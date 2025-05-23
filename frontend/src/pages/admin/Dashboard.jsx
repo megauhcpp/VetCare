@@ -59,8 +59,10 @@ const AdminDashboard = () => {
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
         Aquí tienes un resumen general del sistema.
       </Typography>
-      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto' }}>
-        <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'nowrap', justifyContent: 'center', minWidth: 1200 }}>
+
+      {/* Stats Cards */}
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', mb: 4 }}>
+        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'nowrap', justifyContent: 'center', minWidth: 1200 }}>
           {stats.map((stat, index) => (
             <Box
               key={index}
