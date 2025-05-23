@@ -142,22 +142,24 @@ const Treatments = () => {
                           </Typography>
                         }
                         secondary={
-                          <>
-                            <Typography component="div" variant="body2" sx={{ mt: 1 }}>
-                              <strong>Descripción:</strong> {treatment.descripcion}
-                            </Typography>
-                            <Typography component="div" variant="body2">
-                              <strong>Fecha de inicio:</strong> {formatDate(treatment.fecha_inicio)}
-                            </Typography>
-                            {treatment.fecha_fin && (
-                              <Typography component="div" variant="body2">
-                                <strong>Fecha de fin:</strong> {formatDate(treatment.fecha_fin)}
-                              </Typography>
-                            )}
-                            <Typography component="div" variant="body2">
-                              <strong>Veterinario:</strong> {treatment.cita?.veterinario?.nombre} {treatment.cita?.veterinario?.apellido}
-                            </Typography>
-                          </>
+                          <Typography component="span" variant="body2">
+                            <Box component="span" sx={{ display: 'block', mt: 1 }}>
+                              <Box component="span" sx={{ display: 'block' }}>
+                                <strong>Descripción:</strong> {treatment.descripcion}
+                              </Box>
+                              <Box component="span" sx={{ display: 'block' }}>
+                                <strong>Fecha de inicio:</strong> {formatDate(treatment.fecha_inicio)}
+                              </Box>
+                              {treatment.fecha_fin && (
+                                <Box component="span" sx={{ display: 'block' }}>
+                                  <strong>Fecha de fin:</strong> {formatDate(treatment.fecha_fin)}
+                                </Box>
+                              )}
+                              <Box component="span" sx={{ display: 'block' }}>
+                                <strong>Veterinario:</strong> {treatment.cita?.veterinario?.nombre} {treatment.cita?.veterinario?.apellido}
+                              </Box>
+                            </Box>
+                          </Typography>
                         }
                       />
                       <Chip

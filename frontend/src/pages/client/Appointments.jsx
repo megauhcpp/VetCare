@@ -59,7 +59,10 @@ const Appointments = () => {
 
   // Filtrar las citas que corresponden a las mascotas del usuario
   const filteredAppointments = appointments.filter(appointment => 
-    userPets.some(pet => pet.id_mascota === appointment.id_mascota)
+    userPets.some(pet => 
+      pet.id_mascota === appointment.id_mascota ||
+      pet.id_mascota === appointment.mascota?.id_mascota
+    )
   );
 
   const handleOpenDialog = (appointment = null) => {

@@ -71,7 +71,7 @@ export const AppProvider = ({ children }) => {
             const userPets = petsData.filter(pet => pet.id_usuario === user.id_usuario);
             console.log('CLIENTE userPets:', userPets);
             setPets(userPets);
-            setAppointments(appointmentsData);
+            setAppointments(Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []));
             setTreatments(Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []));
           }
         }
