@@ -26,23 +26,45 @@ class TratamientoController extends Controller
                 ], 401);
             }
 
-            Log::info('Fetching treatments for user:', ['user_id' => $user->id_usuario]);
+            Log::info('Fetching treatments for user:', ['user_id' => $user->id_usuario, 'role' => $user->rol]);
 
-            $tratamientos = Tratamiento::whereHas('cita.mascota', function($query) use ($user) {
-                $query->where('id_usuario', $user->id_usuario);
-            })
-            ->with([
-                'cita' => function($query) {
-                    $query->select('id_cita', 'id_mascota', 'id_usuario', 'fecha_hora', 'tipo_consulta', 'motivo_consulta', 'estado');
-                },
-                'cita.mascota' => function($query) {
-                    $query->select('id_mascota', 'id_usuario', 'nombre', 'especie', 'raza', 'fecha_nacimiento', 'sexo', 'notas');
-                },
-                'cita.veterinario' => function($query) {
-                    $query->select('id_usuario', 'nombre', 'apellido', 'email');
-                }
-            ])
-            ->get();
+            // Si es admin, obtener todos los tratamientos
+            if ($user->rol === 'admin') {
+                $tratamientos = Tratamiento::with([
+                    'cita' => function($query) {
+                        $query->select('id_cita', 'id_mascota', 'id_usuario', 'fecha_hora', 'tipo_consulta', 'motivo_consulta', 'estado');
+                    },
+                    'cita.mascota' => function($query) {
+                        $query->select('id_mascota', 'id_usuario', 'nombre', 'especie', 'raza', 'fecha_nacimiento', 'sexo', 'notas');
+                    },
+                    'cita.mascota.usuario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    },
+                    'cita.veterinario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    }
+                ])->get();
+            } else {
+                // Si es cliente, obtener solo sus tratamientos
+                $tratamientos = Tratamiento::whereHas('cita.mascota', function($query) use ($user) {
+                    $query->where('id_usuario', $user->id_usuario);
+                })
+                ->with([
+                    'cita' => function($query) {
+                        $query->select('id_cita', 'id_mascota', 'id_usuario', 'fecha_hora', 'tipo_consulta', 'motivo_consulta', 'estado');
+                    },
+                    'cita.mascota' => function($query) {
+                        $query->select('id_mascota', 'id_usuario', 'nombre', 'especie', 'raza', 'fecha_nacimiento', 'sexo', 'notas');
+                    },
+                    'cita.mascota.usuario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    },
+                    'cita.veterinario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    }
+                ])
+                ->get();
+            }
 
             Log::info('Found treatments:', ['count' => $tratamientos->count()]);
 
@@ -68,7 +90,13 @@ class TratamientoController extends Controller
                             'raza' => $tratamiento->cita->mascota->raza,
                             'fecha_nacimiento' => $tratamiento->cita->mascota->fecha_nacimiento,
                             'sexo' => $tratamiento->cita->mascota->sexo,
-                            'notas' => $tratamiento->cita->mascota->notas
+                            'notas' => $tratamiento->cita->mascota->notas,
+                            'usuario' => [
+                                'id_usuario' => $tratamiento->cita->mascota->usuario->id_usuario,
+                                'nombre' => $tratamiento->cita->mascota->usuario->nombre,
+                                'apellido' => $tratamiento->cita->mascota->usuario->apellido,
+                                'email' => $tratamiento->cita->mascota->usuario->email
+                            ]
                         ],
                         'veterinario' => [
                             'id_usuario' => $tratamiento->cita->veterinario->id_usuario,
