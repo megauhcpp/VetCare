@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Box,
   Typography,
@@ -28,42 +29,51 @@ import {
   IconButton,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
-import { LocalHospital as TreatmentIcon, Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { 
+  LocalHospital as TreatmentIcon, 
+  ExpandMore as ExpandMoreIcon,
+  Pets as PetsIcon
+} from '@mui/icons-material';
 
 const Treatments = () => {
-  const { treatments, addTreatment, updateTreatment, deleteTreatment } = useApp();
-  const [open, setOpen] = useState(false);
-  const [selectedTreatment, setSelectedTreatment] = useState(null);
-  const [formData, setFormData] = useState({
-    nombre: '',
-    descripcion: '',
-    duracion: '',
-    costo: '',
-    estado: 'activo'
-  });
+  const { treatments, pets } = useApp();
+  const { user } = useAuth();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Mover hooks antes del return temprano
-  const treatmentsData = useMemo(() => treatments?.data || [], [treatments]);
-  const activeTreatments = useMemo(() =>
-    Array.isArray(treatmentsData)
-      ? treatmentsData.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso')
-      : []
-  , [treatmentsData]);
-  const completedTreatments = useMemo(() =>
-    Array.isArray(treatmentsData)
-      ? treatmentsData.filter(t => t.estado === 'completado')
-      : []
-  , [treatmentsData]);
-  const cancelledTreatments = useMemo(() =>
-    Array.isArray(treatmentsData)
-      ? treatmentsData.filter(t => t.estado === 'cancelado')
-      : []
-  , [treatmentsData]);
+  const treatmentsData = useMemo(() => {
+    console.log('Raw treatments:', treatments);
+    return Array.isArray(treatments) ? treatments : (treatments?.data || []);
+  }, [treatments]);
+  
+  // Filtrar mascotas del usuario actual
+  const userPets = useMemo(() => {
+    console.log('Raw pets:', pets);
+    return pets.filter(pet => pet.id_usuario === user?.id_usuario);
+  }, [pets, user]);
 
-  if (!Array.isArray(treatments)) {
+  // Organizar tratamientos por mascota
+  const treatmentsByPet = useMemo(() => {
+    console.log('Treatments data:', treatmentsData);
+    console.log('User pets:', userPets);
+    
+    const organized = {};
+    userPets.forEach(pet => {
+      organized[pet.id_mascota] = {
+        pet,
+        treatments: treatmentsData.filter(t => t.cita?.mascota?.id_mascota === pet.id_mascota)
+      };
+    });
+    console.log('Organized treatments:', organized);
+    return organized;
+  }, [userPets, treatmentsData]);
+
+  if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress />
@@ -71,166 +81,114 @@ const Treatments = () => {
     );
   }
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pendiente':
+        return 'warning';
+      case 'en_progreso':
+        return 'primary';
+      case 'completado':
+        return 'success';
+      case 'cancelado':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Tratamientos
+        Tratamientos de Mis Mascotas
       </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Tratamientos Activos
+      {Object.values(treatmentsByPet).map(({ pet, treatments }) => (
+        <Accordion key={pet.id_mascota} sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+              <PetsIcon sx={{ mr: 2 }} />
+              <Typography variant="h6">
+                {pet.nombre} - {pet.especie} ({pet.raza})
               </Typography>
+              <Chip 
+                label={`${treatments.length} tratamiento${treatments.length !== 1 ? 's' : ''}`}
+                color="primary"
+                size="small"
+                sx={{ ml: 2 }}
+              />
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {treatments.length > 0 ? (
               <List>
-                {activeTreatments.length > 0 ? (
-                  activeTreatments.map((treatment) => (
-                    <React.Fragment key={treatment.id_tratamiento}>
-                      <ListItem>
-                        <ListItemIcon>
-                          <TreatmentIcon />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={treatment.nombre}
-                          secondary={
-                            <>
-                              <Typography component="span" variant="body2">
-                                {treatment.cita.mascota.nombre}
+                {treatments.map((treatment) => (
+                  <React.Fragment key={treatment.id_tratamiento}>
+                    <ListItem>
+                      <ListItemIcon>
+                        <TreatmentIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography variant="subtitle1" fontWeight="medium">
+                            {treatment.nombre}
+                          </Typography>
+                        }
+                        secondary={
+                          <>
+                            <Typography component="div" variant="body2" sx={{ mt: 1 }}>
+                              <strong>Descripción:</strong> {treatment.descripcion}
+                            </Typography>
+                            <Typography component="div" variant="body2">
+                              <strong>Fecha de inicio:</strong> {formatDate(treatment.fecha_inicio)}
+                            </Typography>
+                            {treatment.fecha_fin && (
+                              <Typography component="div" variant="body2">
+                                <strong>Fecha de fin:</strong> {formatDate(treatment.fecha_fin)}
                               </Typography>
-                              <br />
-                              <Typography component="span" variant="body2" color="text.secondary">
-                                {treatment.descripcion}
-                              </Typography>
-                              <br />
-                              <Typography component="span" variant="body2" color="text.secondary">
-                                Inicio: {new Date(treatment.fecha_inicio).toLocaleDateString()}
-                              </Typography>
-                            </>
-                          }
-                        />
-                        <Chip
-                          label={treatment.estado === 'pendiente' ? 'Pendiente' : 'En Progreso'}
-                          color={treatment.estado === 'pendiente' ? 'warning' : 'primary'}
-                          size="small"
-                        />
-                      </ListItem>
-                      <Divider />
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <ListItem>
-                    <ListItemText primary="No hay tratamientos activos" />
-                  </ListItem>
-                )}
+                            )}
+                            <Typography component="div" variant="body2">
+                              <strong>Veterinario:</strong> {treatment.cita?.veterinario?.nombre} {treatment.cita?.veterinario?.apellido}
+                            </Typography>
+                          </>
+                        }
+                      />
+                      <Chip
+                        label={treatment.estado}
+                        color={getStatusColor(treatment.estado)}
+                        size="small"
+                        sx={{ ml: 2 }}
+                      />
+                    </ListItem>
+                    <Divider />
+                  </React.Fragment>
+                ))}
               </List>
-            </CardContent>
-          </Card>
-        </Grid>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                No hay tratamientos registrados para esta mascota.
+              </Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      ))}
 
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Tratamientos Completados
-              </Typography>
-              <List>
-                {completedTreatments.length > 0 ? (
-                  completedTreatments.map((treatment) => (
-                    <React.Fragment key={treatment.id_tratamiento}>
-                      <ListItem>
-                        <ListItemIcon>
-                          <TreatmentIcon />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={treatment.nombre}
-                          secondary={
-                            <>
-                              <Typography component="span" variant="body2">
-                                {treatment.cita.mascota.nombre}
-                              </Typography>
-                              <br />
-                              <Typography component="span" variant="body2" color="text.secondary">
-                                {treatment.descripcion}
-                              </Typography>
-                              <br />
-                              <Typography component="span" variant="body2" color="text.secondary">
-                                Completado: {new Date(treatment.fecha_fin).toLocaleDateString()}
-                              </Typography>
-                            </>
-                          }
-                        />
-                        <Chip
-                          label="Completado"
-                          color="success"
-                          size="small"
-                        />
-                      </ListItem>
-                      <Divider />
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <ListItem>
-                    <ListItemText primary="No hay tratamientos completados" />
-                  </ListItem>
-                )}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Tratamientos Cancelados
-              </Typography>
-              <List>
-                {cancelledTreatments.length > 0 ? (
-                  cancelledTreatments.map((treatment) => (
-                    <React.Fragment key={treatment.id_tratamiento}>
-                      <ListItem>
-                        <ListItemIcon>
-                          <TreatmentIcon />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={treatment.nombre}
-                          secondary={
-                            <>
-                              <Typography component="span" variant="body2">
-                                {treatment.cita.mascota.nombre}
-                              </Typography>
-                              <br />
-                              <Typography component="span" variant="body2" color="text.secondary">
-                                {treatment.descripcion}
-                              </Typography>
-                              <br />
-                              <Typography component="span" variant="body2" color="text.secondary">
-                                Cancelado: {new Date(treatment.fecha_fin).toLocaleDateString()}
-                              </Typography>
-                            </>
-                          }
-                        />
-                        <Chip
-                          label="Cancelado"
-                          color="error"
-                          size="small"
-                        />
-                      </ListItem>
-                      <Divider />
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <ListItem>
-                    <ListItemText primary="No hay tratamientos cancelados" />
-                  </ListItem>
-                )}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

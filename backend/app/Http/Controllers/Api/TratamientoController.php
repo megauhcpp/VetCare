@@ -26,6 +26,8 @@ class TratamientoController extends Controller
                 ], 401);
             }
 
+            Log::info('Fetching treatments for user:', ['user_id' => $user->id_usuario]);
+
             $tratamientos = Tratamiento::whereHas('cita.mascota', function($query) use ($user) {
                 $query->where('id_usuario', $user->id_usuario);
             })
@@ -40,8 +42,11 @@ class TratamientoController extends Controller
                     $query->select('id_usuario', 'nombre', 'apellido', 'email');
                 }
             ])
-            ->get()
-            ->map(function ($tratamiento) {
+            ->get();
+
+            Log::info('Found treatments:', ['count' => $tratamientos->count()]);
+
+            $formattedTreatments = $tratamientos->map(function ($tratamiento) {
                 return [
                     'id_tratamiento' => $tratamiento->id_tratamiento,
                     'nombre' => $tratamiento->nombre,
@@ -75,13 +80,18 @@ class TratamientoController extends Controller
                 ];
             });
 
+            Log::info('Formatted treatments:', ['count' => $formattedTreatments->count()]);
+
             return response()->json([
                 'status' => 'success',
-                'data' => $tratamientos
+                'data' => $formattedTreatments
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error al obtener tratamientos:', ['error' => $e->getMessage()]);
+            Log::error('Error al obtener tratamientos:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error al obtener los tratamientos',
