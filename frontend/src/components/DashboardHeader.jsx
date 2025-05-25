@@ -2,13 +2,24 @@ import { Link } from 'react-router-dom';
 import { User, Search } from 'lucide-react';
 import '../styles/DashboardHeader.css';
 
-const DashboardHeader = () => {
+const DashboardHeader = ({ isAdmin, isVet }) => {
+  const getTitle = () => {
+    if (isAdmin) return 'Admin Dashboard';
+    if (isVet) return 'Veterinario Dashboard';
+    return 'Client Dashboard';
+  };
+
+  const getProfilePath = () => {
+    if (isAdmin) return '/admin/profile';
+    if (isVet) return '/vet/profile';
+    return '/profile';
+  };
+
   return (
     <header className="dashboard-topbar">
-      <div className="dashboard-title">Client Dashboard</div>
+      <div className="dashboard-title">{getTitle()}</div>
       <div className="dashboard-actions">
-        
-        <Link to="/profile" className="profile-btn">
+        <Link to={getProfilePath()} className="profile-btn">
           <User size={18} />
           <span>Perfil</span>
         </Link>

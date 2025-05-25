@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminLayout from './layouts/AdminLayout';
 import ClientLayout from './layouts/ClientLayout';
+import VetLayout from './layouts/VetLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminPets from './pages/admin/Pets';
@@ -13,6 +14,11 @@ import AdminTreatments from './pages/admin/Treatments';
 import AdminAppointments from './pages/admin/Appointments';
 import AdminSettings from './pages/admin/Settings';
 import AdminProfile from './pages/admin/Profile';
+import VetDashboard from './pages/vet/Dashboard';
+import VetPets from './pages/vet/Pets';
+import VetTreatments from './pages/vet/Treatments';
+import VetAppointments from './pages/vet/Appointments';
+import VetProfile from './pages/vet/Profile';
 import ClientDashboard from './pages/client/Dashboard';
 import ClientPets from './pages/client/Pets';
 import ClientAppointments from './pages/client/Appointments';
@@ -20,7 +26,7 @@ import ClientTreatments from './pages/client/Treatments';
 import ClientProfile from './pages/client/Profile';
 
 // Componente de ruta protegida
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({ children, requireAdmin = false, requireVet = false }) => {
   const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
@@ -31,8 +37,26 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     return <Navigate to="/login" />;
   }
 
-  if (requireAdmin && user?.rol !== 'admin') {
+  // Redirigir según el rol del usuario
+  if (user?.rol === 'admin' && !requireAdmin) {
+    return <Navigate to="/admin/dashboard" />;
+  }
+
+  if (user?.rol === 'veterinario' && !requireVet) {
+    return <Navigate to="/vet/dashboard" />;
+  }
+
+  if (user?.rol === 'cliente' && (requireAdmin || requireVet)) {
     return <Navigate to="/dashboard" />;
+  }
+
+  // Verificar permisos específicos
+  if (requireAdmin && user?.rol !== 'admin') {
+    return <Navigate to="/login" />;
+  }
+
+  if (requireVet && user?.rol !== 'veterinario') {
+    return <Navigate to="/login" />;
   }
 
   return children;
@@ -41,7 +65,21 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 // Componente para redirigir según el rol
 const RootRedirect = () => {
   const { user } = useAuth();
-  return user?.rol === 'admin' ? <Navigate to="/admin/dashboard" /> : <Navigate to="/dashboard" />;
+  
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  switch (user.rol) {
+    case 'admin':
+      return <Navigate to="/admin/dashboard" />;
+    case 'veterinario':
+      return <Navigate to="/vet/dashboard" />;
+    case 'cliente':
+      return <Navigate to="/dashboard" />;
+    default:
+      return <Navigate to="/login" />;
+  }
 };
 
 const App = () => {
@@ -67,6 +105,19 @@ const App = () => {
               <Route path="appointments" element={<AdminAppointments />} />
               <Route path="settings" element={<AdminSettings />} />
               <Route path="profile" element={<AdminProfile />} />
+            </Route>
+
+            {/* Vet Routes */}
+            <Route path="/vet" element={
+              <ProtectedRoute requireVet={true}>
+                <VetLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={<VetDashboard />} />
+              <Route path="pets" element={<VetPets />} />
+              <Route path="treatments" element={<VetTreatments />} />
+              <Route path="appointments" element={<VetAppointments />} />
+              <Route path="profile" element={<VetProfile />} />
             </Route>
             
             {/* Client Routes */}

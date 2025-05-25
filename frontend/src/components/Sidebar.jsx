@@ -4,7 +4,7 @@ import { LogOut, User, Calendar, PawPrint, Stethoscope, Users } from 'lucide-rea
 import { useAuth } from '../context/AuthContext';
 import '../styles/Sidebar.css';
 
-const Sidebar = ({ isAdmin }) => {
+const Sidebar = ({ isAdmin, isVet }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
@@ -17,6 +17,14 @@ const Sidebar = ({ isAdmin }) => {
     { label: 'Perfil', icon: <User />, to: '/admin/profile' },
   ];
 
+  const vetNavItems = [
+    { label: 'Dashboard', icon: <Calendar />, to: '/vet/dashboard' },
+    { label: 'Mascotas', icon: <PawPrint />, to: '/vet/pets' },
+    { label: 'Citas', icon: <Calendar />, to: '/vet/appointments' },
+    { label: 'Tratamientos', icon: <Stethoscope />, to: '/vet/treatments' },
+    { label: 'Perfil', icon: <User />, to: '/vet/profile' },
+  ];
+
   const clientNavItems = [
     { label: 'Dashboard', icon: <Calendar />, to: '/dashboard' },
     { label: 'Mis Mascotas', icon: <PawPrint />, to: '/pets' },
@@ -25,7 +33,7 @@ const Sidebar = ({ isAdmin }) => {
     { label: 'Perfil', icon: <User />, to: '/profile' },
   ];
 
-  const navItems = isAdmin ? adminNavItems : clientNavItems;
+  const navItems = isAdmin ? adminNavItems : isVet ? vetNavItems : clientNavItems;
 
   return (
     <aside className="sidebar">
@@ -41,7 +49,9 @@ const Sidebar = ({ isAdmin }) => {
         </div>
         <div className="user-info">
           <span className="user-name">{user?.nombre || 'Usuario'}</span>
-          <span className="user-role">{isAdmin ? 'Administrador' : 'Cliente'}</span>
+          <span className="user-role">
+            {isAdmin ? 'Administrador' : isVet ? 'Veterinario' : 'Cliente'}
+          </span>
         </div>
       </div>
       <nav className="sidebar-nav">

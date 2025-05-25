@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -18,21 +16,16 @@ import {
   MenuItem,
   Chip,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Snackbar,
   Alert,
   CircularProgress
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon, Add as AddIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Appointments = () => {
-  const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment } = useApp();
+  const { appointments, pets, setAppointments } = useApp();
   const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -53,17 +46,6 @@ const Appointments = () => {
       </Box>
     );
   }
-
-  // Filtrar las mascotas del usuario actual
-  const userPets = pets.filter(pet => pet.id_usuario === user?.id_usuario);
-
-  // Filtrar las citas que corresponden a las mascotas del usuario
-  const filteredAppointments = appointments.filter(appointment => 
-    userPets.some(pet => 
-      pet.id_mascota === appointment.id_mascota ||
-      pet.id_mascota === appointment.mascota?.id_mascota
-    )
-  );
 
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
@@ -194,23 +176,23 @@ const Appointments = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Mis Citas</Typography>
+        <Typography variant="h4">Gestión de Citas</Typography>
         <Button
           variant="contained"
           color="primary"
           onClick={() => handleOpenDialog()}
         >
-          Agendar Cita
+          Nueva Cita
         </Button>
       </Box>
 
-      {filteredAppointments.length === 0 ? (
+      {appointments.length === 0 ? (
         <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No tienes citas programadas. ¡Agenda una nueva cita!
+          No hay citas programadas
         </Typography>
       ) : (
         <List>
-          {filteredAppointments.map((appointment) => (
+          {appointments.map((appointment) => (
             <ListItem
               key={appointment.id_cita}
               sx={{
@@ -224,7 +206,7 @@ const Appointments = () => {
                 primary={
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Typography variant="h6">
-                      {userPets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
+                      {pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
                     </Typography>
                     <Chip
                       label={appointment.estado}
@@ -267,27 +249,12 @@ const Appointments = () => {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-          }
-        }}
       >
-        <DialogTitle sx={{ 
-          bgcolor: 'primary.main', 
-          color: 'white',
-          py: 2,
-          px: 3,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
-        }}>
-          <EventIcon />
-          {selectedAppointment ? 'Editar Cita' : 'Agendar Cita'}
+        <DialogTitle>
+          {selectedAppointment ? 'Editar Cita' : 'Nueva Cita'}
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             <TextField
               select
               label="Mascota"
@@ -295,12 +262,8 @@ const Appointments = () => {
               value={formData.petId}
               onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             >
-              {userPets.map((pet) => (
+              {pets.map((pet) => (
                 <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
                   {pet.nombre}
                 </MenuItem>
@@ -314,10 +277,6 @@ const Appointments = () => {
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               InputLabelProps={{ shrink: true }}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             />
             <TextField
               label="Hora"
@@ -327,10 +286,6 @@ const Appointments = () => {
               onChange={(e) => setFormData({ ...formData, time: e.target.value })}
               InputLabelProps={{ shrink: true }}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             />
             <TextField
               select
@@ -339,10 +294,6 @@ const Appointments = () => {
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             >
               <MenuItem value="consulta_general">Consulta General</MenuItem>
               <MenuItem value="vacunacion">Vacunación</MenuItem>
@@ -358,56 +309,24 @@ const Appointments = () => {
               value={formData.motivo}
               onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             />
-            {selectedAppointment && (
-              <TextField
-                select
-                label="Estado"
-                fullWidth
-                value={formData.estado}
-                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                required
-                variant="outlined"
-                InputProps={{
-                  sx: { borderRadius: 2 }
-                }}
-              >
-                <MenuItem value="pendiente">Pendiente</MenuItem>
-                <MenuItem value="confirmada">Confirmada</MenuItem>
-                <MenuItem value="cancelada">Cancelada</MenuItem>
-              </TextField>
-            )}
+            <TextField
+              select
+              label="Estado"
+              fullWidth
+              value={formData.estado}
+              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+              required
+            >
+              <MenuItem value="pendiente">Pendiente</MenuItem>
+              <MenuItem value="confirmada">Confirmada</MenuItem>
+              <MenuItem value="cancelada">Cancelada</MenuItem>
+            </TextField>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button 
-            onClick={handleCloseDialog}
-            variant="outlined"
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              '&:hover': {
-                bgcolor: 'grey.100'
-              }
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              '&:hover': {
-                bgcolor: 'primary.dark'
-              }
-            }}
-          >
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
             {selectedAppointment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
