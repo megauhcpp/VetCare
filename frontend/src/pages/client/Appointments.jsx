@@ -55,25 +55,22 @@ const Appointments = () => {
   }
 
   // Filtrar las mascotas del usuario actual
-  const userPets = pets.filter(pet => pet.id_usuario === user?.id_usuario);
+  const userPets = pets.filter(pet => pet.usuario?.id_usuario === user?.id_usuario);
 
   // Filtrar las citas que corresponden a las mascotas del usuario
   const filteredAppointments = appointments.filter(appointment => 
-    userPets.some(pet => 
-      pet.id_mascota === appointment.id_mascota ||
-      pet.id_mascota === appointment.mascota?.id_mascota
-    )
+    userPets.some(pet => pet.id_mascota === appointment.mascota?.id_mascota)
   );
 
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
       setFormData({
-        petId: appointment.id_mascota,
+        petId: appointment.mascota?.id_mascota || '',
         date: appointment.fecha_hora.split('T')[0],
         time: appointment.fecha_hora.split('T')[1].substring(0, 5),
         type: appointment.tipo_consulta,
-        motivo: appointment.motivo_consulta || '',
+        motivo: appointment.motivo_consulta,
         estado: appointment.estado
       });
     } else {
@@ -104,19 +101,21 @@ const Appointments = () => {
       }
 
       const url = selectedAppointment 
-        ? `/api/citas/${selectedAppointment.id_cita}`
-        : '/api/citas';
+        ? `http://localhost:8000/api/citas/${selectedAppointment.id_cita}`
+        : 'http://localhost:8000/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
-      const appointmentData = {
+      const fechaHora = `${formData.date}T${formData.time}:00`;
+      
+      const requestData = {
         id_mascota: formData.petId,
-        fecha_hora: `${formData.date}T${formData.time}:00`,
+        fecha_hora: fechaHora,
         tipo_consulta: formData.type,
         motivo_consulta: formData.motivo,
         estado: formData.estado
       };
-
+      
       const response = await fetch(url, {
         method,
         headers: {
@@ -124,7 +123,8 @@ const Appointments = () => {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(appointmentData),
+        body: JSON.stringify(requestData),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -156,12 +156,13 @@ const Appointments = () => {
           return;
         }
 
-        const response = await fetch(`/api/citas/${appointmentId}`, {
+        const response = await fetch(`http://localhost:8000/api/citas/${appointmentId}`, {
           method: 'DELETE',
           headers: {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
-          }
+          },
+          credentials: 'include'
         });
 
         if (response.ok) {
@@ -198,15 +199,16 @@ const Appointments = () => {
         <Button
           variant="contained"
           color="primary"
+          startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
         >
-          Agendar Cita
+          Nueva Cita
         </Button>
       </Box>
 
       {filteredAppointments.length === 0 ? (
         <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No tienes citas programadas. ¡Agenda una nueva cita!
+          No tienes citas programadas
         </Typography>
       ) : (
         <List>
@@ -224,8 +226,13 @@ const Appointments = () => {
                 primary={
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Typography variant="h6">
-                      {userPets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
+                      {appointment.mascota?.nombre}
                     </Typography>
+                    <Chip
+                      label={appointment.tipo_consulta}
+                      color="primary"
+                      size="small"
+                    />
                     <Chip
                       label={appointment.estado}
                       color={getStatusColor(appointment.estado)}
@@ -236,16 +243,14 @@ const Appointments = () => {
                 secondary={
                   <Typography component="div" variant="body2">
                     <Typography component="div" sx={{ mb: 0.5 }}>
-                      Fecha: {new Date(appointment.fecha_hora).toLocaleString()}
+                      Fecha: {new Date(appointment.fecha_hora).toLocaleDateString()}
                     </Typography>
                     <Typography component="div" sx={{ mb: 0.5 }}>
-                      Tipo de Consulta: {appointment.tipo_consulta}
+                      Hora: {new Date(appointment.fecha_hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </Typography>
-                    {appointment.motivo_consulta && (
-                      <Typography component="div">
-                        Motivo: {appointment.motivo_consulta}
-                      </Typography>
-                    )}
+                    <Typography component="div" sx={{ mb: 0.5 }}>
+                      Motivo: {appointment.motivo_consulta}
+                    </Typography>
                   </Typography>
                 }
               />
@@ -267,27 +272,12 @@ const Appointments = () => {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-          }
-        }}
       >
-        <DialogTitle sx={{ 
-          bgcolor: 'primary.main', 
-          color: 'white',
-          py: 2,
-          px: 3,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
-        }}>
-          <EventIcon />
-          {selectedAppointment ? 'Editar Cita' : 'Agendar Cita'}
+        <DialogTitle>
+          {selectedAppointment ? 'Editar Cita' : 'Nueva Cita'}
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             <TextField
               select
               label="Mascota"
@@ -295,10 +285,6 @@ const Appointments = () => {
               value={formData.petId}
               onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             >
               {userPets.map((pet) => (
                 <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
@@ -312,12 +298,10 @@ const Appointments = () => {
               fullWidth
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
+              InputLabelProps={{
+                shrink: true,
               }}
+              required
             />
             <TextField
               label="Hora"
@@ -325,12 +309,10 @@ const Appointments = () => {
               fullWidth
               value={formData.time}
               onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
+              InputLabelProps={{
+                shrink: true,
               }}
+              required
             />
             <TextField
               select
@@ -339,76 +321,27 @@ const Appointments = () => {
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             >
               <MenuItem value="consulta_general">Consulta General</MenuItem>
               <MenuItem value="vacunacion">Vacunación</MenuItem>
               <MenuItem value="cirugia">Cirugía</MenuItem>
               <MenuItem value="urgencia">Urgencia</MenuItem>
-              <MenuItem value="control">Control</MenuItem>
             </TextField>
             <TextField
               label="Motivo de la Consulta"
               fullWidth
               multiline
-              rows={2}
+              rows={3}
               value={formData.motivo}
               onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
               required
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
             />
-            {selectedAppointment && (
-              <TextField
-                select
-                label="Estado"
-                fullWidth
-                value={formData.estado}
-                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                required
-                variant="outlined"
-                InputProps={{
-                  sx: { borderRadius: 2 }
-                }}
-              >
-                <MenuItem value="pendiente">Pendiente</MenuItem>
-                <MenuItem value="confirmada">Confirmada</MenuItem>
-                <MenuItem value="cancelada">Cancelada</MenuItem>
-              </TextField>
-            )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button 
-            onClick={handleCloseDialog}
-            variant="outlined"
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              '&:hover': {
-                bgcolor: 'grey.100'
-              }
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              '&:hover': {
-                bgcolor: 'primary.dark'
-              }
-            }}
-          >
-            {selectedAppointment ? 'Actualizar' : 'Crear'}
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained">
+            {selectedAppointment ? 'Actualizar' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -418,7 +351,11 @@ const Appointments = () => {
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

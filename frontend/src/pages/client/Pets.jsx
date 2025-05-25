@@ -56,7 +56,7 @@ const Pets = () => {
   }
 
   // Filtrar mascotas del usuario actual
-  const userPets = pets.filter(pet => pet.id_usuario === user?.id_usuario);
+  const userPets = pets.filter(pet => pet.usuario?.id_usuario === user?.id_usuario);
 
   const handleOpenDialog = (pet = null) => {
     if (pet) {
@@ -309,31 +309,25 @@ const Pets = () => {
               ])}
             </TextField>
             <TextField
-              select
               label="Raza"
               fullWidth
               value={formData.raza}
               onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
               variant="outlined"
-              disabled={!formData.especie}
               InputProps={{
                 sx: { borderRadius: 2 }
               }}
-            >
-              {formData.especie && especies[formData.especie].map((raza) => (
-                <MenuItem key={raza} value={raza}>
-                  {raza}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
             <TextField
               label="Fecha de Nacimiento"
               type="date"
               fullWidth
               value={formData.fecha_nacimiento}
               onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
-              InputLabelProps={{ shrink: true }}
               variant="outlined"
+              InputLabelProps={{
+                shrink: true,
+              }}
               InputProps={{
                 sx: { borderRadius: 2 }
               }}
@@ -359,7 +353,7 @@ const Pets = () => {
               label="Notas"
               fullWidth
               multiline
-              rows={3}
+              rows={4}
               value={formData.notas}
               onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
               variant="outlined"
@@ -369,32 +363,12 @@ const Pets = () => {
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button 
-            onClick={handleCloseDialog}
-            variant="outlined"
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              '&:hover': {
-                bgcolor: 'grey.100'
-              }
-            }}
-          >
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={handleCloseDialog} variant="outlined">
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              '&:hover': {
-                bgcolor: 'primary.dark'
-              }
-            }}
-          >
-            {selectedPet ? 'Actualizar' : 'Crear'}
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            {selectedPet ? 'Actualizar' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -404,7 +378,11 @@ const Pets = () => {
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

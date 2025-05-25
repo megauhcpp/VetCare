@@ -102,15 +102,25 @@ const AppProvider = ({ children }) => {
           setTreatments(treatmentsArray);
         } else {
           // Fetch only user-specific data for clients
+          console.log('Fetching data for client');
           const [petsRes, appointmentsRes, treatmentsRes] = await Promise.all([
             fetch(`${API_URL}/mascotas`, { headers }),
             fetch(`${API_URL}/citas`, { headers }),
             fetch(`${API_URL}/tratamientos`, { headers })
           ]);
           
-          if (!petsRes.ok) throw new Error('Error fetching pets');
-          if (!appointmentsRes.ok) throw new Error('Error fetching appointments');
-          if (!treatmentsRes.ok) throw new Error('Error fetching treatments');
+          if (!petsRes.ok) {
+            console.error('Error response from pets:', await petsRes.text());
+            throw new Error('Error fetching pets');
+          }
+          if (!appointmentsRes.ok) {
+            console.error('Error response from appointments:', await appointmentsRes.text());
+            throw new Error('Error fetching appointments');
+          }
+          if (!treatmentsRes.ok) {
+            console.error('Error response from treatments:', await treatmentsRes.text());
+            throw new Error('Error fetching treatments');
+          }
           
           const petsData = await petsRes.json();
           const appointmentsData = await appointmentsRes.json();
@@ -118,12 +128,53 @@ const AppProvider = ({ children }) => {
 
           console.log('CLIENTE DATA RAW:', { petsData, appointmentsData, treatmentsData });
 
-          // Filter pets by current user
-          const userPets = petsData.filter(pet => pet.id_usuario === user.id_usuario);
+          // Process pets data
+          const petsArray = Array.isArray(petsData) ? petsData : (petsData.data || []);
+          console.log('CLIENTE petsArray:', petsArray);
+          console.log('CLIENTE user.id_usuario:', user.id_usuario);
+          
+          const userPets = petsArray.filter(pet => {
+            console.log('Checking pet:', pet);
+            console.log('Pet id_usuario:', pet.usuario?.id_usuario);
+            console.log('User id_usuario:', user.id_usuario);
+            console.log('Are they equal?', pet.usuario?.id_usuario === user.id_usuario);
+            return pet.usuario?.id_usuario === user.id_usuario;
+          });
           console.log('CLIENTE userPets:', userPets);
           setPets(userPets);
-          setAppointments(Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []));
-          setTreatments(Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []));
+
+          // Process appointments data
+          const appointmentsArray = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
+          console.log('CLIENTE appointmentsArray:', appointmentsArray);
+          
+          const userAppointments = appointmentsArray.filter(appointment => {
+            console.log('Checking appointment:', appointment);
+            console.log('Appointment id_mascota:', appointment.mascota?.id_mascota);
+            console.log('User pets:', userPets.map(pet => pet.id_mascota));
+            return userPets.some(pet => pet.id_mascota === appointment.mascota?.id_mascota);
+          });
+          console.log('CLIENTE userAppointments:', userAppointments);
+          setAppointments(userAppointments);
+
+          // Process treatments data
+          const treatmentsArray = Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []);
+          console.log('CLIENTE treatmentsArray:', treatmentsArray);
+          
+          const userTreatments = treatmentsArray.filter(treatment => {
+            console.log('Checking treatment:', treatment);
+            console.log('Treatment id_cita:', treatment.cita?.id_cita);
+            console.log('User appointments:', userAppointments.map(app => app.id_cita));
+            return userAppointments.some(appointment => appointment.id_cita === treatment.cita?.id_cita);
+          });
+          console.log('CLIENTE userTreatments:', userTreatments);
+          setTreatments(userTreatments);
+
+          // Log final state
+          console.log('CLIENTE FINAL STATE:', {
+            pets: userPets,
+            appointments: userAppointments,
+            treatments: userTreatments
+          });
         }
       } catch (error) {
         console.error('Error fetching data:', error);

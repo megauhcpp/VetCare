@@ -54,7 +54,7 @@ const Treatments = () => {
   // Filtrar mascotas del usuario actual
   const userPets = useMemo(() => {
     console.log('Raw pets:', pets);
-    return pets.filter(pet => pet.id_usuario === user?.id_usuario);
+    return pets.filter(pet => pet.usuario?.id_usuario === user?.id_usuario);
   }, [pets, user]);
 
   // Organizar tratamientos por mascota
@@ -110,84 +110,113 @@ const Treatments = () => {
         Tratamientos de Mis Mascotas
       </Typography>
 
-      {Object.values(treatmentsByPet).map(({ pet, treatments }) => (
-        <Accordion key={pet.id_mascota} sx={{ mb: 2 }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              <PetsIcon sx={{ mr: 2 }} />
-              <Typography variant="h6">
-                {pet.nombre} - {pet.especie} ({pet.raza})
-              </Typography>
-              <Chip 
-                label={`${treatments.length} tratamiento${treatments.length !== 1 ? 's' : ''}`}
-                color="primary"
-                size="small"
-                sx={{ ml: 2 }}
-              />
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            {treatments.length > 0 ? (
-              <List>
-                {treatments.map((treatment) => (
-                  <React.Fragment key={treatment.id_tratamiento}>
-                    <ListItem>
-                      <ListItemIcon>
-                        <TreatmentIcon />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Typography variant="subtitle1" fontWeight="medium">
-                            {treatment.nombre}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography component="span" variant="body2">
-                            <Box component="span" sx={{ display: 'block', mt: 1 }}>
-                              <Box component="span" sx={{ display: 'block' }}>
-                                <strong>Descripción:</strong> {treatment.descripcion}
+      {Object.keys(treatmentsByPet).length === 0 ? (
+        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
+          No hay tratamientos registrados para tus mascotas
+        </Typography>
+      ) : (
+        <Grid container spacing={3}>
+          {Object.values(treatmentsByPet).map(({ pet, treatments }) => (
+            <Grid item xs={12} key={pet.id_mascota}>
+              <Accordion>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    bgcolor: 'primary.light',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      bgcolor: 'primary.main',
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <PetsIcon />
+                    <Typography variant="h6">
+                      {pet.nombre} - {pet.especie}
+                    </Typography>
+                    <Chip
+                      label={`${treatments.length} tratamientos`}
+                      color="primary"
+                      size="small"
+                      sx={{ ml: 2 }}
+                    />
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {treatments.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No hay tratamientos registrados para esta mascota
+                    </Typography>
+                  ) : (
+                    <List>
+                      {treatments.map((treatment) => (
+                        <ListItem
+                          key={treatment.id_tratamiento}
+                          sx={{
+                            mb: 2,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1
+                          }}
+                        >
+                          <ListItemIcon>
+                            <TreatmentIcon color="primary" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="h6">
+                                  {treatment.nombre}
+                                </Typography>
+                                <Chip
+                                  label={treatment.estado}
+                                  color={getStatusColor(treatment.estado)}
+                                  size="small"
+                                />
                               </Box>
-                              <Box component="span" sx={{ display: 'block' }}>
-                                <strong>Fecha de inicio:</strong> {formatDate(treatment.fecha_inicio)}
-                              </Box>
-                              {treatment.fecha_fin && (
-                                <Box component="span" sx={{ display: 'block' }}>
-                                  <strong>Fecha de fin:</strong> {formatDate(treatment.fecha_fin)}
+                            }
+                            secondary={
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                  {treatment.descripcion}
+                                </Typography>
+                                <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
+                                  <Typography variant="body2">
+                                    Fecha de inicio: {formatDate(treatment.fecha_inicio)}
+                                  </Typography>
+                                  {treatment.fecha_fin && (
+                                    <Typography variant="body2">
+                                      Fecha de fin: {formatDate(treatment.fecha_fin)}
+                                    </Typography>
+                                  )}
                                 </Box>
-                              )}
-                              <Box component="span" sx={{ display: 'block' }}>
-                                <strong>Veterinario:</strong> {treatment.cita?.veterinario?.nombre} {treatment.cita?.veterinario?.apellido}
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                  Precio: ${treatment.precio}
+                                </Typography>
                               </Box>
-                            </Box>
-                          </Typography>
-                        }
-                      />
-                      <Chip
-                        label={treatment.estado}
-                        color={getStatusColor(treatment.estado)}
-                        size="small"
-                        sx={{ ml: 2 }}
-                      />
-                    </ListItem>
-                    <Divider />
-                  </React.Fragment>
-                ))}
-              </List>
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                No hay tratamientos registrados para esta mascota.
-              </Typography>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      ))}
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
