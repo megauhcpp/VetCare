@@ -28,8 +28,8 @@ class TratamientoController extends Controller
 
             Log::info('Fetching treatments for user:', ['user_id' => $user->id_usuario, 'role' => $user->rol]);
 
-            // Si es admin, obtener todos los tratamientos
-            if ($user->rol === 'admin') {
+            // Si es admin o veterinario, obtener todos los tratamientos
+            if ($user->rol === 'admin' || $user->rol === 'veterinario') {
                 $tratamientos = Tratamiento::with([
                     'cita' => function($query) {
                         $query->select('id_cita', 'id_mascota', 'id_usuario', 'fecha_hora', 'tipo_consulta', 'motivo_consulta', 'estado');

@@ -7,6 +7,7 @@ use App\Models\Mascota;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MascotaController extends Controller
 {
@@ -15,15 +16,70 @@ class MascotaController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        
-        if ($user->rol === 'admin') {
-            $mascotas = Mascota::with('usuario')->get();
-        } else {
-            $mascotas = Mascota::where('id_usuario', $user->id_usuario)->get();
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            Log::info('Fetching pets for user:', ['user_id' => $user->id_usuario, 'role' => $user->rol]);
+
+            // Si es admin o veterinario, obtener todas las mascotas
+            if ($user->rol === 'admin' || $user->rol === 'veterinario') {
+                $mascotas = Mascota::with(['usuario' => function($query) {
+                    $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                }])->get();
+            } else {
+                // Si es cliente, obtener solo sus mascotas
+                $mascotas = Mascota::where('id_usuario', $user->id_usuario)
+                    ->with(['usuario' => function($query) {
+                        $query->select('id_usuario', 'nombre', 'apellido', 'email');
+                    }])
+                    ->get();
+            }
+
+            Log::info('Found pets:', ['count' => $mascotas->count()]);
+
+            $formattedPets = $mascotas->map(function ($mascota) {
+                return [
+                    'id_mascota' => $mascota->id_mascota,
+                    'nombre' => $mascota->nombre,
+                    'especie' => $mascota->especie,
+                    'raza' => $mascota->raza,
+                    'fecha_nacimiento' => $mascota->fecha_nacimiento,
+                    'sexo' => $mascota->sexo,
+                    'notas' => $mascota->notas,
+                    'usuario' => [
+                        'id_usuario' => $mascota->usuario->id_usuario,
+                        'nombre' => $mascota->usuario->nombre,
+                        'apellido' => $mascota->usuario->apellido,
+                        'email' => $mascota->usuario->email
+                    ]
+                ];
+            });
+
+            Log::info('Formatted pets:', ['count' => $formattedPets->count()]);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $formattedPets
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al obtener mascotas:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al obtener las mascotas',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json($mascotas);
     }
 
     /**

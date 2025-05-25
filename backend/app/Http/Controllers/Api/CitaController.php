@@ -28,8 +28,8 @@ class CitaController extends Controller
 
             Log::info('Fetching appointments for user:', ['user_id' => $user->id_usuario, 'role' => $user->rol]);
 
-            // Si es admin, obtener todas las citas
-            if ($user->rol === 'admin') {
+            // Si es admin o veterinario, obtener todas las citas
+            if ($user->rol === 'admin' || $user->rol === 'veterinario') {
                 $citas = Cita::with([
                     'mascota' => function($query) {
                         $query->select('id_mascota', 'id_usuario', 'nombre', 'especie', 'raza', 'fecha_nacimiento', 'sexo', 'notas');
