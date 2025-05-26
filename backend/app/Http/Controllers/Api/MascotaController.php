@@ -90,33 +90,78 @@ class MascotaController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'especie' => 'required|string|max:255',
-            'raza' => 'required|string|max:255',
-            'fecha_nacimiento' => 'required|date',
-            'sexo' => 'required|string|max:10',
-            'notas' => 'nullable|string'
-        ]);
+        try {
+            Log::info('Creando nueva mascota:', [
+                'request_data' => $request->all(),
+                'user' => Auth::user()
+            ]);
 
-        $user = Auth::user();
-        
-        // Obtener el último ID de mascota
-        $ultimaMascota = Mascota::orderBy('id_mascota', 'desc')->first();
-        $nuevoId = $ultimaMascota ? $ultimaMascota->id_mascota + 1 : 1;
+            $request->validate([
+                'nombre' => 'required|string|max:255',
+                'especie' => 'required|string|max:255',
+                'raza' => 'required|string|max:255',
+                'fecha_nacimiento' => 'required|date',
+                'sexo' => 'required|string|max:10',
+                'notas' => 'nullable|string',
+                'id_usuario' => 'required|exists:usuarios,id_usuario'
+            ]);
 
-        $mascota = new Mascota();
-        $mascota->id_mascota = $nuevoId;
-        $mascota->id_usuario = $user->id_usuario;
-        $mascota->nombre = $request->nombre;
-        $mascota->especie = $request->especie;
-        $mascota->raza = $request->raza;
-        $mascota->fecha_nacimiento = $request->fecha_nacimiento;
-        $mascota->sexo = $request->sexo;
-        $mascota->notas = $request->notas;
-        $mascota->save();
+            $user = Auth::user();
+            
+            // Verificar que el usuario tenga permisos para crear mascotas para otros usuarios
+            if ($user->rol !== 'admin' && $user->rol !== 'veterinario') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No tienes permiso para crear mascotas para otros usuarios'
+                ], 403);
+            }
 
-        return response()->json($mascota, 201);
+            // Verificar que el usuario seleccionado sea un cliente
+            $usuarioSeleccionado = Usuario::find($request->id_usuario);
+            if (!$usuarioSeleccionado || $usuarioSeleccionado->rol !== 'cliente') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El usuario seleccionado debe ser un cliente'
+                ], 400);
+            }
+            
+            // Obtener el último ID de mascota
+            $ultimaMascota = Mascota::orderBy('id_mascota', 'desc')->first();
+            $nuevoId = $ultimaMascota ? $ultimaMascota->id_mascota + 1 : 1;
+
+            $mascota = new Mascota();
+            $mascota->id_mascota = $nuevoId;
+            $mascota->id_usuario = $request->id_usuario;
+            $mascota->nombre = $request->nombre;
+            $mascota->especie = $request->especie;
+            $mascota->raza = $request->raza;
+            $mascota->fecha_nacimiento = $request->fecha_nacimiento;
+            $mascota->sexo = $request->sexo;
+            $mascota->notas = $request->notas;
+            $mascota->save();
+
+            Log::info('Mascota creada exitosamente:', [
+                'mascota' => $mascota,
+                'usuario_asignado' => $usuarioSeleccionado
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Mascota creada exitosamente',
+                'data' => $mascota
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error al crear mascota:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al crear la mascota',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

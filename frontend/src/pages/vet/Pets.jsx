@@ -35,10 +35,9 @@ const Pets = () => {
     nombre: '',
     especie: '',
     raza: '',
-    edad: '',
-    peso: '',
+    fecha_nacimiento: '',
     sexo: '',
-    observaciones: '',
+    notas: '',
     id_usuario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -80,10 +79,9 @@ const Pets = () => {
         nombre: pet.nombre,
         especie: pet.especie,
         raza: pet.raza,
-        edad: pet.edad,
-        peso: pet.peso,
+        fecha_nacimiento: pet.fecha_nacimiento ? pet.fecha_nacimiento.split('T')[0] : '',
         sexo: pet.sexo,
-        observaciones: pet.observaciones || '',
+        notas: pet.notas || '',
         id_usuario: pet.id_usuario || ''
       });
     } else {
@@ -92,10 +90,9 @@ const Pets = () => {
         nombre: '',
         especie: '',
         raza: '',
-        edad: '',
-        peso: '',
+        fecha_nacimiento: '',
         sexo: '',
-        observaciones: '',
+        notas: '',
         id_usuario: ''
       });
     }
@@ -121,10 +118,7 @@ const Pets = () => {
       
       const method = selectedPet ? 'PUT' : 'POST';
       
-      const petData = {
-        ...formData,
-        id_usuario: user.id_usuario
-      };
+      const petData = { ...formData };
 
       const response = await fetch(url, {
         method,
@@ -207,9 +201,9 @@ const Pets = () => {
         </Typography>
       ) : (
         <List>
-          {pets.map((pet) => (
+          {pets.map((pet, idx) => (
             <ListItem
-              key={pet.id_mascota}
+              key={pet.id_mascota || `pet-${idx}`}
               sx={{
                 mb: 2,
                 border: '1px solid',
@@ -236,17 +230,14 @@ const Pets = () => {
                       Raza: {pet.raza}
                     </Typography>
                     <Typography component="div" sx={{ mb: 0.5 }}>
-                      Edad: {pet.edad} años
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Peso: {pet.peso} kg
+                      Fecha de Nacimiento: {pet.fecha_nacimiento}
                     </Typography>
                     <Typography component="div" sx={{ mb: 0.5 }}>
                       Sexo: {pet.sexo}
                     </Typography>
-                    {pet.observaciones && (
+                    {pet.notas && (
                       <Typography component="div">
-                        Observaciones: {pet.observaciones}
+                        Notas: {pet.notas}
                       </Typography>
                     )}
                   </Typography>
@@ -291,8 +282,8 @@ const Pets = () => {
               onChange={(e) => setFormData({ ...formData, especie: e.target.value, raza: '' })}
               required
             >
-              {Object.entries(categoriasEspecies).map(([categoria, especiesList]) => [
-                <MenuItem key={categoria} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
+              {Object.entries(categoriasEspecies).flatMap(([categoria, especiesList]) => [
+                <MenuItem key={`cat-${categoria}`} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
                   {categoria}
                 </MenuItem>,
                 ...especiesList.map(especie => (
@@ -311,26 +302,25 @@ const Pets = () => {
               required
               disabled={!formData.especie}
             >
-              {formData.especie && especies[formData.especie]?.map((raza) => (
-                <MenuItem key={raza} value={raza}>
-                  {raza}
+              {formData.especie ? (
+                especies[formData.especie]?.map((raza) => (
+                  <MenuItem key={raza} value={raza}>
+                    {raza}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled value="">
+                  Seleccione una especie primero
                 </MenuItem>
-              ))}
+              )}
             </TextField>
             <TextField
-              label="Edad"
-              type="number"
+              label="Fecha de Nacimiento"
+              type="date"
+              value={formData.fecha_nacimiento}
+              onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               fullWidth
-              value={formData.edad}
-              onChange={(e) => setFormData({ ...formData, edad: e.target.value })}
-              required
-            />
-            <TextField
-              label="Peso (kg)"
-              type="number"
-              fullWidth
-              value={formData.peso}
-              onChange={(e) => setFormData({ ...formData, peso: e.target.value })}
+              InputLabelProps={{ shrink: true }}
               required
             />
             <TextField
@@ -345,12 +335,12 @@ const Pets = () => {
               <MenuItem value="hembra">Hembra</MenuItem>
             </TextField>
             <TextField
-              label="Observaciones"
+              label="Notas"
               fullWidth
               multiline
               rows={3}
-              value={formData.observaciones}
-              onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+              value={formData.notas}
+              onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
             />
             <TextField
               select
@@ -362,11 +352,17 @@ const Pets = () => {
               required
               sx={{ mb: 2 }}
             >
-              {clientes.map((cliente) => (
-                <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
-                  {cliente.nombre} {cliente.apellido} ({cliente.email})
+              {clientes.length === 0 ? (
+                <MenuItem disabled value="">
+                  No hay clientes disponibles
                 </MenuItem>
-              ))}
+              ) : (
+                clientes.map((cliente) => (
+                  <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
+                    {cliente.nombre} {cliente.apellido} ({cliente.email})
+                  </MenuItem>
+                ))
+              )}
             </TextField>
           </Box>
         </DialogContent>

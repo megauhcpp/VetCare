@@ -150,21 +150,37 @@ const AdminPets = () => {
 
   const handleSubmit = async () => {
     try {
+      if (!formData.id_usuario) {
+        setSnackbar({
+          open: true,
+          message: 'Debes seleccionar un dueño para la mascota',
+          severity: 'error'
+        });
+        return;
+      }
+
       const url = selectedPet
         ? `/api/pets/${selectedPet.id_mascota}`
         : '/api/pets';
       
       const method = selectedPet ? 'PUT' : 'POST';
       
+      console.log('Enviando datos:', formData); // Debug log
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error('Error al guardar la mascota');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al guardar la mascota');
+      }
 
       setSnackbar({
         open: true,
@@ -175,6 +191,7 @@ const AdminPets = () => {
       handleCloseDialog();
       // Aquí deberías actualizar la lista de mascotas
     } catch (error) {
+      console.error('Error:', error); // Debug log
       setSnackbar({
         open: true,
         message: error.message,
@@ -261,6 +278,7 @@ const AdminPets = () => {
               <TableCell>Dueño</TableCell>
               <TableCell>Fecha de Nacimiento</TableCell>
               <TableCell>Sexo</TableCell>
+              <TableCell>Notas</TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
@@ -283,6 +301,17 @@ const AdminPets = () => {
                       color={pet.sexo === 'Macho' ? 'primary' : 'secondary'}
                       size="small"
                     />
+                  </TableCell>
+                  <TableCell>
+                    {pet.notas ? (
+                      <Tooltip title={pet.notas}>
+                        <Typography noWrap sx={{ maxWidth: 200 }}>
+                          {pet.notas}
+                        </Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography color="text.secondary">Sin notas</Typography>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
