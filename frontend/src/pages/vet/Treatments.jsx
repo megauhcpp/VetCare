@@ -36,7 +36,7 @@ const Treatments = () => {
     descripcion: '',
     fecha_inicio: '',
     fecha_fin: '',
-    estado: 'activo',
+    estado: 'pendiente',
     medicamentos: '',
     instrucciones: ''
   });
@@ -72,7 +72,7 @@ const Treatments = () => {
         descripcion: '',
         fecha_inicio: '',
         fecha_fin: '',
-        estado: 'activo',
+        estado: 'pendiente',
         medicamentos: '',
         instrucciones: ''
       });
@@ -168,34 +168,55 @@ const Treatments = () => {
   const handleChangeState = async (treatment, newState) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/tratamientos/${treatment.id_tratamiento}`, {
+      if (!token) {
+        setSnackbar({ open: true, message: 'No hay token de autenticación', severity: 'error' });
+        return;
+      }
+
+      const url = `/api/tratamientos/${treatment.id_tratamiento}/estado`;
+
+      console.log('Updating treatment state:', {
+        url,
+        treatmentId: treatment.id_tratamiento,
+        newState,
+        token: token.substring(0, 10) + '...' // Solo mostramos parte del token por seguridad
+      });
+
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ ...treatment, estado: newState }),
+        body: JSON.stringify({ estado: newState })
       });
-      if (response.ok) {
-        const updatedTreatment = await response.json();
-        setTreatments(treatments.map(t => t.id_tratamiento === updatedTreatment.id_tratamiento ? updatedTreatment : t));
-        setSnackbar({ open: true, message: `Tratamiento marcado como ${newState}`, severity: 'success' });
-        setChangingStateId(null);
-      } else {
-        setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+
+      console.log('Server response:', await response.clone().json());
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al actualizar el estado del tratamiento');
       }
+
+      const updatedTreatment = await response.json();
+      setTreatments(treatments.map(t => t.id_tratamiento === updatedTreatment.data.id_tratamiento ? updatedTreatment.data : t));
+      setSnackbar({ open: true, message: `Tratamiento marcado como ${newState}`, severity: 'success' });
+      setChangingStateId(null);
     } catch (error) {
-      setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+      console.error('Error updating treatment state:', error);
+      setSnackbar({ open: true, message: error.message || 'Error al cambiar el estado', severity: 'error' });
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'activo':
-        return 'success';
+      case 'pendiente':
+        return 'warning';
+      case 'en_progreso':
+        return 'primary';
       case 'completado':
-        return 'info';
+        return 'success';
       case 'cancelado':
         return 'error';
       default:
@@ -374,7 +395,8 @@ const Treatments = () => {
               onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
               required
             >
-              <MenuItem value="activo">Activo</MenuItem>
+              <MenuItem value="pendiente">Pendiente</MenuItem>
+              <MenuItem value="en_progreso">En Progreso</MenuItem>
               <MenuItem value="completado">Completado</MenuItem>
               <MenuItem value="cancelado">Cancelado</MenuItem>
             </TextField>

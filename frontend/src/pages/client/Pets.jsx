@@ -25,7 +25,10 @@ import {
   TableRow,
   Paper,
   Snackbar,
-  CircularProgress
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -124,16 +127,30 @@ const Pets = () => {
 
       if (response.ok) {
         const updatedPet = await response.json();
+        console.log('Pet created/updated:', updatedPet); // Debug log
+
+        // Actualizar la lista de mascotas
         if (selectedPet) {
           setPets(pets.map(p => p.id_mascota === updatedPet.id_mascota ? updatedPet : p));
         } else {
-          setPets([...pets, updatedPet]);
+          // Asegurarse de que la nueva mascota tenga la relación con el usuario
+          const newPet = {
+            ...updatedPet,
+            usuario: {
+              id_usuario: user.id_usuario,
+              nombre: user.nombre,
+              apellido: user.apellido
+            }
+          };
+          setPets(prevPets => [...prevPets, newPet]);
         }
+
         handleCloseDialog();
         setError('');
         setSnackbar({ open: true, message: 'Mascota guardada correctamente', severity: 'success' });
       } else {
         const errorData = await response.json();
+        console.error('Error response:', errorData); // Debug log
         setError(errorData.message || 'Error al guardar la mascota');
       }
     } catch (error) {
@@ -286,38 +303,44 @@ const Pets = () => {
                 sx: { borderRadius: 2 }
               }}
             />
-            <TextField
-              select
-              label="Especie"
-              fullWidth
-              value={formData.especie}
-              onChange={handleEspecieChange}
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
-            >
-              {Object.entries(categoriasEspecies).map(([categoria, especiesList]) => [
-                <MenuItem key={categoria} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
-                  {categoria}
-                </MenuItem>,
-                ...especiesList.map(especie => (
-                  <MenuItem key={especie} value={especie} sx={{ pl: 4 }}>
-                    {especie.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+            <FormControl fullWidth>
+              <InputLabel>Especie</InputLabel>
+              <Select
+                value={formData.especie}
+                onChange={handleEspecieChange}
+                label="Especie"
+                variant="outlined"
+                sx={{ borderRadius: 2 }}
+              >
+                {Object.entries(categoriasEspecies).map(([categoria, especiesList]) => [
+                  <MenuItem key={categoria} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
+                    {categoria}
+                  </MenuItem>,
+                  ...especiesList.map(especie => (
+                    <MenuItem key={especie} value={especie} sx={{ pl: 4 }}>
+                      {especie.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </MenuItem>
+                  ))
+                ])}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Raza</InputLabel>
+              <Select
+                value={formData.raza}
+                onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
+                label="Raza"
+                variant="outlined"
+                sx={{ borderRadius: 2 }}
+                disabled={!formData.especie}
+              >
+                {formData.especie && especies[formData.especie]?.map((raza) => (
+                  <MenuItem key={raza} value={raza}>
+                    {raza}
                   </MenuItem>
-                ))
-              ])}
-            </TextField>
-            <TextField
-              label="Raza"
-              fullWidth
-              value={formData.raza}
-              onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
-            />
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               label="Fecha de Nacimiento"
               type="date"
@@ -332,23 +355,22 @@ const Pets = () => {
                 sx: { borderRadius: 2 }
               }}
             />
-            <TextField
-              select
-              label="Sexo"
-              fullWidth
-              value={formData.sexo}
-              onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
-            >
-              {sexos.map((sexo) => (
-                <MenuItem key={sexo} value={sexo}>
-                  {sexo}
-                </MenuItem>
-              ))}
-            </TextField>
+            <FormControl fullWidth>
+              <InputLabel>Sexo</InputLabel>
+              <Select
+                value={formData.sexo}
+                onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
+                label="Sexo"
+                variant="outlined"
+                sx={{ borderRadius: 2 }}
+              >
+                {sexos.map((sexo) => (
+                  <MenuItem key={sexo} value={sexo}>
+                    {sexo}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               label="Notas"
               fullWidth

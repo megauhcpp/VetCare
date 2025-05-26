@@ -165,7 +165,7 @@ const Treatments = () => {
                           <ListItemText
                             primary={
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="h6">
+                                <Typography variant="h6" component="div">
                                   {treatment.nombre}
                                 </Typography>
                                 <Chip
@@ -177,20 +177,20 @@ const Treatments = () => {
                             }
                             secondary={
                               <Box sx={{ mt: 1 }}>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" component="div">
                                   {treatment.descripcion}
                                 </Typography>
                                 <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
-                                  <Typography variant="body2">
+                                  <Typography variant="body2" component="div">
                                     Fecha de inicio: {formatDate(treatment.fecha_inicio)}
                                   </Typography>
                                   {treatment.fecha_fin && (
-                                    <Typography variant="body2">
+                                    <Typography variant="body2" component="div">
                                       Fecha de fin: {formatDate(treatment.fecha_fin)}
                                     </Typography>
                                   )}
                                 </Box>
-                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                <Typography variant="body2" component="div" sx={{ mt: 1 }}>
                                   Precio: ${treatment.precio}
                                 </Typography>
                               </Box>

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Cita;
+use Illuminate\Support\Facades\DB;
 
 class TratamientoController extends Controller
 {
@@ -212,21 +213,103 @@ class TratamientoController extends Controller
     /**
      * Update the status of a treatment.
      */
-    public function updateEstado(Request $request, Tratamiento $tratamiento)
+    public function updateEstado(Request $request, $id)
     {
-        // Verificar que el tratamiento pertenece al usuario
-        if ($tratamiento->cita->mascota->id_usuario !== Auth::user()->id_usuario) {
-            return response()->json(['error' => 'No autorizado'], 403);
+        try {
+            Log::info('Iniciando actualización de estado de tratamiento', [
+                'tratamiento_id' => $id,
+                'request_data' => $request->all()
+            ]);
+
+            $user = Auth::user();
+            
+            if (!$user) {
+                Log::warning('Intento de actualización sin usuario autenticado');
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            Log::info('Usuario autenticado', [
+                'user_id' => $user->id_usuario,
+                'role' => $user->rol
+            ]);
+
+            // Solo permitir a admin y veterinario cambiar el estado
+            if ($user->rol !== 'admin' && $user->rol !== 'veterinario') {
+                Log::warning('Intento de actualización por usuario no autorizado', [
+                    'user_id' => $user->id_usuario,
+                    'role' => $user->rol
+                ]);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Solo los administradores y veterinarios pueden cambiar el estado de los tratamientos'
+                ], 403);
+            }
+
+            $request->validate([
+                'estado' => 'required|string|in:pendiente,en_progreso,completado,cancelado'
+            ]);
+
+            // Buscar el tratamiento
+            $tratamiento = Tratamiento::find($id);
+            if (!$tratamiento) {
+                Log::error('Tratamiento no encontrado', ['id' => $id]);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Tratamiento no encontrado'
+                ], 404);
+            }
+
+            Log::info('Validación exitosa, actualizando estado', [
+                'old_state' => $tratamiento->estado,
+                'new_state' => $request->estado
+            ]);
+
+            // Actualizar directamente usando Query Builder
+            DB::table('tratamientos')
+                ->where('id_tratamiento', $id)
+                ->update(['estado' => $request->estado]);
+
+            // Recargar el tratamiento con sus relaciones
+            $tratamiento = Tratamiento::with(['cita.mascota', 'cita.veterinario'])
+                ->find($id);
+
+            Log::info('Estado actualizado exitosamente', [
+                'tratamiento_id' => $id,
+                'new_state' => $tratamiento->estado
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $tratamiento
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Error de validación al actualizar estado', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar estado del tratamiento', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'tratamiento_id' => $id ?? null,
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al actualizar el estado del tratamiento',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $request->validate([
-            'estado' => 'required|string|in:pendiente,en_progreso,completado,cancelado'
-        ]);
-
-        $tratamiento->estado = $request->estado;
-        $tratamiento->save();
-        $tratamiento->load(['cita.mascota', 'cita.veterinario']);
-
-        return response()->json($tratamiento);
     }
 }

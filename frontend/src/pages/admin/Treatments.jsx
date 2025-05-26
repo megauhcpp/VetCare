@@ -40,7 +40,7 @@ import {
 } from '@mui/icons-material';
 
 const AdminTreatments = () => {
-  const { treatments, pets, appointments } = useApp();
+  const { treatments, pets, appointments, setTreatments } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -203,22 +203,65 @@ const AdminTreatments = () => {
 
   const handleChangeState = async (treatment, newState) => {
     try {
-      const response = await fetch(`/api/treatments/${treatment.id_tratamiento}`, {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setSnackbar({
+          open: true,
+          message: 'No hay token de autenticación',
+          severity: 'error'
+        });
+        return;
+      }
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const url = `${apiUrl}/api/tratamientos/${treatment.id_tratamiento}/estado`;
+
+      console.log('Updating treatment state:', {
+        url,
+        treatmentId: treatment.id_tratamiento,
+        newState,
+        token: token.substring(0, 10) + '...' // Solo mostramos parte del token por seguridad
+      });
+
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({ ...treatment, estado: newState }),
+        body: JSON.stringify({ estado: newState })
       });
-      if (response.ok) {
-        setSnackbar({ open: true, message: `Tratamiento marcado como ${newState}`, severity: 'success' });
-        setChangingStateId(null);
-        // Aquí deberías actualizar la lista de tratamientos
-      } else {
-        setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+
+      const data = await response.json();
+      console.log('Server response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al cambiar el estado');
       }
+
+      setSnackbar({
+        open: true,
+        message: `Tratamiento marcado como ${newState}`,
+        severity: 'success'
+      });
+      setChangingStateId(null);
+      
+      // Actualizar la lista de tratamientos
+      const updatedTreatments = treatmentsData.map(t => 
+        t.id_tratamiento === treatment.id_tratamiento 
+          ? { ...t, estado: newState }
+          : t
+      );
+      setTreatments(updatedTreatments);
+
     } catch (error) {
-      setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+      console.error('Error updating treatment state:', error);
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error al cambiar el estado',
+        severity: 'error'
+      });
     }
   };
 

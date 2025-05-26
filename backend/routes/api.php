@@ -64,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tratamientos/{id}', [TratamientoController::class, 'show']);
         Route::put('/tratamientos/{id}', [TratamientoController::class, 'update']);
         Route::delete('/tratamientos/{id}', [TratamientoController::class, 'destroy']);
-        Route::patch('/tratamientos/{id}/estado', [TratamientoController::class, 'updateEstado']);
+        Route::put('/tratamientos/{id}/estado', [TratamientoController::class, 'updateEstado']);
     });
     
     // Treatments (English)
@@ -74,7 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/treatments/{id}', [TratamientoController::class, 'show']);
         Route::put('/treatments/{id}', [TratamientoController::class, 'update']);
         Route::delete('/treatments/{id}', [TratamientoController::class, 'destroy']);
-        Route::patch('/treatments/{id}/estado', [TratamientoController::class, 'updateEstado']);
+        Route::put('/treatments/{id}/status', [TratamientoController::class, 'updateEstado']);
     });
     
     // Admin Routes
