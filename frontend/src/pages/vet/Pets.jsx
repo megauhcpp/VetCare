@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -37,9 +37,32 @@ const Pets = () => {
     edad: '',
     peso: '',
     sexo: '',
-    observaciones: ''
+    observaciones: '',
+    id_usuario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [clientes, setClientes] = useState([]);
+
+  useEffect(() => {
+    // Fetch clientes (usuarios con rol cliente)
+    const fetchClientes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/clientes', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setClientes(data.data || data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching clientes:', error);
+      }
+    };
+    fetchClientes();
+  }, []);
 
   if (!Array.isArray(pets)) {
     return (
@@ -59,7 +82,8 @@ const Pets = () => {
         edad: pet.edad,
         peso: pet.peso,
         sexo: pet.sexo,
-        observaciones: pet.observaciones || ''
+        observaciones: pet.observaciones || '',
+        id_usuario: pet.id_usuario || ''
       });
     } else {
       setSelectedPet(null);
@@ -70,7 +94,8 @@ const Pets = () => {
         edad: '',
         peso: '',
         sexo: '',
-        observaciones: ''
+        observaciones: '',
+        id_usuario: ''
       });
     }
     setOpenDialog(true);
@@ -312,6 +337,22 @@ const Pets = () => {
               value={formData.observaciones}
               onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
             />
+            <TextField
+              select
+              label="Dueño"
+              name="id_usuario"
+              fullWidth
+              value={formData.id_usuario}
+              onChange={e => setFormData(prev => ({ ...prev, id_usuario: e.target.value }))}
+              required
+              sx={{ mb: 2 }}
+            >
+              {clientes.map((cliente) => (
+                <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
+                  {cliente.nombre} {cliente.apellido} ({cliente.email})
+                </MenuItem>
+              ))}
+            </TextField>
           </Box>
         </DialogContent>
         <DialogActions>

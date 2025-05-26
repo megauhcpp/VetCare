@@ -33,7 +33,10 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  SwapHoriz as SwapHorizIcon,
+  Check as CheckIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 
 const AdminTreatments = () => {
@@ -51,6 +54,7 @@ const AdminTreatments = () => {
     id_cita: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [changingStateId, setChangingStateId] = useState(null);
 
   // Extraer los tratamientos del objeto de respuesta
   const treatmentsData = useMemo(() => {
@@ -197,6 +201,27 @@ const AdminTreatments = () => {
     }
   };
 
+  const handleChangeState = async (treatment, newState) => {
+    try {
+      const response = await fetch(`/api/treatments/${treatment.id_tratamiento}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...treatment, estado: newState }),
+      });
+      if (response.ok) {
+        setSnackbar({ open: true, message: `Tratamiento marcado como ${newState}`, severity: 'success' });
+        setChangingStateId(null);
+        // Aquí deberías actualizar la lista de tratamientos
+      } else {
+        setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+      }
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+    }
+  };
+
   const filteredTreatments = treatmentsData.filter(treatment => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -277,6 +302,25 @@ const AdminTreatments = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Cambiar estado">
+                        <IconButton size="small" onClick={() => setChangingStateId(changingStateId === treatment.id_tratamiento ? null : treatment.id_tratamiento)}>
+                          <SwapHorizIcon />
+                        </IconButton>
+                      </Tooltip>
+                      {changingStateId === treatment.id_tratamiento && (
+                        <>
+                          <Tooltip title="Marcar como completado">
+                            <IconButton size="small" onClick={() => handleChangeState(treatment, 'completado')} color="success">
+                              <CheckIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Marcar como cancelado">
+                            <IconButton size="small" onClick={() => handleChangeState(treatment, 'cancelado')} color="error">
+                              <CloseIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
                       <Tooltip title="Ver detalles">
                         <IconButton size="small">
                           <ViewIcon />

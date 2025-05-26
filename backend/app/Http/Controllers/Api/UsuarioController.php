@@ -86,8 +86,22 @@ class UsuarioController extends Controller
     // Obtener todos los veterinarios
     public function getVeterinarios()
     {
-        $veterinarios = Usuario::where('rol', 'veterinario')->get();
-        return response()->json($veterinarios);
+        try {
+            $veterinarios = Usuario::where('rol', 'veterinario')
+                ->select('id_usuario', 'nombre', 'apellido', 'email')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $veterinarios
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al obtener los veterinarios',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Obtener todos los clientes

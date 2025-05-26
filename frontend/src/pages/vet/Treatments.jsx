@@ -21,7 +21,7 @@ import {
   CircularProgress,
   Divider
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Check as CheckIcon, Close as CloseIcon, SwapHoriz as SwapHorizIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -41,6 +41,7 @@ const Treatments = () => {
     instrucciones: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [changingStateId, setChangingStateId] = useState(null);
 
   if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
@@ -164,6 +165,31 @@ const Treatments = () => {
     }
   };
 
+  const handleChangeState = async (treatment, newState) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/tratamientos/${treatment.id_tratamiento}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...treatment, estado: newState }),
+      });
+      if (response.ok) {
+        const updatedTreatment = await response.json();
+        setTreatments(treatments.map(t => t.id_tratamiento === updatedTreatment.id_tratamiento ? updatedTreatment : t));
+        setSnackbar({ open: true, message: `Tratamiento marcado como ${newState}`, severity: 'success' });
+        setChangingStateId(null);
+      } else {
+        setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+      }
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'activo':
@@ -250,6 +276,19 @@ const Treatments = () => {
                 }
               />
               <ListItemSecondaryAction>
+                <IconButton onClick={() => setChangingStateId(changingStateId === treatment.id_tratamiento ? null : treatment.id_tratamiento)}>
+                  <SwapHorizIcon />
+                </IconButton>
+                {changingStateId === treatment.id_tratamiento && (
+                  <>
+                    <IconButton onClick={() => handleChangeState(treatment, 'completado')} color="success">
+                      <CheckIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleChangeState(treatment, 'cancelado')} color="error">
+                      <CloseIcon />
+                    </IconButton>
+                  </>
+                )}
                 <IconButton onClick={() => handleOpenDialog(treatment)}>
                   <EditIcon />
                 </IconButton>

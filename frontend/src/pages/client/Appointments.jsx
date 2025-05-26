@@ -36,13 +36,15 @@ const Appointments = () => {
   const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [veterinarians, setVeterinarians] = useState([]);
   const [formData, setFormData] = useState({
     petId: '',
     date: '',
     time: '',
     type: '',
     motivo: '',
-    estado: 'pendiente'
+    estado: 'pendiente',
+    id_veterinario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
@@ -62,6 +64,27 @@ const Appointments = () => {
     userPets.some(pet => pet.id_mascota === appointment.mascota?.id_mascota)
   );
 
+  useEffect(() => {
+    // Fetch veterinarians when component mounts
+    const fetchVeterinarians = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/veterinarios', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setVeterinarians(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching veterinarians:', error);
+      }
+    };
+    fetchVeterinarians();
+  }, []);
+
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
@@ -71,7 +94,8 @@ const Appointments = () => {
         time: appointment.fecha_hora.split('T')[1].substring(0, 5),
         type: appointment.tipo_consulta,
         motivo: appointment.motivo_consulta,
-        estado: appointment.estado
+        estado: appointment.estado,
+        id_veterinario: appointment.veterinario?.id_usuario || ''
       });
     } else {
       setSelectedAppointment(null);
@@ -81,7 +105,8 @@ const Appointments = () => {
         time: '',
         type: '',
         motivo: '',
-        estado: 'pendiente'
+        estado: 'pendiente',
+        id_veterinario: ''
       });
     }
     setOpenDialog(true);
@@ -113,7 +138,8 @@ const Appointments = () => {
         fecha_hora: fechaHora,
         tipo_consulta: formData.type,
         motivo_consulta: formData.motivo,
-        estado: formData.estado
+        estado: formData.estado,
+        id_veterinario: formData.id_veterinario
       };
       
       const response = await fetch(url, {
@@ -289,6 +315,20 @@ const Appointments = () => {
               {userPets.map((pet) => (
                 <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
                   {pet.nombre}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              label="Veterinario"
+              fullWidth
+              value={formData.id_veterinario}
+              onChange={(e) => setFormData({ ...formData, id_veterinario: e.target.value })}
+              required
+            >
+              {veterinarians.map((vet) => (
+                <MenuItem key={vet.id_usuario} value={vet.id_usuario}>
+                  {`${vet.nombre} ${vet.apellido}`}
                 </MenuItem>
               ))}
             </TextField>

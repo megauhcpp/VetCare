@@ -137,18 +137,22 @@ class CitaController extends Controller
             'fecha_hora' => 'required|date',
             'tipo_consulta' => 'required|string|in:consulta_general,vacunacion,cirugia,urgencia',
             'estado' => 'required|string|in:pendiente,confirmada,completada,cancelada',
+            'id_veterinario' => 'required|exists:usuarios,id_usuario'
         ]);
 
-        // Obtener el veterinario disponible (primer usuario con rol veterinario)
-        $veterinario = Usuario::where('rol', 'veterinario')->first();
+        // Verificar que el veterinario existe y tiene el rol correcto
+        $veterinario = Usuario::where('id_usuario', $request->id_veterinario)
+            ->where('rol', 'veterinario')
+            ->first();
+
         if (!$veterinario) {
             return response()->json([
-                'error' => 'No hay veterinarios disponibles'
-            ], 404);
+                'error' => 'El veterinario seleccionado no es válido'
+            ], 422);
         }
 
         // Verificar que el veterinario esté disponible
-        $citaExistente = Cita::where('id_usuario', $veterinario->id_usuario)
+        $citaExistente = Cita::where('id_usuario', $request->id_veterinario)
             ->where('fecha_hora', $request->fecha_hora)
             ->where('estado', '!=', 'cancelada')
             ->first();
@@ -166,7 +170,7 @@ class CitaController extends Controller
         $cita = new Cita();
         $cita->id_cita = $nuevoId;
         $cita->id_mascota = $request->id_mascota;
-        $cita->id_usuario = $veterinario->id_usuario;
+        $cita->id_usuario = $request->id_veterinario;
         $cita->fecha_hora = $request->fecha_hora;
         $cita->tipo_consulta = $request->tipo_consulta;
         $cita->motivo_consulta = $request->motivo_consulta;
@@ -198,11 +202,28 @@ class CitaController extends Controller
             'fecha_hora' => 'sometimes|required|date',
             'tipo_consulta' => 'sometimes|required|string|in:consulta_general,vacunacion,cirugia,urgencia',
             'estado' => 'sometimes|required|string|in:pendiente,confirmada,completada,cancelada',
+            'id_veterinario' => 'sometimes|required|exists:usuarios,id_usuario'
         ]);
 
-        if ($request->has('fecha_hora') && $request->fecha_hora !== $cita->fecha_hora) {
-            $citaExistente = Cita::where('id_usuario', $cita->id_usuario)
-                ->where('fecha_hora', $request->fecha_hora)
+        if ($request->has('id_veterinario')) {
+            // Verificar que el veterinario existe y tiene el rol correcto
+            $veterinario = Usuario::where('id_usuario', $request->id_veterinario)
+                ->where('rol', 'veterinario')
+                ->first();
+
+            if (!$veterinario) {
+                return response()->json([
+                    'error' => 'El veterinario seleccionado no es válido'
+                ], 422);
+            }
+        }
+
+        if ($request->has('fecha_hora') || $request->has('id_veterinario')) {
+            $fechaHora = $request->fecha_hora ?? $cita->fecha_hora;
+            $idVeterinario = $request->id_veterinario ?? $cita->id_usuario;
+
+            $citaExistente = Cita::where('id_usuario', $idVeterinario)
+                ->where('fecha_hora', $fechaHora)
                 ->where('estado', '!=', 'cancelada')
                 ->where('id_cita', '!=', $cita->id_cita)
                 ->first();

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Box,
@@ -52,12 +52,34 @@ const AdminPets = () => {
     notas: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [clientes, setClientes] = useState([]);
 
   // Extraer las mascotas del objeto de respuesta
   const petsData = useMemo(() => {
     console.log('Raw pets:', pets);
     return Array.isArray(pets) ? pets : (pets?.data || []);
   }, [pets]);
+
+  useEffect(() => {
+    // Fetch clientes (usuarios con rol cliente)
+    const fetchClientes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/clientes', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setClientes(data.data || data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching clientes:', error);
+      }
+    };
+    fetchClientes();
+  }, []);
 
   if (!Array.isArray(pets)) {
     return (
@@ -347,9 +369,9 @@ const AdminPets = () => {
                 onChange={handleInputChange}
                 label="Dueño"
               >
-                {users?.filter(user => user.rol === 'cliente').map((user) => (
-                  <MenuItem key={user.id_usuario} value={user.id_usuario}>
-                    {user.nombre} {user.apellido}
+                {clientes.map((cliente) => (
+                  <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
+                    {cliente.nombre} {cliente.apellido} ({cliente.email})
                   </MenuItem>
                 ))}
               </Select>
