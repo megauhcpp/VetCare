@@ -144,7 +144,7 @@ const Treatments = () => {
                 </AccordionSummary>
                 <AccordionDetails>
                   {treatments.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" component="div">
                       No hay tratamientos registrados para esta mascota
                     </Typography>
                   ) : (
@@ -176,7 +176,7 @@ const Treatments = () => {
                               </Box>
                             }
                             secondary={
-                              <Box sx={{ mt: 1 }}>
+                              <Typography component="div"><Box>
                                 <Typography variant="body2" color="text.secondary" component="div">
                                   {treatment.descripcion}
                                 </Typography>
@@ -193,7 +193,7 @@ const Treatments = () => {
                                 <Typography variant="body2" component="div" sx={{ mt: 1 }}>
                                   Precio: ${treatment.precio}
                                 </Typography>
-                              </Box>
+                              </Box></Typography>
                             }
                           />
                         </ListItem>
