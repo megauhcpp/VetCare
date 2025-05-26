@@ -320,7 +320,6 @@ const AdminUsers = () => {
                 onChange={handleInputChange}
                 label="Rol"
               >
-                <MenuItem value="admin">Administrador</MenuItem>
                 <MenuItem value="veterinario">Veterinario</MenuItem>
                 <MenuItem value="cliente">Cliente</MenuItem>
               </Select>

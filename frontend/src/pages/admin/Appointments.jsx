@@ -33,11 +33,14 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  SwapHoriz as SwapHorizIcon,
+  Check as CheckIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 
 const AdminAppointments = () => {
-  const { appointments, pets, users } = useApp();
+  const { appointments, pets, users, setAppointments } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -51,6 +54,7 @@ const AdminAppointments = () => {
     estado: 'pendiente'
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [changingStateId, setChangingStateId] = useState(null);
 
   // Extraer las citas del objeto de respuesta
   const appointmentsData = useMemo(() => {
@@ -200,6 +204,71 @@ const AdminAppointments = () => {
     }
   };
 
+  const handleChangeState = async (appointment, newState) => {
+    try {
+      const token = localStorage.getItem('token');
+      const vetId = appointment.id_usuario || appointment.veterinario?.id_usuario;
+
+      const response = await fetch(`/api/citas/${appointment.id_cita}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          estado: newState,
+          id_veterinario: vetId,
+          id_usuario: vetId
+        }),
+      });
+
+      if (response.ok) {
+        // Actualizar el estado local inmediatamente
+        const updatedAppointments = appointmentsData.map(a => 
+          a.id_cita === appointment.id_cita 
+            ? { ...a, estado: newState }
+            : a
+        );
+        setAppointments(updatedAppointments);
+        
+        // Mostrar mensaje de éxito
+        setSnackbar({ 
+          open: true, 
+          message: `Cita marcada como ${newState}`, 
+          severity: 'success' 
+        });
+        setChangingStateId(null);
+
+        // Recargar los datos para asegurar sincronización
+        try {
+          const refreshResponse = await fetch('/api/citas', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (refreshResponse.ok) {
+            const data = await refreshResponse.json();
+            setAppointments(data.data || []);
+          }
+        } catch (refreshError) {
+          console.error('Error al recargar las citas:', refreshError);
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('Error al cambiar el estado:', errorData);
+        setSnackbar({ 
+          open: true, 
+          message: errorData.error || errorData.message || 'Error al cambiar el estado', 
+          severity: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error('Error al cambiar el estado:', error);
+      setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+    }
+  };
+
   const filteredAppointments = appointmentsData.filter(appointment => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -281,6 +350,25 @@ const AdminAppointments = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Cambiar estado">
+                        <IconButton size="small" onClick={() => setChangingStateId(changingStateId === appointment.id_cita ? null : appointment.id_cita)}>
+                          <SwapHorizIcon />
+                        </IconButton>
+                      </Tooltip>
+                      {changingStateId === appointment.id_cita && (
+                        <>
+                          <Tooltip title="Marcar como confirmada">
+                            <IconButton size="small" onClick={() => handleChangeState(appointment, 'confirmada')} color="success">
+                              <CheckIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Marcar como cancelada">
+                            <IconButton size="small" onClick={() => handleChangeState(appointment, 'cancelada')} color="error">
+                              <CloseIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
                       <Tooltip title="Ver detalles">
                         <IconButton size="small">
                           <ViewIcon />

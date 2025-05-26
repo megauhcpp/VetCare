@@ -20,7 +20,7 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -40,6 +40,7 @@ const Appointments = () => {
     id_veterinario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [changingStateId, setChangingStateId] = useState(null);
 
   useEffect(() => {
     // Fetch veterinarians when component mounts
@@ -193,6 +194,71 @@ const Appointments = () => {
     }
   };
 
+  const handleChangeState = async (appointment, newState) => {
+    try {
+      const token = localStorage.getItem('token');
+      const vetId = appointment.id_usuario || appointment.veterinario?.id_usuario;
+
+      const response = await fetch(`/api/citas/${appointment.id_cita}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          estado: newState,
+          id_veterinario: vetId,
+          id_usuario: vetId
+        }),
+      });
+
+      if (response.ok) {
+        // Actualizar el estado local inmediatamente
+        const updatedAppointments = appointments.map(a => 
+          a.id_cita === appointment.id_cita 
+            ? { ...a, estado: newState }
+            : a
+        );
+        setAppointments(updatedAppointments);
+        
+        // Mostrar mensaje de éxito
+        setSnackbar({ 
+          open: true, 
+          message: `Cita marcada como ${newState}`, 
+          severity: 'success' 
+        });
+        setChangingStateId(null);
+
+        // Recargar los datos para asegurar sincronización
+        try {
+          const refreshResponse = await fetch('/api/citas', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (refreshResponse.ok) {
+            const data = await refreshResponse.json();
+            setAppointments(data.data || []);
+          }
+        } catch (refreshError) {
+          console.error('Error al recargar las citas:', refreshError);
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('Error al cambiar el estado:', errorData);
+        setSnackbar({ 
+          open: true, 
+          message: errorData.error || errorData.message || 'Error al cambiar el estado', 
+          severity: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error('Error al cambiar el estado:', error);
+      setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pendiente':
@@ -265,6 +331,19 @@ const Appointments = () => {
                 }
               />
               <ListItemSecondaryAction>
+                <IconButton onClick={() => setChangingStateId(changingStateId === appointment.id_cita ? null : appointment.id_cita)}>
+                  <SwapHorizIcon />
+                </IconButton>
+                {changingStateId === appointment.id_cita && (
+                  <>
+                    <IconButton onClick={() => handleChangeState(appointment, 'confirmada')} color="success">
+                      <CheckIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleChangeState(appointment, 'cancelada')} color="error">
+                      <CloseIcon />
+                    </IconButton>
+                  </>
+                )}
                 <IconButton onClick={() => handleOpenDialog(appointment)}>
                   <EditIcon />
                 </IconButton>
@@ -309,12 +388,11 @@ const Appointments = () => {
               value={formData.id_veterinario}
               onChange={(e) => setFormData({ ...formData, id_veterinario: e.target.value })}
               required
+              disabled
             >
-              {veterinarians.map((vet) => (
-                <MenuItem key={vet.id_usuario} value={vet.id_usuario}>
-                  {`${vet.nombre} ${vet.apellido}`}
-                </MenuItem>
-              ))}
+              <MenuItem key={user?.id_usuario} value={user?.id_usuario}>
+                {user?.nombre} {user?.apellido}
+              </MenuItem>
             </TextField>
             <TextField
               label="Fecha"

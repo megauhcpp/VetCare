@@ -24,6 +24,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { especies, categoriasEspecies } from '../../data/petSpecies';
 
 const Pets = () => {
   const { pets, setPets } = useApp();
@@ -287,21 +288,35 @@ const Pets = () => {
               label="Especie"
               fullWidth
               value={formData.especie}
-              onChange={(e) => setFormData({ ...formData, especie: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, especie: e.target.value, raza: '' })}
               required
             >
-              <MenuItem value="perro">Perro</MenuItem>
-              <MenuItem value="gato">Gato</MenuItem>
-              <MenuItem value="ave">Ave</MenuItem>
-              <MenuItem value="otro">Otro</MenuItem>
+              {Object.entries(categoriasEspecies).map(([categoria, especiesList]) => [
+                <MenuItem key={categoria} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
+                  {categoria}
+                </MenuItem>,
+                ...especiesList.map(especie => (
+                  <MenuItem key={especie} value={especie} sx={{ pl: 4 }}>
+                    {especie.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </MenuItem>
+                ))
+              ])}
             </TextField>
             <TextField
+              select
               label="Raza"
               fullWidth
               value={formData.raza}
               onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
               required
-            />
+              disabled={!formData.especie}
+            >
+              {formData.especie && especies[formData.especie]?.map((raza) => (
+                <MenuItem key={raza} value={raza}>
+                  {raza}
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="Edad"
               type="number"
