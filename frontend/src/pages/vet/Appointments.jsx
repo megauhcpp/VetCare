@@ -36,7 +36,6 @@ const Appointments = () => {
     time: '',
     type: '',
     motivo: '',
-    estado: 'pendiente',
     id_veterinario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -87,7 +86,6 @@ const Appointments = () => {
         time: appointment.fecha_hora.split('T')[1].substring(0, 5),
         type: appointment.tipo_consulta,
         motivo: appointment.motivo_consulta || '',
-        estado: appointment.estado,
         id_veterinario: appointment.id_usuario
       });
     } else {
@@ -98,7 +96,6 @@ const Appointments = () => {
         time: '',
         type: '',
         motivo: '',
-        estado: 'pendiente',
         id_veterinario: user?.id_usuario || ''
       });
     }
@@ -129,7 +126,6 @@ const Appointments = () => {
         fecha_hora: `${formData.date}T${formData.time}:00`,
         tipo_consulta: formData.type,
         motivo_consulta: formData.motivo,
-        estado: formData.estado,
         id_veterinario: formData.id_veterinario
       };
 
@@ -435,18 +431,6 @@ const Appointments = () => {
               onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
               required
             />
-            <TextField
-              select
-              label="Estado"
-              fullWidth
-              value={formData.estado}
-              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-              required
-            >
-              <MenuItem value="pendiente">Pendiente</MenuItem>
-              <MenuItem value="confirmada">Confirmada</MenuItem>
-              <MenuItem value="cancelada">Cancelada</MenuItem>
-            </TextField>
           </Box>
         </DialogContent>
         <DialogActions>

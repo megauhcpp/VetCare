@@ -44,7 +44,7 @@ const Appointments = () => {
     type: '',
     motivo: '',
     estado: 'pendiente',
-    id_veterinario: ''
+    id_usuario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
@@ -93,9 +93,9 @@ const Appointments = () => {
         date: appointment.fecha_hora.split('T')[0],
         time: appointment.fecha_hora.split('T')[1].substring(0, 5),
         type: appointment.tipo_consulta,
-        motivo: appointment.motivo_consulta,
+        motivo: appointment.motivo || appointment.motivo_consulta || '',
         estado: appointment.estado,
-        id_veterinario: appointment.veterinario?.id_usuario || ''
+        id_usuario: appointment.veterinario?.id_usuario || ''
       });
     } else {
       setSelectedAppointment(null);
@@ -106,7 +106,7 @@ const Appointments = () => {
         type: '',
         motivo: '',
         estado: 'pendiente',
-        id_veterinario: ''
+        id_usuario: ''
       });
     }
     setOpenDialog(true);
@@ -138,8 +138,7 @@ const Appointments = () => {
         fecha_hora: fechaHora,
         tipo_consulta: formData.type,
         motivo_consulta: formData.motivo,
-        estado: formData.estado,
-        id_veterinario: formData.id_veterinario
+        id_usuario: Number(formData.id_usuario)
       };
       
       const response = await fetch(url, {
@@ -267,7 +266,7 @@ const Appointments = () => {
                   </Stack>
                 }
                 secondary={
-                  <Typography component="div" variant="body2">
+                  <Typography component="div">
                     <Typography component="div" sx={{ mb: 0.5 }}>
                       Fecha: {new Date(appointment.fecha_hora).toLocaleDateString()}
                     </Typography>
@@ -322,8 +321,8 @@ const Appointments = () => {
               select
               label="Veterinario"
               fullWidth
-              value={formData.id_veterinario}
-              onChange={(e) => setFormData({ ...formData, id_veterinario: e.target.value })}
+              value={formData.id_usuario}
+              onChange={(e) => setFormData({ ...formData, id_usuario: Number(e.target.value) })}
               required
             >
               {veterinarians.map((vet) => (

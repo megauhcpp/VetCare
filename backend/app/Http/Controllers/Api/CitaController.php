@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
 use App\Models\Usuario;
+use App\Models\Mascota;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -133,34 +134,30 @@ class CitaController extends Controller
     {
         $request->validate([
             'id_mascota' => 'required|exists:mascotas,id_mascota',
-            'motivo_consulta' => 'required|string',
+            'id_usuario' => 'required|exists:usuarios,id_usuario',
             'fecha_hora' => 'required|date',
-            'tipo_consulta' => 'required|string|in:consulta_general,vacunacion,cirugia,urgencia',
-            'estado' => 'required|string|in:pendiente,confirmada,completada,cancelada',
-            'id_veterinario' => 'required|exists:usuarios,id_usuario'
+            'motivo_consulta' => 'required|string',
+            'tipo_consulta' => 'required|string'
         ]);
 
-        // Verificar que el veterinario existe y tiene el rol correcto
-        $veterinario = Usuario::where('id_usuario', $request->id_veterinario)
-            ->where('rol', 'veterinario')
-            ->first();
-
-        if (!$veterinario) {
-            return response()->json([
-                'error' => 'El veterinario seleccionado no es válido'
-            ], 422);
+        $user = Auth::user();
+        
+        // Verificar permisos
+        if ($user->rol === 'cliente') {
+            // Verificar que la mascota pertenece al cliente
+            $mascota = Mascota::findOrFail($request->id_mascota);
+            if ($mascota->id_usuario !== $user->id_usuario) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No tienes permiso para crear citas para esta mascota'
+                ], 403);
+            }
         }
 
-        // Verificar que el veterinario esté disponible
-        $citaExistente = Cita::where('id_usuario', $request->id_veterinario)
-            ->where('fecha_hora', $request->fecha_hora)
-            ->where('estado', '!=', 'cancelada')
-            ->first();
-
-        if ($citaExistente) {
-            return response()->json([
-                'error' => 'El veterinario ya tiene una cita programada para esa fecha y hora'
-            ], 422);
+        // Establecer estado automáticamente según el rol
+        $estado = 'pendiente'; // Estado por defecto para clientes
+        if ($user->rol === 'veterinario' || $user->rol === 'admin') {
+            $estado = 'confirmada';
         }
 
         // Obtener el último ID de cita
@@ -170,16 +167,21 @@ class CitaController extends Controller
         $cita = new Cita();
         $cita->id_cita = $nuevoId;
         $cita->id_mascota = $request->id_mascota;
-        $cita->id_usuario = $request->id_veterinario;
+        $cita->id_usuario = $request->id_usuario;
         $cita->fecha_hora = $request->fecha_hora;
-        $cita->tipo_consulta = $request->tipo_consulta;
         $cita->motivo_consulta = $request->motivo_consulta;
-        $cita->estado = $request->estado;
+        $cita->tipo_consulta = $request->tipo_consulta;
+        $cita->estado = $estado;
         $cita->save();
 
+        // Cargar las relaciones para la respuesta
         $cita->load(['mascota.usuario', 'veterinario']);
 
-        return response()->json($cita, 201);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cita creada exitosamente',
+            'data' => $cita
+        ], 201);
     }
 
     /**
@@ -202,12 +204,12 @@ class CitaController extends Controller
             'fecha_hora' => 'sometimes|required|date',
             'tipo_consulta' => 'sometimes|required|string|in:consulta_general,vacunacion,cirugia,urgencia',
             'estado' => 'sometimes|required|string|in:pendiente,confirmada,completada,cancelada',
-            'id_veterinario' => 'sometimes|required|exists:usuarios,id_usuario'
+            'id_usuario' => 'sometimes|required|exists:usuarios,id_usuario'
         ]);
 
-        if ($request->has('id_veterinario')) {
+        if ($request->has('id_usuario')) {
             // Verificar que el veterinario existe y tiene el rol correcto
-            $veterinario = Usuario::where('id_usuario', $request->id_veterinario)
+            $veterinario = Usuario::where('id_usuario', $request->id_usuario)
                 ->where('rol', 'veterinario')
                 ->first();
 
@@ -218,9 +220,9 @@ class CitaController extends Controller
             }
         }
 
-        if ($request->has('fecha_hora') || $request->has('id_veterinario')) {
+        if ($request->has('fecha_hora') || $request->has('id_usuario')) {
             $fechaHora = $request->fecha_hora ?? $cita->fecha_hora;
-            $idVeterinario = $request->id_veterinario ?? $cita->id_usuario;
+            $idVeterinario = $request->id_usuario ?? $cita->id_usuario;
 
             $citaExistente = Cita::where('id_usuario', $idVeterinario)
                 ->where('fecha_hora', $fechaHora)

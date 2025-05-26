@@ -51,7 +51,6 @@ const AdminAppointments = () => {
     fecha_hora: '',
     tipo_consulta: '',
     motivo_consulta: '',
-    estado: 'pendiente'
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
@@ -104,7 +103,6 @@ const AdminAppointments = () => {
         fecha_hora: date.toISOString().slice(0, 16),
         tipo_consulta: appointment.tipo_consulta,
         motivo_consulta: appointment.motivo_consulta,
-        estado: appointment.estado
       });
       setSelectedAppointment(appointment);
     } else {
@@ -114,7 +112,6 @@ const AdminAppointments = () => {
         fecha_hora: '',
         tipo_consulta: '',
         motivo_consulta: '',
-        estado: 'pendiente'
       });
       setSelectedAppointment(null);
     }
@@ -468,20 +465,6 @@ const AdminAppointments = () => {
               multiline
               rows={3}
             />
-            <FormControl fullWidth>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                name="estado"
-                value={formData.estado}
-                onChange={handleInputChange}
-                label="Estado"
-              >
-                <MenuItem value="pendiente">Pendiente</MenuItem>
-                <MenuItem value="confirmada">Confirmada</MenuItem>
-                <MenuItem value="completada">Completada</MenuItem>
-                <MenuItem value="cancelada">Cancelada</MenuItem>
-              </Select>
-            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
