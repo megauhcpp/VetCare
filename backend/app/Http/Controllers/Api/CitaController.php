@@ -248,6 +248,8 @@ class CitaController extends Controller
      */
     public function destroy(Cita $cita)
     {
+        // Eliminar todos los tratamientos asociados a la cita
+        $cita->tratamientos()->delete();
         $cita->delete();
         return response()->json(null, 204);
     }
