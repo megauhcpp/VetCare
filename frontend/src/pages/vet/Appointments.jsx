@@ -126,7 +126,7 @@ const Appointments = () => {
         fecha_hora: `${formData.date}T${formData.time}:00`,
         tipo_consulta: formData.type,
         motivo_consulta: formData.motivo,
-        id_veterinario: formData.id_veterinario
+        id_usuario: formData.id_veterinario
       };
 
       const response = await fetch(url, {
