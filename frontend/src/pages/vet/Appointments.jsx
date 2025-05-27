@@ -122,12 +122,43 @@ const Appointments = () => {
     setSelectedAppointment(null);
   };
 
+  // Función para refrescar la lista de citas
+  const refreshAppointments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+
+      const response = await fetch('/api/citas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const appointmentsArray = Array.isArray(data) ? data : (data.data || []);
+        setAppointments(appointmentsArray);
+      } else {
+        throw new Error('Error al obtener las citas');
+      }
+    } catch (error) {
+      console.error('Error al refrescar citas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al actualizar la lista de citas',
+        severity: 'error'
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error('No hay token de autenticación');
-        return;
+        throw new Error('No hay token de autenticación');
       }
 
       const url = selectedAppointment 
@@ -154,119 +185,108 @@ const Appointments = () => {
         body: JSON.stringify(appointmentData),
       });
 
-      if (response.ok) {
-        const updatedAppointment = await response.json();
-        if (selectedAppointment) {
-          setAppointments(appointments.map(a => a.id_cita === updatedAppointment.id_cita ? updatedAppointment : a));
-        } else {
-          setAppointments([...appointments, updatedAppointment]);
-        }
-        handleCloseDialog();
-        setSnackbar({ open: true, message: 'Cita guardada correctamente', severity: 'success' });
-      } else {
-        const errorData = await response.json();
-        console.error('Error al guardar la cita:', errorData);
-        setSnackbar({ open: true, message: 'Error al guardar la cita', severity: 'error' });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al guardar la cita');
       }
+
+      setSnackbar({
+        open: true,
+        message: `Cita ${selectedAppointment ? 'actualizada' : 'creada'} exitosamente`,
+        severity: 'success'
+      });
+
+      await refreshAppointments();
+      handleCloseDialog();
     } catch (error) {
-      console.error('Error saving appointment:', error);
-      setSnackbar({ open: true, message: 'Error al guardar la cita', severity: 'error' });
+      console.error('Error al guardar cita:', error);
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
     }
   };
 
   const handleDelete = async (appointmentId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('No hay token de autenticación');
-          return;
-        }
-
-        const response = await fetch(`/api/citas/${appointmentId}`, {
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          setAppointments(appointments.filter(a => a.id_cita !== appointmentId));
-          setSnackbar({ open: true, message: 'Cita eliminada correctamente', severity: 'success' });
-        } else {
-          console.error('Error al eliminar la cita:', await response.text());
-          setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
-        }
-      } catch (error) {
-        console.error('Error deleting appointment:', error);
-        setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No hay token de autenticación');
       }
+
+      const response = await fetch(`/api/citas/${appointmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al eliminar la cita');
+      }
+
+      setSnackbar({
+        open: true,
+        message: 'Cita eliminada exitosamente',
+        severity: 'success'
+      });
+
+      await refreshAppointments();
+    } catch (error) {
+      console.error('Error al eliminar cita:', error);
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
     }
   };
 
   const handleChangeState = async (appointment, newState) => {
     try {
       const token = localStorage.getItem('token');
-      const vetId = appointment.id_usuario || appointment.veterinario?.id_usuario;
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
 
-      const response = await fetch(`/api/citas/${appointment.id_cita}`, {
+      setChangingStateId(appointment.id_cita);
+
+      const response = await fetch(`/api/citas/${appointment.id_cita}/estado`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          estado: newState,
-          id_veterinario: vetId,
-          id_usuario: vetId
-        }),
+        body: JSON.stringify({ estado: newState }),
       });
 
-      if (response.ok) {
-        // Actualizar el estado local inmediatamente
-        const updatedAppointments = appointments.map(a => 
-          a.id_cita === appointment.id_cita 
-            ? { ...a, estado: newState }
-            : a
-        );
-        setAppointments(updatedAppointments);
-        
-        // Mostrar mensaje de éxito
-        setSnackbar({ 
-          open: true, 
-          message: `Cita marcada como ${newState}`, 
-          severity: 'success' 
-        });
-        setChangingStateId(null);
+      const data = await response.json();
 
-        // Recargar los datos para asegurar sincronización
-        try {
-          const refreshResponse = await fetch('/api/citas', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (refreshResponse.ok) {
-            const data = await refreshResponse.json();
-            setAppointments(data.data || []);
-          }
-        } catch (refreshError) {
-          console.error('Error al recargar las citas:', refreshError);
-        }
-      } else {
-        const errorData = await response.json();
-        console.error('Error al cambiar el estado:', errorData);
-        setSnackbar({ 
-          open: true, 
-          message: errorData.error || errorData.message || 'Error al cambiar el estado', 
-          severity: 'error' 
-        });
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al cambiar el estado de la cita');
       }
+
+      setSnackbar({
+        open: true,
+        message: 'Estado de la cita actualizado exitosamente',
+        severity: 'success'
+      });
+
+      await refreshAppointments();
     } catch (error) {
-      console.error('Error al cambiar el estado:', error);
-      setSnackbar({ open: true, message: 'Error al cambiar el estado', severity: 'error' });
+      console.error('Error al cambiar estado de la cita:', error);
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
+    } finally {
+      setChangingStateId(null);
     }
   };
 
