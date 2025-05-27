@@ -46,12 +46,14 @@ const AdminTreatments = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedTreatment, setSelectedTreatment] = useState(null);
   const [formData, setFormData] = useState({
+    id_cita: '',
     nombre: '',
+    precio: '',
     descripcion: '',
     fecha_inicio: '',
     fecha_fin: '',
-    estado: 'pendiente',
-    id_cita: ''
+    medicamentos: '',
+    instrucciones: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
@@ -96,22 +98,26 @@ const AdminTreatments = () => {
   const handleOpenDialog = (treatment = null) => {
     if (treatment) {
       setFormData({
-        nombre: treatment.nombre,
+        id_cita: treatment.id_cita || '',
+        nombre: treatment.nombre || '',
+        precio: treatment.precio || '',
         descripcion: treatment.descripcion,
         fecha_inicio: treatment.fecha_inicio,
         fecha_fin: treatment.fecha_fin || '',
-        estado: treatment.estado,
-        id_cita: treatment.id_cita
+        medicamentos: treatment.medicamentos || '',
+        instrucciones: treatment.instrucciones || ''
       });
       setSelectedTreatment(treatment);
     } else {
       setFormData({
+        id_cita: '',
         nombre: '',
+        precio: '',
         descripcion: '',
         fecha_inicio: '',
         fecha_fin: '',
-        estado: 'pendiente',
-        id_cita: ''
+        medicamentos: '',
+        instrucciones: ''
       });
       setSelectedTreatment(null);
     }
@@ -149,15 +155,30 @@ const AdminTreatments = () => {
       
       const method = selectedTreatment ? 'PUT' : 'POST';
       
+      const dataToSend = selectedTreatment
+        ? formData
+        : { ...formData, estado: 'activo' };
+      
+      const token = localStorage.getItem('token');
+      console.log('Tratamiento a enviar:', dataToSend);
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
-      if (!response.ok) throw new Error('Error al guardar el tratamiento');
+      if (!response.ok) {
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (e) {}
+        console.error('Error al guardar el tratamiento:', errorData);
+        throw new Error(errorData.message || 'Error al guardar el tratamiento');
+      }
 
       setSnackbar({
         open: true,
@@ -402,68 +423,77 @@ const AdminTreatments = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <TextField
-              name="nombre"
-              label="Nombre"
-              value={formData.nombre}
-              onChange={handleInputChange}
+              select
+              label="Cita"
               fullWidth
+              value={formData.id_cita}
+              onChange={e => setFormData({ ...formData, id_cita: e.target.value })}
+              required
+            >
+              {appointments.map((cita) => (
+                <MenuItem key={cita.id_cita} value={cita.id_cita}>
+                  {(cita.mascota?.nombre || pets.find(p => p.id_mascota === cita.id_mascota)?.nombre || 'Mascota')}
+                  {cita.motivo_consulta ? ` - ${cita.motivo_consulta}` : ''}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Nombre Tratamiento"
+              fullWidth
+              value={formData.nombre}
+              onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+              required
             />
             <TextField
-              name="descripcion"
+              label="Precio"
+              type="number"
+              fullWidth
+              value={formData.precio}
+              onChange={e => setFormData({ ...formData, precio: e.target.value })}
+              required
+            />
+            <TextField
               label="Descripción"
-              value={formData.descripcion}
-              onChange={handleInputChange}
               fullWidth
               multiline
               rows={3}
+              value={formData.descripcion}
+              onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
+              required
             />
-            <FormControl fullWidth>
-              <InputLabel>Cita</InputLabel>
-              <Select
-                name="id_cita"
-                value={formData.id_cita}
-                onChange={handleInputChange}
-                label="Cita"
-              >
-                {appointments?.map((appointment) => (
-                  <MenuItem key={appointment.id_cita} value={appointment.id_cita}>
-                    {appointment.mascota?.nombre} - {formatDate(appointment.fecha_hora)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <TextField
-              name="fecha_inicio"
               label="Fecha de Inicio"
               type="date"
               value={formData.fecha_inicio}
-              onChange={handleInputChange}
+              onChange={e => setFormData({ ...formData, fecha_inicio: e.target.value })}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+            <TextField
+              label="Fecha de Fin"
+              type="date"
+              value={formData.fecha_fin}
+              onChange={e => setFormData({ ...formData, fecha_fin: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
             <TextField
-              name="fecha_fin"
-              label="Fecha de Fin"
-              type="date"
-              value={formData.fecha_fin}
-              onChange={handleInputChange}
+              label="Medicamentos"
               fullWidth
-              InputLabelProps={{ shrink: true }}
+              multiline
+              rows={2}
+              value={formData.medicamentos}
+              onChange={e => setFormData({ ...formData, medicamentos: e.target.value })}
             />
-            <FormControl fullWidth>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                name="estado"
-                value={formData.estado}
-                onChange={handleInputChange}
-                label="Estado"
-              >
-                <MenuItem value="pendiente">Pendiente</MenuItem>
-                <MenuItem value="en_progreso">En Progreso</MenuItem>
-                <MenuItem value="completado">Completado</MenuItem>
-                <MenuItem value="cancelado">Cancelado</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              label="Instrucciones"
+              fullWidth
+              multiline
+              rows={3}
+              value={formData.instrucciones}
+              onChange={e => setFormData({ ...formData, instrucciones: e.target.value })}
+            />
           </Box>
         </DialogContent>
         <DialogActions>

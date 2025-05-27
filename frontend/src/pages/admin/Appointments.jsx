@@ -149,10 +149,13 @@ const AdminAppointments = () => {
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
+      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         },
         body: JSON.stringify(formData),
       });

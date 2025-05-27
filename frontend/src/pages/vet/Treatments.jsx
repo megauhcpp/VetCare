@@ -26,17 +26,18 @@ import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 
 const Treatments = () => {
-  const { treatments, pets, setTreatments } = useApp();
+  const { treatments, pets, setTreatments, appointments } = useApp();
   const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedTreatment, setSelectedTreatment] = useState(null);
   const [formData, setFormData] = useState({
-    petId: '',
-    tipo: '',
+    id_cita: '',
+    nombre: '',
+    precio: '',
     descripcion: '',
     fecha_inicio: '',
     fecha_fin: '',
-    estado: 'pendiente',
+    estado: 'activo',
     medicamentos: '',
     instrucciones: ''
   });
@@ -55,8 +56,9 @@ const Treatments = () => {
     if (treatment) {
       setSelectedTreatment(treatment);
       setFormData({
-        petId: treatment.id_mascota,
-        tipo: treatment.tipo,
+        id_cita: treatment.id_cita || '',
+        nombre: treatment.nombre || '',
+        precio: treatment.precio || '',
         descripcion: treatment.descripcion,
         fecha_inicio: treatment.fecha_inicio.split('T')[0],
         fecha_fin: treatment.fecha_fin ? treatment.fecha_fin.split('T')[0] : '',
@@ -67,12 +69,13 @@ const Treatments = () => {
     } else {
       setSelectedTreatment(null);
       setFormData({
-        petId: '',
-        tipo: '',
+        id_cita: '',
+        nombre: '',
+        precio: '',
         descripcion: '',
         fecha_inicio: '',
         fecha_fin: '',
-        estado: 'pendiente',
+        estado: 'activo',
         medicamentos: '',
         instrucciones: ''
       });
@@ -101,7 +104,8 @@ const Treatments = () => {
       
       const treatmentData = {
         ...formData,
-        id_veterinario: user.id_usuario
+        id_veterinario: user.id_usuario,
+        estado: 'activo'
       };
 
       const response = await fetch(url, {
@@ -335,32 +339,34 @@ const Treatments = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             <TextField
               select
-              label="Mascota"
+              label="Cita"
               fullWidth
-              value={formData.petId}
-              onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
+              value={formData.id_cita}
+              onChange={e => setFormData({ ...formData, id_cita: e.target.value })}
               required
             >
-              {pets.map((pet) => (
-                <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
-                  {pet.nombre}
+              {appointments.map((cita) => (
+                <MenuItem key={cita.id_cita} value={cita.id_cita}>
+                  {(cita.mascota?.nombre || pets.find(p => p.id_mascota === cita.id_mascota)?.nombre || 'Mascota')}
+                  {cita.motivo_consulta ? ` - ${cita.motivo_consulta}` : ''}
                 </MenuItem>
               ))}
             </TextField>
             <TextField
-              select
-              label="Tipo de Tratamiento"
+              label="Nombre Tratamiento"
               fullWidth
-              value={formData.tipo}
-              onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+              value={formData.nombre}
+              onChange={e => setFormData({ ...formData, nombre: e.target.value })}
               required
-            >
-              <MenuItem value="medicacion">Medicación</MenuItem>
-              <MenuItem value="terapia">Terapia</MenuItem>
-              <MenuItem value="cirugia">Cirugía</MenuItem>
-              <MenuItem value="control">Control</MenuItem>
-              <MenuItem value="otro">Otro</MenuItem>
-            </TextField>
+            />
+            <TextField
+              label="Precio"
+              type="number"
+              fullWidth
+              value={formData.precio}
+              onChange={e => setFormData({ ...formData, precio: e.target.value })}
+              required
+            />
             <TextField
               label="Descripción"
               fullWidth
@@ -387,19 +393,6 @@ const Treatments = () => {
               onChange={(e) => setFormData({ ...formData, fecha_fin: e.target.value })}
               InputLabelProps={{ shrink: true }}
             />
-            <TextField
-              select
-              label="Estado"
-              fullWidth
-              value={formData.estado}
-              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-              required
-            >
-              <MenuItem value="pendiente">Pendiente</MenuItem>
-              <MenuItem value="en_progreso">En Progreso</MenuItem>
-              <MenuItem value="completado">Completado</MenuItem>
-              <MenuItem value="cancelado">Cancelado</MenuItem>
-            </TextField>
             <TextField
               label="Medicamentos"
               fullWidth

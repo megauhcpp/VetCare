@@ -141,17 +141,28 @@ class TratamientoController extends Controller
             'precio' => 'required|numeric|min:0',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-            'estado' => 'required|string|in:pendiente,en_progreso,completado,cancelado'
+            'estado' => 'sometimes|string|in:activo,pendiente,en_progreso,completado,cancelado'
         ]);
 
-        // Verificar que la cita pertenece al usuario o es su veterinario
-        $cita = Cita::where('id_cita', $request->id_cita)
-            ->whereHas('mascota', function($query) {
-                $query->where('id_usuario', Auth::user()->id_usuario);
-            })
-            ->firstOrFail();
+        $data = $request->all();
+        if (!isset($data['estado'])) {
+            $data['estado'] = 'activo';
+        }
 
-        $tratamiento = Tratamiento::create($request->all());
+        // Verificar que la cita pertenece al usuario o es su veterinario
+        if (Auth::user()->rol === 'admin' || Auth::user()->rol === 'veterinario') {
+            // Permitir a admin y veterinario crear tratamientos para cualquier cita existente
+            $cita = Cita::where('id_cita', $request->id_cita)->firstOrFail();
+        } else {
+            // Solo permitir a clientes crear tratamientos para sus propias mascotas
+            $cita = Cita::where('id_cita', $request->id_cita)
+                ->whereHas('mascota', function($query) {
+                    $query->where('id_usuario', Auth::user()->id_usuario);
+                })
+                ->firstOrFail();
+        }
+
+        $tratamiento = Tratamiento::create($data);
         $tratamiento->load(['cita.mascota', 'cita.veterinario']);
 
         return response()->json($tratamiento, 201);
@@ -187,7 +198,7 @@ class TratamientoController extends Controller
             'precio' => 'sometimes|required|numeric|min:0',
             'fecha_inicio' => 'sometimes|required|date',
             'fecha_fin' => 'sometimes|required|date|after_or_equal:fecha_inicio',
-            'estado' => 'sometimes|required|string|in:pendiente,en_progreso,completado,cancelado'
+            'estado' => 'sometimes|required|string|in:activo,pendiente,en_progreso,completado,cancelado'
         ]);
 
         $tratamiento->update($request->all());
@@ -249,7 +260,7 @@ class TratamientoController extends Controller
             }
 
             $request->validate([
-                'estado' => 'required|string|in:pendiente,en_progreso,completado,cancelado'
+                'estado' => 'required|string|in:activo,pendiente,en_progreso,completado,cancelado'
             ]);
 
             // Buscar el tratamiento
