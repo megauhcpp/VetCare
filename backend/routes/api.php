@@ -61,10 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tratamientos', [TratamientoController::class, 'index']);
         Route::post('/tratamientos', [TratamientoController::class, 'store']);
-        Route::get('/tratamientos/{id}', [TratamientoController::class, 'show']);
-        Route::put('/tratamientos/{id}', [TratamientoController::class, 'update']);
-        Route::delete('/tratamientos/{id}', [TratamientoController::class, 'destroy']);
-        Route::put('/tratamientos/{id}/estado', [TratamientoController::class, 'updateEstado']);
+        Route::get('/tratamientos/{tratamiento}', [TratamientoController::class, 'show']);
+        Route::put('/tratamientos/{tratamiento}', [TratamientoController::class, 'update']);
+        Route::delete('/tratamientos/{tratamiento}', [TratamientoController::class, 'destroy']);
+        Route::put('/tratamientos/{tratamiento}/estado', [TratamientoController::class, 'updateEstado']);
     });
     
     // Treatments (English)

@@ -212,9 +212,16 @@ class TratamientoController extends Controller
      */
     public function destroy(Tratamiento $tratamiento)
     {
-        // Verificar que el tratamiento pertenece al usuario
-        if ($tratamiento->cita->mascota->id_usuario !== Auth::user()->id_usuario) {
-            return response()->json(['error' => 'No autorizado'], 403);
+        $user = Auth::user();
+
+        // Si es cliente, solo puede eliminar si la relación existe y es dueño
+        if ($user->rol === 'cliente') {
+            if (!$tratamiento->cita || !$tratamiento->cita->mascota) {
+                return response()->json(['error' => 'No autorizado (relación inválida)'], 403);
+            }
+            if ($tratamiento->cita->mascota->id_usuario !== $user->id_usuario) {
+                return response()->json(['error' => 'No autorizado'], 403);
+            }
         }
 
         $tratamiento->delete();

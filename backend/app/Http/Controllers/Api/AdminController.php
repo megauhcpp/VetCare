@@ -9,6 +9,7 @@ use App\Models\Cita;
 use App\Models\Tratamiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -62,9 +63,57 @@ class AdminController extends Controller
 
     public function deleteUser($user)
     {
-        $usuario = Usuario::findOrFail($user);
-        $usuario->delete();
-        return response()->json(null, 204);
+        try {
+            DB::beginTransaction();
+            
+            $usuario = Usuario::findOrFail($user);
+            
+            // Eliminar tratamientos de las citas de sus mascotas
+            foreach ($usuario->mascotas as $mascota) {
+                // Eliminar tratamientos de las citas de la mascota
+                Tratamiento::whereHas('cita', function($query) use ($mascota) {
+                    $query->where('id_mascota', $mascota->id_mascota);
+                })->delete();
+                
+                // Eliminar citas de la mascota
+                Cita::where('id_mascota', $mascota->id_mascota)->delete();
+                
+                // Eliminar la mascota
+                $mascota->delete();
+            }
+
+            // Eliminar citas donde el usuario es veterinario
+            if ($usuario->rol === 'veterinario') {
+                // Eliminar tratamientos de las citas donde es veterinario
+                Tratamiento::whereHas('cita', function($query) use ($usuario) {
+                    $query->where('id_usuario', $usuario->id_usuario);
+                })->delete();
+                
+                // Eliminar citas donde es veterinario
+                Cita::where('id_usuario', $usuario->id_usuario)->delete();
+            }
+
+            // Eliminar el usuario
+            $usuario->delete();
+            
+            DB::commit();
+            
+            return response()->json([
+                'message' => 'Usuario y sus datos relacionados eliminados correctamente'
+            ], 200);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error al eliminar usuario:', [
+                'error' => $e->getMessage(),
+                'user_id' => $user
+            ]);
+            
+            return response()->json([
+                'message' => 'Error al eliminar el usuario',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Pet Management

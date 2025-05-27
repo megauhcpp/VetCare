@@ -198,8 +198,13 @@ const AdminTreatments = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/treatments/${selectedTreatment.id_tratamiento}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/api/tratamientos/${selectedTreatment.id_tratamiento}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
       });
 
       if (!response.ok) throw new Error('Error al eliminar el tratamiento');

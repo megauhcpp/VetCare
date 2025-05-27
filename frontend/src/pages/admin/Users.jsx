@@ -149,11 +149,19 @@ const AdminUsers = () => {
 
   const handleDelete = async () => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/users/${selectedUser.id_usuario}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
       });
 
-      if (!response.ok) throw new Error('Error al eliminar el usuario');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al eliminar el usuario');
+      }
 
       setSnackbar({
         open: true,
@@ -163,9 +171,10 @@ const AdminUsers = () => {
       await refreshUsers();
       handleCloseDeleteDialog();
     } catch (error) {
+      console.error('Error al eliminar usuario:', error);
       setSnackbar({
         open: true,
-        message: error.message,
+        message: error.message || 'Error al eliminar el usuario',
         severity: 'error'
       });
     }

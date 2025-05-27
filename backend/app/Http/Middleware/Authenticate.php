@@ -18,6 +18,11 @@ class Authenticate extends Middleware
      */
     public function handle($request, array $guards)
     {
+        \Log::info('Middleware Authenticate ejecutado', [
+            'url' => $request->fullUrl(),
+            'token' => $request->bearerToken(),
+            'user_id' => optional($request->user())->id_usuario
+        ]);
         try {
             return parent::handle($request, $guards);
         } catch (\Illuminate\Auth\AuthenticationException $e) {
@@ -56,10 +61,9 @@ class Authenticate extends Middleware
     protected function unauthenticated($request, array $guards)
     {
         if ($request->expectsJson() || $request->is('api/*')) {
-            abort(response()->json([
-                'message' => 'No autenticado.',
-                'status' => 'error'
-            ], 401));
+            throw new \Illuminate\Auth\AuthenticationException(
+                'No autenticado.', $guards, $this->redirectTo($request)
+            );
         }
 
         parent::unauthenticated($request, $guards);

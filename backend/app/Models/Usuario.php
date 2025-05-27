@@ -33,13 +33,15 @@ class Usuario extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // Relación: mascotas que pertenecen a este usuario
     public function mascotas()
     {
-        return $this->hasMany(Mascota::class, 'id_usuario');
+        return $this->hasMany(Mascota::class, 'id_usuario', 'id_usuario');
     }
 
+    // Relación: citas donde el usuario es veterinario
     public function citasComoVeterinario()
     {
-        return $this->hasMany(Cita::class, 'id_veterinario');
+        return $this->hasMany(Cita::class, 'id_usuario', 'id_usuario');
     }
 }
