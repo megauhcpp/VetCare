@@ -84,6 +84,11 @@ const Appointments = () => {
       appointment.veterinario?.id_usuario === user?.id_usuario
   );
 
+  // Añadir useEffect para refrescar citas cuando cambien las mascotas
+  useEffect(() => {
+    refreshAppointments();
+  }, [pets]);
+
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -256,7 +261,7 @@ const Appointments = () => {
       setChangingStateId(appointment.id_cita);
 
       const response = await fetch(`/api/citas/${appointment.id_cita}/estado`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -270,6 +275,14 @@ const Appointments = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Error al cambiar el estado de la cita');
       }
+
+      // Actualizar el estado local inmediatamente
+      const updatedAppointments = appointments.map(a => 
+        a.id_cita === appointment.id_cita 
+          ? { ...a, estado: newState }
+          : a
+      );
+      setAppointments(updatedAppointments);
 
       setSnackbar({
         open: true,

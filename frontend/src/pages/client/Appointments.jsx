@@ -124,6 +124,11 @@ const Appointments = () => {
     fetchVeterinarians();
   }, [token]);
 
+  // Añadir useEffect para refrescar citas cuando cambien las mascotas
+  useEffect(() => {
+    refreshAppointments();
+  }, [pets]);
+
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
