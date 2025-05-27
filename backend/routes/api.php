@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pets', [MascotaController::class, 'store']);
     Route::get('/pets/{id}', [MascotaController::class, 'show']);
     Route::put('/pets/{id}', [MascotaController::class, 'update']);
-    Route::delete('/pets/{id}', [MascotaController::class, 'destroy']);
+    Route::delete('/pets/{mascota}', [MascotaController::class, 'destroy']);
     
     // Citas (Español)
     Route::apiResource('citas', CitaController::class);
@@ -53,9 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Appointments (English)
     Route::get('/appointments', [CitaController::class, 'index']);
     Route::post('/appointments', [CitaController::class, 'store']);
-    Route::get('/appointments/{id}', [CitaController::class, 'show']);
-    Route::put('/appointments/{id}', [CitaController::class, 'update']);
-    Route::delete('/appointments/{id}', [CitaController::class, 'destroy']);
+    Route::get('/appointments/{cita}', [CitaController::class, 'show']);
+    Route::put('/appointments/{cita}', [CitaController::class, 'update']);
+    Route::delete('/appointments/{cita}', [CitaController::class, 'destroy']);
     
     // Tratamientos (Español)
     Route::middleware('auth:sanctum')->group(function () {

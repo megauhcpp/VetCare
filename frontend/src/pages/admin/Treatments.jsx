@@ -185,9 +185,8 @@ const AdminTreatments = () => {
         message: `Tratamiento ${selectedTreatment ? 'actualizado' : 'creado'} exitosamente`,
         severity: 'success'
       });
-      
+      await refreshTreatments();
       handleCloseDialog();
-      // Aquí deberías actualizar la lista de tratamientos
     } catch (error) {
       setSnackbar({
         open: true,
@@ -210,9 +209,8 @@ const AdminTreatments = () => {
         message: 'Tratamiento eliminado exitosamente',
         severity: 'success'
       });
-      
+      await refreshTreatments();
       handleCloseDeleteDialog();
-      // Aquí deberías actualizar la lista de tratamientos
     } catch (error) {
       setSnackbar({
         open: true,
@@ -296,6 +294,22 @@ const AdminTreatments = () => {
       treatment.cita?.veterinario?.apellido?.toLowerCase().includes(searchLower)
     );
   });
+
+  // Función para refrescar la lista de tratamientos
+  const refreshTreatments = async () => {
+    try {
+      const response = await fetch('/api/treatments', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTreatments(Array.isArray(data) ? data : (data.data || []));
+      }
+    } catch (e) { /* opcional: manejar error */ }
+  };
 
   return (
     <Box sx={{ p: 3 }}>

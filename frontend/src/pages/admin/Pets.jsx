@@ -187,9 +187,8 @@ const AdminPets = () => {
         message: `Mascota ${selectedPet ? 'actualizada' : 'creada'} exitosamente`,
         severity: 'success'
       });
-      
+      await refreshPets();
       handleCloseDialog();
-      // Aquí deberías actualizar la lista de mascotas
     } catch (error) {
       console.error('Error:', error); // Debug log
       setSnackbar({
@@ -204,6 +203,10 @@ const AdminPets = () => {
     try {
       const response = await fetch(`/api/pets/${selectedPet.id_mascota}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
+        }
       });
 
       if (!response.ok) throw new Error('Error al eliminar la mascota');
@@ -213,9 +216,8 @@ const AdminPets = () => {
         message: 'Mascota eliminada exitosamente',
         severity: 'success'
       });
-      
+      await refreshPets();
       handleCloseDeleteDialog();
-      // Aquí deberías actualizar la lista de mascotas
     } catch (error) {
       setSnackbar({
         open: true,
@@ -235,6 +237,22 @@ const AdminPets = () => {
       pet.usuario?.apellido?.toLowerCase().includes(searchLower)
     );
   });
+
+  // Función para refrescar la lista de mascotas
+  const refreshPets = async () => {
+    try {
+      const response = await fetch('/api/pets', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPets(Array.isArray(data) ? data : (data.data || []));
+      }
+    } catch (e) { /* opcional: manejar error */ }
+  };
 
   return (
     <Box sx={{ p: 3 }}>

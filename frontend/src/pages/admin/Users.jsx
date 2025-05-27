@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material';
 
 const AdminUsers = () => {
-  const { users } = useApp();
+  const { users, setUsers } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -136,9 +136,8 @@ const AdminUsers = () => {
         message: `Usuario ${selectedUser ? 'actualizado' : 'creado'} exitosamente`,
         severity: 'success'
       });
-      
+      await refreshUsers();
       handleCloseDialog();
-      // Aquí deberías actualizar la lista de usuarios
     } catch (error) {
       setSnackbar({
         open: true,
@@ -161,9 +160,8 @@ const AdminUsers = () => {
         message: 'Usuario eliminado exitosamente',
         severity: 'success'
       });
-      
+      await refreshUsers();
       handleCloseDeleteDialog();
-      // Aquí deberías actualizar la lista de usuarios
     } catch (error) {
       setSnackbar({
         open: true,
@@ -195,6 +193,22 @@ const AdminUsers = () => {
       user.rol?.toLowerCase().includes(searchLower)
     );
   });
+
+  // Función para refrescar la lista de usuarios
+  const refreshUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(Array.isArray(data) ? data : (data.data || []));
+      }
+    } catch (e) { /* opcional: manejar error */ }
+  };
 
   return (
     <Box sx={{ p: 3 }}>

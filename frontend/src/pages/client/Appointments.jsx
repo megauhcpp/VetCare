@@ -32,7 +32,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon, Add as AddIcon } from '@mui/icons-material';
 
 const Appointments = () => {
-  const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment } = useApp();
+  const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment, token } = useApp();
   const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -68,8 +68,7 @@ const Appointments = () => {
     // Fetch veterinarians when component mounts
     const fetchVeterinarians = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/veterinarios', {
+        const response = await fetch('http://localhost:8000/api/veterinarios', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -83,7 +82,7 @@ const Appointments = () => {
       }
     };
     fetchVeterinarians();
-  }, []);
+  }, [token]);
 
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
@@ -119,7 +118,6 @@ const Appointments = () => {
 
   const handleSubmit = async () => {
     try {
-      const token = localStorage.getItem('token');
       if (!token) {
         console.error('No hay token de autenticación');
         return;
@@ -176,7 +174,6 @@ const Appointments = () => {
   const handleDelete = async (appointmentId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
       try {
-        const token = localStorage.getItem('token');
         if (!token) {
           console.error('No hay token de autenticación');
           return;
@@ -196,7 +193,8 @@ const Appointments = () => {
           await refreshAppointments();
           setSnackbar({ open: true, message: 'Cita eliminada correctamente', severity: 'success' });
         } else {
-          console.error('Error al eliminar la cita:', await response.text());
+          const errorData = await response.json();
+          console.error('Error al eliminar la cita:', errorData);
           setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
         }
       } catch (error) {

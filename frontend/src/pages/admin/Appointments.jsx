@@ -144,12 +144,20 @@ const AdminAppointments = () => {
   const handleSubmit = async () => {
     try {
       const url = selectedAppointment
-        ? `/api/appointments/${selectedAppointment.id_cita}`
-        : '/api/appointments';
+        ? `http://localhost:8000/api/citas/${selectedAppointment.id_cita}`
+        : 'http://localhost:8000/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
       const token = localStorage.getItem('token');
+      const citaData = {
+        id_mascota: formData.id_mascota,
+        id_usuario: formData.id_usuario,
+        fecha_hora: formData.fecha_hora,
+        motivo_consulta: formData.motivo_consulta,
+        tipo_consulta: formData.tipo_consulta
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -157,19 +165,21 @@ const AdminAppointments = () => {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(citaData),
       });
 
-      if (!response.ok) throw new Error('Error al guardar la cita');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al guardar la cita');
+      }
 
       setSnackbar({
         open: true,
         message: `Cita ${selectedAppointment ? 'actualizada' : 'creada'} exitosamente`,
         severity: 'success'
       });
-      
+      await refreshAppointments();
       handleCloseDialog();
-      // Aquí deberías actualizar la lista de citas
     } catch (error) {
       setSnackbar({
         open: true,
@@ -181,8 +191,13 @@ const AdminAppointments = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/appointments/${selectedAppointment.id_cita}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/api/citas/${selectedAppointment.id_cita}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
       });
 
       if (!response.ok) throw new Error('Error al eliminar la cita');
@@ -192,9 +207,8 @@ const AdminAppointments = () => {
         message: 'Cita eliminada exitosamente',
         severity: 'success'
       });
-      
+      await refreshAppointments();
       handleCloseDeleteDialog();
-      // Aquí deberías actualizar la lista de citas
     } catch (error) {
       setSnackbar({
         open: true,
@@ -280,6 +294,23 @@ const AdminAppointments = () => {
       appointment.veterinario?.apellido?.toLowerCase().includes(searchLower)
     );
   });
+
+  // Función para refrescar la lista de citas
+  const refreshAppointments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/api/citas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAppointments(Array.isArray(data) ? data : (data.data || []));
+      }
+    } catch (e) { /* opcional: manejar error */ }
+  };
 
   return (
     <Box sx={{ p: 3 }}>

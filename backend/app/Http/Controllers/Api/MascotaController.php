@@ -223,9 +223,17 @@ class MascotaController extends Controller
     public function destroy(Mascota $mascota)
     {
         $user = Auth::user();
-        
+        if (!$user) {
+            \Log::warning('Intento de eliminar mascota sin autenticación', ['mascota_id' => $mascota->id_mascota]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Usuario no autenticado'
+            ], 401);
+        }
+
         // Verificar permisos: solo el dueño, veterinarios o admins pueden eliminar mascotas
         if ($user->rol !== 'admin' && $user->rol !== 'veterinario' && $mascota->id_usuario !== $user->id_usuario) {
+            \Log::warning('Intento de eliminar mascota sin permisos', ['user_id' => $user->id_usuario, 'mascota_id' => $mascota->id_mascota]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'No tienes permiso para eliminar esta mascota'
@@ -233,35 +241,26 @@ class MascotaController extends Controller
         }
 
         try {
-            // Iniciar una transacción para asegurar la integridad de los datos
-            DB::beginTransaction();
-
-            Log::info('Iniciando eliminación de mascota y sus relaciones:', [
-                'mascota_id' => $mascota->id_mascota,
-                'usuario_id' => $user->id_usuario,
-                'rol_usuario' => $user->rol
-            ]);
-
+            \DB::beginTransaction();
+            \Log::info('Eliminando tratamientos y citas de la mascota', ['mascota_id' => $mascota->id_mascota]);
             // Eliminar los tratamientos relacionados con las citas de la mascota
-            $tratamientosEliminados = Tratamiento::whereHas('cita', function($query) use ($mascota) {
+            $tratamientosEliminados = \App\Models\Tratamiento::whereHas('cita', function($query) use ($mascota) {
                 $query->where('id_mascota', $mascota->id_mascota);
             })->delete();
-
-            Log::info('Tratamientos eliminados:', ['count' => $tratamientosEliminados]);
-
             // Eliminar las citas de la mascota
-            $citasEliminadas = Cita::where('id_mascota', $mascota->id_mascota)->delete();
-
-            Log::info('Citas eliminadas:', ['count' => $citasEliminadas]);
-
-            // Finalmente, eliminar la mascota
-            $mascota->delete();
-
-            Log::info('Mascota eliminada exitosamente');
-
-            // Confirmar la transacción
-            DB::commit();
-
+            $citasEliminadas = \App\Models\Cita::where('id_mascota', $mascota->id_mascota)->delete();
+            \Log::info('Eliminando mascota', ['mascota_id' => $mascota->id_mascota]);
+            $deleted = $mascota->delete();
+            if (!$deleted) {
+                \DB::rollBack();
+                \Log::error('No se pudo eliminar la mascota', ['mascota_id' => $mascota->id_mascota]);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No se pudo eliminar la mascota'
+                ], 500);
+            }
+            \DB::commit();
+            \Log::info('Mascota eliminada exitosamente', ['mascota_id' => $mascota->id_mascota]);
             return response()->json([
                 'status' => 'success',
                 'message' => 'Mascota y sus datos relacionados eliminados correctamente',
@@ -271,9 +270,8 @@ class MascotaController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
-            // Si algo falla, revertir la transacción
-            DB::rollBack();
-            Log::error('Error al eliminar mascota y sus relaciones:', [
+            \DB::rollBack();
+            \Log::error('Error al eliminar mascota y sus relaciones', [
                 'error' => $e->getMessage(),
                 'mascota_id' => $mascota->id_mascota,
                 'usuario_id' => $user->id_usuario,
