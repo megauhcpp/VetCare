@@ -38,7 +38,7 @@ import {
 import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
 
 const AdminPets = () => {
-  const { pets, users } = useApp();
+  const { pets, setPets, users } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
@@ -168,8 +168,6 @@ const AdminPets = () => {
       
       const method = selectedPet ? 'PUT' : 'POST';
       
-      console.log('Enviando datos:', formData); // Debug log
-
       const response = await fetch(url, {
         method,
         headers: {
@@ -190,10 +188,11 @@ const AdminPets = () => {
         message: `Mascota ${selectedPet ? 'actualizada' : 'creada'} exitosamente`,
         severity: 'success'
       });
+      
       await refreshPets();
       handleCloseDialog();
     } catch (error) {
-      console.error('Error:', error); // Debug log
+      console.error('Error:', error);
       setSnackbar({
         open: true,
         message: error.message,
@@ -212,16 +211,21 @@ const AdminPets = () => {
         }
       });
 
-      if (!response.ok) throw new Error('Error al eliminar la mascota');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al eliminar la mascota');
+      }
 
       setSnackbar({
         open: true,
         message: 'Mascota eliminada exitosamente',
         severity: 'success'
       });
+      
       await refreshPets();
       handleCloseDeleteDialog();
     } catch (error) {
+      console.error('Error al eliminar mascota:', error);
       setSnackbar({
         open: true,
         message: error.message,
@@ -277,9 +281,19 @@ const AdminPets = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setPets(Array.isArray(data) ? data : (data.data || []));
+        const petsArray = Array.isArray(data) ? data : (data.data || []);
+        setPets(petsArray);
+      } else {
+        throw new Error('Error al obtener las mascotas');
       }
-    } catch (e) { /* opcional: manejar error */ }
+    } catch (error) {
+      console.error('Error al refrescar mascotas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al actualizar la lista de mascotas',
+        severity: 'error'
+      });
+    }
   };
 
   const handleRequestSort = (property) => {
