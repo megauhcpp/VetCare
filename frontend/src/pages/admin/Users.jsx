@@ -26,7 +26,8 @@ import {
   Alert,
   Snackbar,
   Chip,
-  InputAdornment
+  InputAdornment,
+  TableSortLabel
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -38,6 +39,7 @@ import {
 const AdminUsers = () => {
   const { users, setUsers } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('todos');
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -49,6 +51,9 @@ const AdminUsers = () => {
     rol: 'cliente'
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [filters, setFilters] = useState({ nombre: '', email: '', rol: '' });
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('nombre');
 
   // Extraer los usuarios del objeto de respuesta
   const usersData = useMemo(() => {
@@ -194,13 +199,41 @@ const AdminUsers = () => {
   };
 
   const filteredUsers = usersData.filter(user => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      user.nombre?.toLowerCase().includes(searchLower) ||
-      user.apellido?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.rol?.toLowerCase().includes(searchLower)
-    );
+    const nombreMatch = user.nombre?.toLowerCase().includes(filters.nombre.toLowerCase()) || user.apellido?.toLowerCase().includes(filters.nombre.toLowerCase());
+    const emailMatch = user.email?.toLowerCase().includes(filters.email.toLowerCase());
+    const rolMatch = !filters.rol || user.rol === filters.rol;
+    return nombreMatch && emailMatch && rolMatch;
+  });
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (orderBy === 'nombre') {
+      const aName = (a.nombre || '') + ' ' + (a.apellido || '');
+      const bName = (b.nombre || '') + ' ' + (b.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    } else if (orderBy === 'email') {
+      if (order === 'asc') {
+        return (a.email || '').localeCompare(b.email || '');
+      } else {
+        return (b.email || '').localeCompare(a.email || '');
+      }
+    } else if (orderBy === 'rol') {
+      if (order === 'asc') {
+        return (a.rol || '').localeCompare(b.rol || '');
+      } else {
+        return (b.rol || '').localeCompare(a.rol || '');
+      }
+    }
+    return 0;
   });
 
   // Función para refrescar la lista de usuarios
@@ -234,36 +267,76 @@ const AdminUsers = () => {
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <TextField
-          fullWidth
+          label="Buscar por nombre"
+          value={filters.nombre}
+          onChange={e => setFilters(f => ({ ...f, nombre: e.target.value }))}
           variant="outlined"
-          placeholder="Buscar usuarios..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
+          size="small"
+          fullWidth
         />
+        <TextField
+          label="Buscar por email"
+          value={filters.email}
+          onChange={e => setFilters(f => ({ ...f, email: e.target.value }))}
+          variant="outlined"
+          size="small"
+          fullWidth
+        />
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Filtrar por rol</InputLabel>
+          <Select
+            value={filters.rol}
+            onChange={e => setFilters(f => ({ ...f, rol: e.target.value }))}
+            label="Filtrar por rol"
+            size="small"
+          >
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="admin">Administrador</MenuItem>
+            <MenuItem value="veterinario">Veterinario</MenuItem>
+            <MenuItem value="cliente">Cliente</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Rol</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'nombre'}
+                  direction={orderBy === 'nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('nombre')}
+                >
+                  Nombre
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'email'}
+                  direction={orderBy === 'email' ? order : 'asc'}
+                  onClick={() => handleRequestSort('email')}
+                >
+                  Email
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'rol'}
+                  direction={orderBy === 'rol' ? order : 'asc'}
+                  onClick={() => handleRequestSort('rol')}
+                >
+                  Rol
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
+            {sortedUsers.length > 0 ? (
+              sortedUsers.map((user) => (
                 <TableRow key={user.id_usuario}>
                   <TableCell>{user.nombre} {user.apellido}</TableCell>
                   <TableCell>{user.email}</TableCell>

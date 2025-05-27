@@ -18,9 +18,19 @@ import {
   Stack,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Tooltip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  Paper,
+  InputAdornment
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -40,6 +50,11 @@ const Appointments = () => {
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
+  const [selectedHour, setSelectedHour] = useState('10');
+  const [selectedMinute, setSelectedMinute] = useState('00');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno'
 
   useEffect(() => {
     // Fetch veterinarians when component mounts
@@ -268,10 +283,72 @@ const Appointments = () => {
     }
   };
 
+  const filteredAppointments = vetAppointments.filter(appointment => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      appointment.motivo_consulta?.toLowerCase().includes(searchLower) ||
+      pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre?.toLowerCase().includes(searchLower) ||
+      appointment.estado?.toLowerCase().includes(searchLower) ||
+      appointment.veterinario?.nombre?.toLowerCase().includes(searchLower) ||
+      appointment.veterinario?.apellido?.toLowerCase().includes(searchLower) ||
+      (pets.find(p => p.id_mascota === appointment.id_mascota)?.usuario?.nombre || '').toLowerCase().includes(searchLower) ||
+      (pets.find(p => p.id_mascota === appointment.id_mascota)?.usuario?.apellido || '').toLowerCase().includes(searchLower)
+    );
+  });
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    if (orderBy === 'fecha') {
+      if (order === 'asc') {
+        return new Date(a.fecha_hora) - new Date(b.fecha_hora);
+      } else {
+        return new Date(b.fecha_hora) - new Date(a.fecha_hora);
+      }
+    } else if (orderBy === 'mascota') {
+      const aName = (pets.find(p => p.id_mascota === a.id_mascota)?.nombre || '');
+      const bName = (pets.find(p => p.id_mascota === b.id_mascota)?.nombre || '');
+      return order === 'asc' ? aName.localeCompare(bName) : bName.localeCompare(aName);
+    } else if (orderBy === 'dueno') {
+      const aName = (pets.find(p => p.id_mascota === a.id_mascota)?.usuario?.nombre || '') + ' ' + (pets.find(p => p.id_mascota === a.id_mascota)?.usuario?.apellido || '');
+      const bName = (pets.find(p => p.id_mascota === b.id_mascota)?.usuario?.nombre || '') + ' ' + (pets.find(p => p.id_mascota === b.id_mascota)?.usuario?.apellido || '');
+      return order === 'asc' ? aName.localeCompare(bName) : bName.localeCompare(aName);
+    } else if (orderBy === 'veterinario') {
+      const aVet = (a.veterinario?.nombre || '') + ' ' + (a.veterinario?.apellido || '');
+      const bVet = (b.veterinario?.nombre || '') + ' ' + (b.veterinario?.apellido || '');
+      return order === 'asc' ? aVet.localeCompare(bVet) : bVet.localeCompare(aVet);
+    } else if (orderBy === 'estado') {
+      return order === 'asc' ? (a.estado || '').localeCompare(b.estado || '') : (b.estado || '').localeCompare(a.estado || '');
+    } else if (orderBy === 'tipo_consulta') {
+      return order === 'asc' ? (a.tipo_consulta || '').localeCompare(b.tipo_consulta || '') : (b.tipo_consulta || '').localeCompare(a.tipo_consulta || '');
+    } else if (orderBy === 'motivo') {
+      return order === 'asc' ? (a.motivo_consulta || '').localeCompare(b.motivo_consulta || '') : (b.motivo_consulta || '').localeCompare(a.motivo_consulta || '');
+    } else if (orderBy === 'cambiar_estado' || orderBy === 'acciones') {
+      // No tiene sentido ordenar por estas columnas, así que no cambiamos el orden
+      return 0;
+    }
+    return 0;
+  });
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Gestión de Citas</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Gestión de Citas
+        </Typography>
         <Button
           variant="contained"
           color="primary"
@@ -280,77 +357,161 @@ const Appointments = () => {
           Nueva Cita
         </Button>
       </Box>
-
-      {vetAppointments.length === 0 ? (
-        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No hay citas programadas
-        </Typography>
-      ) : (
-        <List>
-          {vetAppointments.map((appointment) => (
-            <ListItem
-              key={appointment.id_cita}
-              sx={{
-                mb: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1
-              }}
-            >
-              <ListItemText
-                primary={
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography variant="h6">
-                      {pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
-                    </Typography>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Buscar por mascota, dueño, motivo..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha'}
+                  direction={orderBy === 'fecha' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha')}
+                >
+                  Fecha y Hora
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'mascota'}
+                  direction={orderBy === 'mascota' ? order : 'asc'}
+                  onClick={() => handleRequestSort('mascota')}
+                >
+                  Mascota
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'dueno'}
+                  direction={orderBy === 'dueno' ? order : 'asc'}
+                  onClick={() => handleRequestSort('dueno')}
+                >
+                  Dueño
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'veterinario'}
+                  direction={orderBy === 'veterinario' ? order : 'asc'}
+                  onClick={() => handleRequestSort('veterinario')}
+                >
+                  Veterinario
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'tipo_consulta'}
+                  direction={orderBy === 'tipo_consulta' ? order : 'asc'}
+                  onClick={() => handleRequestSort('tipo_consulta')}
+                >
+                  Tipo de Consulta
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'motivo'}
+                  direction={orderBy === 'motivo' ? order : 'asc'}
+                  onClick={() => handleRequestSort('motivo')}
+                >
+                  Motivo
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'estado'}
+                  direction={orderBy === 'estado' ? order : 'asc'}
+                  onClick={() => handleRequestSort('estado')}
+                >
+                  Estado
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedAppointments.length > 0 ? (
+              sortedAppointments.map((appointment) => (
+                <TableRow key={appointment.id_cita}>
+                  <TableCell>{formatDateTime(appointment.fecha_hora)}</TableCell>
+                  <TableCell>{appointment.mascota?.nombre || pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}</TableCell>
+                  <TableCell>{(appointment.mascota?.usuario?.nombre || pets.find(p => p.id_mascota === appointment.id_mascota)?.usuario?.nombre || '') + ' ' + (appointment.mascota?.usuario?.apellido || pets.find(p => p.id_mascota === appointment.id_mascota)?.usuario?.apellido || '')}</TableCell>
+                  <TableCell>{appointment.veterinario?.nombre} {appointment.veterinario?.apellido}</TableCell>
+                  <TableCell>{appointment.tipo_consulta}</TableCell>
+                  <TableCell>
+                    {appointment.motivo_consulta ? (
+                      <Tooltip title={appointment.motivo_consulta}>
+                        <Typography noWrap sx={{ maxWidth: 200 }}>{appointment.motivo_consulta}</Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography color="text.secondary">Sin motivo</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Chip
                       label={appointment.estado}
-                      color={getStatusColor(appointment.estado)}
+                      color="primary"
                       size="small"
+                      sx={{ fontWeight: 600, color: 'white', textTransform: 'capitalize' }}
                     />
-                  </Stack>
-                }
-                secondary={
-                  <Typography component="div" variant="body2">
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Fecha: {new Date(appointment.fecha_hora).toLocaleString()}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Tipo de Consulta: {appointment.tipo_consulta}
-                    </Typography>
-                    {appointment.motivo_consulta && (
-                      <Typography component="div">
-                        Motivo: {appointment.motivo_consulta}
-                      </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title="Cambiar estado">
+                      <IconButton onClick={() => setChangingStateId(changingStateId === appointment.id_cita ? null : appointment.id_cita)}>
+                        <SwapHorizIcon />
+                      </IconButton>
+                    </Tooltip>
+                    {changingStateId === appointment.id_cita && (
+                      <>
+                        <Tooltip title="Confirmar">
+                          <IconButton onClick={() => handleChangeState(appointment, 'confirmada')} color="success">
+                            <CheckIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Cancelar">
+                          <IconButton onClick={() => handleChangeState(appointment, 'cancelada')} color="error">
+                            <CloseIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </>
                     )}
-                  </Typography>
-                }
-              />
-              <ListItemSecondaryAction>
-                <IconButton onClick={() => setChangingStateId(changingStateId === appointment.id_cita ? null : appointment.id_cita)}>
-                  <SwapHorizIcon />
-                </IconButton>
-                {changingStateId === appointment.id_cita && (
-                  <>
-                    <IconButton onClick={() => handleChangeState(appointment, 'confirmada')} color="success">
-                      <CheckIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleChangeState(appointment, 'cancelada')} color="error">
-                      <CloseIcon />
-                    </IconButton>
-                  </>
-                )}
-                <IconButton onClick={() => handleOpenDialog(appointment)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDelete(appointment.id_cita)}>
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
-      )}
+                    <Tooltip title="Editar">
+                      <IconButton onClick={() => handleOpenDialog(appointment)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Eliminar">
+                      <IconButton onClick={() => handleDelete(appointment.id_cita)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No hay citas programadas
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Dialog 
         open={openDialog} 
@@ -397,17 +558,50 @@ const Appointments = () => {
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: new Date().toISOString().split('T')[0]
+              }}
               required
             />
-            <TextField
-              label="Hora"
-              type="time"
-              fullWidth
-              value={formData.time}
-              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              required
-            />
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <TextField
+                select
+                label="Hora"
+                value={selectedHour}
+                onChange={e => {
+                  setSelectedHour(e.target.value);
+                  setFormData({ ...formData, time: `${e.target.value}:${selectedMinute}` });
+                }}
+                sx={{ width: 100 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              >
+                {[...Array(8)].map((_, i) => {
+                  const hour = 10 + i;
+                  return (
+                    <MenuItem key={hour} value={hour.toString().padStart(2, '0')}>
+                      {hour.toString().padStart(2, '0')}
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+              <TextField
+                select
+                label="Minutos"
+                value={selectedMinute}
+                onChange={e => {
+                  setSelectedMinute(e.target.value);
+                  setFormData({ ...formData, time: `${selectedHour}:${e.target.value}` });
+                }}
+                sx={{ width: 100 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              >
+                {['00', '15', '30', '45'].map(min => (
+                  <MenuItem key={min} value={min}>{min}</MenuItem>
+                ))}
+              </TextField>
+            </Box>
             <TextField
               select
               label="Tipo de Consulta"

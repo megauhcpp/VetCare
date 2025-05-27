@@ -26,7 +26,8 @@ import {
   Alert,
   Snackbar,
   Chip,
-  InputAdornment
+  InputAdornment,
+  TableSortLabel
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -39,6 +40,8 @@ import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
 const AdminPets = () => {
   const { pets, users } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('nombre');
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
@@ -238,6 +241,31 @@ const AdminPets = () => {
     );
   });
 
+  const sortedPets = [...filteredPets].sort((a, b) => {
+    if (orderBy === 'nombre') {
+      if (order === 'asc') {
+        return (a.nombre || '').localeCompare(b.nombre || '');
+      } else {
+        return (b.nombre || '').localeCompare(a.nombre || '');
+      }
+    } else if (orderBy === 'fecha_nacimiento') {
+      if (order === 'asc') {
+        return new Date(a.fecha_nacimiento) - new Date(b.fecha_nacimiento);
+      } else {
+        return new Date(b.fecha_nacimiento) - new Date(a.fecha_nacimiento);
+      }
+    } else if (orderBy === 'dueno') {
+      const aName = (a.usuario?.nombre || '') + ' ' + (a.usuario?.apellido || '');
+      const bName = (b.usuario?.nombre || '') + ' ' + (b.usuario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    }
+    return 0;
+  });
+
   // Función para refrescar la lista de mascotas
   const refreshPets = async () => {
     try {
@@ -252,6 +280,12 @@ const AdminPets = () => {
         setPets(Array.isArray(data) ? data : (data.data || []));
       }
     } catch (e) { /* opcional: manejar error */ }
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
   };
 
   return (
@@ -269,20 +303,14 @@ const AdminPets = () => {
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Buscar mascotas..."
+          label="Buscar"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
         />
       </Box>
 
@@ -290,19 +318,43 @@ const AdminPets = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Nombre</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'nombre'}
+                  direction={orderBy === 'nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('nombre')}
+                >
+                  Nombre
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Especie</TableCell>
               <TableCell>Raza</TableCell>
-              <TableCell>Dueño</TableCell>
-              <TableCell>Fecha de Nacimiento</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'dueno'}
+                  direction={orderBy === 'dueno' ? order : 'asc'}
+                  onClick={() => handleRequestSort('dueno')}
+                >
+                  Dueño
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha_nacimiento'}
+                  direction={orderBy === 'fecha_nacimiento' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha_nacimiento')}
+                >
+                  Fecha de Nacimiento
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Sexo</TableCell>
               <TableCell>Notas</TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredPets.length > 0 ? (
-              filteredPets.map((pet) => (
+            {sortedPets.length > 0 ? (
+              sortedPets.map((pet) => (
                 <TableRow key={pet.id_mascota}>
                   <TableCell>{pet.nombre}</TableCell>
                   <TableCell>{pet.especie}</TableCell>
@@ -431,6 +483,11 @@ const AdminPets = () => {
               onChange={handleInputChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                max: new Date().toISOString().split('T')[0]
+              }}
+              onKeyDown={e => e.preventDefault()}
+              required
             />
             <FormControl fullWidth>
               <InputLabel>Sexo</InputLabel>

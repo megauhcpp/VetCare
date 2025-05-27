@@ -26,7 +26,8 @@ import {
   Select,
   MenuItem,
   Alert,
-  Snackbar
+  Snackbar,
+  TableSortLabel
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -42,6 +43,8 @@ import {
 const AdminTreatments = () => {
   const { treatments, pets, appointments, setTreatments } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('fecha');
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedTreatment, setSelectedTreatment] = useState(null);
@@ -289,6 +292,12 @@ const AdminTreatments = () => {
     }
   };
 
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
   const filteredTreatments = treatmentsData.filter(treatment => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -296,8 +305,42 @@ const AdminTreatments = () => {
       treatment.descripcion?.toLowerCase().includes(searchLower) ||
       treatment.cita?.mascota?.nombre?.toLowerCase().includes(searchLower) ||
       treatment.cita?.veterinario?.nombre?.toLowerCase().includes(searchLower) ||
-      treatment.cita?.veterinario?.apellido?.toLowerCase().includes(searchLower)
+      treatment.cita?.veterinario?.apellido?.toLowerCase().includes(searchLower) ||
+      treatment.estado?.toLowerCase().includes(searchLower)
     );
+  });
+
+  const sortedTreatments = [...filteredTreatments].sort((a, b) => {
+    if (orderBy === 'fecha') {
+      if (order === 'asc') {
+        return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
+      } else {
+        return new Date(b.fecha_inicio) - new Date(a.fecha_inicio);
+      }
+    } else if (orderBy === 'estado') {
+      if (order === 'asc') {
+        return (a.estado || '').localeCompare(b.estado || '');
+      } else {
+        return (b.estado || '').localeCompare(a.estado || '');
+      }
+    } else if (orderBy === 'dueno') {
+      const aName = (a.cita?.mascota?.usuario?.nombre || '') + ' ' + (a.cita?.mascota?.usuario?.apellido || '');
+      const bName = (b.cita?.mascota?.usuario?.nombre || '') + ' ' + (b.cita?.mascota?.usuario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    } else if (orderBy === 'veterinario') {
+      const aVet = (a.cita?.veterinario?.nombre || '') + ' ' + (a.cita?.veterinario?.apellido || '');
+      const bVet = (b.cita?.veterinario?.nombre || '') + ' ' + (b.cita?.veterinario?.apellido || '');
+      if (order === 'asc') {
+        return aVet.localeCompare(bVet);
+      } else {
+        return bVet.localeCompare(aVet);
+      }
+    }
+    return 0;
   });
 
   // Función para refrescar la lista de tratamientos
@@ -331,20 +374,14 @@ const AdminTreatments = () => {
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Buscar tratamientos..."
+          label="Buscar"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
         />
       </Box>
 
@@ -353,18 +390,58 @@ const AdminTreatments = () => {
           <TableHead>
             <TableRow>
               <TableCell>Mascota</TableCell>
-              <TableCell>Dueño</TableCell>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Veterinario</TableCell>
-              <TableCell>Fecha Inicio</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'dueno'}
+                  direction={orderBy === 'dueno' ? order : 'asc'}
+                  onClick={() => handleRequestSort('dueno')}
+                >
+                  Dueño
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'nombre'}
+                  direction={orderBy === 'nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('nombre')}
+                >
+                  Nombre
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'veterinario'}
+                  direction={orderBy === 'veterinario' ? order : 'asc'}
+                  onClick={() => handleRequestSort('veterinario')}
+                >
+                  Veterinario
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha'}
+                  direction={orderBy === 'fecha' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha')}
+                >
+                  Fecha Inicio
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Fecha Fin</TableCell>
-              <TableCell>Estado</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'estado'}
+                  direction={orderBy === 'estado' ? order : 'asc'}
+                  onClick={() => handleRequestSort('estado')}
+                >
+                  Estado
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredTreatments.length > 0 ? (
-              filteredTreatments.map((treatment) => (
+            {sortedTreatments.length > 0 ? (
+              sortedTreatments.map((treatment) => (
                 <TableRow key={treatment.id_tratamiento}>
                   <TableCell>{treatment.cita?.mascota?.nombre}</TableCell>
                   <TableCell>
@@ -487,6 +564,10 @@ const AdminTreatments = () => {
               onChange={e => setFormData({ ...formData, fecha_inicio: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: new Date().toISOString().split('T')[0]
+              }}
+              onKeyDown={e => e.preventDefault()}
               required
             />
             <TextField
@@ -496,6 +577,10 @@ const AdminTreatments = () => {
               onChange={e => setFormData({ ...formData, fecha_fin: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: formData.fecha_inicio || new Date().toISOString().split('T')[0]
+              }}
+              onKeyDown={e => e.preventDefault()}
             />
             <TextField
               label="Medicamentos"

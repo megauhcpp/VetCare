@@ -28,7 +28,9 @@ import {
   CircularProgress,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  TableSortLabel,
+  Tooltip
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -49,6 +51,9 @@ const Pets = () => {
     notas: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('nombre');
 
   if (!Array.isArray(pets)) {
     return (
@@ -256,6 +261,36 @@ const Pets = () => {
     } catch (e) { /* opcional: manejar error */ }
   };
 
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const sortedPets = [...userPets.filter(pet => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      pet.nombre?.toLowerCase().includes(searchLower) ||
+      pet.especie?.toLowerCase().includes(searchLower) ||
+      pet.raza?.toLowerCase().includes(searchLower)
+    );
+  })].sort((a, b) => {
+    if (orderBy === 'nombre') {
+      if (order === 'asc') {
+        return (a.nombre || '').localeCompare(b.nombre || '');
+      } else {
+        return (b.nombre || '').localeCompare(a.nombre || '');
+      }
+    } else if (orderBy === 'fecha_nacimiento') {
+      if (order === 'asc') {
+        return new Date(a.fecha_nacimiento) - new Date(b.fecha_nacimiento);
+      } else {
+        return new Date(b.fecha_nacimiento) - new Date(a.fecha_nacimiento);
+      }
+    }
+    return 0;
+  });
+
   return (
     <Box sx={{ p: 3 }}>
       {error && (
@@ -273,53 +308,100 @@ const Pets = () => {
           Agregar Mascota
         </Button>
       </Box>
-
-      {userPets.length === 0 ? (
-        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No tienes mascotas registradas. ¡Agrega una nueva mascota!
-        </Typography>
-      ) : (
-        <Grid container spacing={3}>
-          {userPets.map((pet) => (
-            <Grid item xs={12} sm={6} md={4} key={pet.id_mascota}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6">{pet.nombre}</Typography>
-                    <Box>
-                      <IconButton onClick={() => handleOpenDialog(pet)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton onClick={() => handleDelete(pet.id_mascota)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                  <Typography color="text.secondary" gutterBottom>
-                    {pet.especie} - {pet.raza}
-                  </Typography>
-                  <Typography variant="body2">
-                    Fecha de Nacimiento: {new Date(pet.fecha_nacimiento).toLocaleDateString()}
-                  </Typography>
-                  <Typography variant="body2">
-                    Sexo: {pet.sexo}
-                  </Typography>
-                  {pet.notas && (
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      Notas: {pet.notas}
-                    </Typography>
-                  )}
-                </CardContent>
-                <CardActions>
-                  <Button size="small" color="primary">
-                    Ver Historial Médico
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Buscar"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+      </Box>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'nombre'}
+                  direction={orderBy === 'nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('nombre')}
+                >
+                  Nombre
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'especie'}
+                  direction={orderBy === 'especie' ? order : 'asc'}
+                  onClick={() => handleRequestSort('especie')}
+                >
+                  Especie
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'raza'}
+                  direction={orderBy === 'raza' ? order : 'asc'}
+                  onClick={() => handleRequestSort('raza')}
+                >
+                  Raza
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha_nacimiento'}
+                  direction={orderBy === 'fecha_nacimiento' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha_nacimiento')}
+                >
+                  Fecha de Nacimiento
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Sexo</TableCell>
+              <TableCell>Notas</TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedPets.length > 0 ? (
+              sortedPets.map((pet) => (
+                <TableRow key={pet.id_mascota}>
+                  <TableCell>{pet.nombre}</TableCell>
+                  <TableCell>{pet.especie}</TableCell>
+                  <TableCell>{pet.raza}</TableCell>
+                  <TableCell>{new Date(pet.fecha_nacimiento).toLocaleDateString()}</TableCell>
+                  <TableCell>{pet.sexo}</TableCell>
+                  <TableCell>
+                    {pet.notas ? (
+                      <Tooltip title={pet.notas}>
+                        <Typography noWrap sx={{ maxWidth: 200 }}>{pet.notas}</Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography color="text.secondary">Sin notas</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleOpenDialog(pet)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(pet.id_mascota)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No tienes mascotas registradas. ¡Agrega una nueva mascota!
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Dialog 
         open={openDialog} 
@@ -403,12 +485,12 @@ const Pets = () => {
               value={formData.fecha_nacimiento}
               onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               variant="outlined"
-              InputLabelProps={{
-                shrink: true,
+              InputLabelProps={{ shrink: true }}
+              inputProps={{
+                max: new Date().toISOString().split('T')[0]
               }}
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
+              onKeyDown={e => e.preventDefault()}
+              required
             />
             <FormControl fullWidth>
               <InputLabel>Sexo</InputLabel>

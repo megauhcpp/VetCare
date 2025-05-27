@@ -19,7 +19,16 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
-  Divider
+  Divider,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableSortLabel,
+  Tooltip,
+  Paper
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Check as CheckIcon, Close as CloseIcon, SwapHoriz as SwapHorizIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
@@ -43,6 +52,9 @@ const Treatments = () => {
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno', 'veterinario'
 
   if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
@@ -228,103 +240,190 @@ const Treatments = () => {
     }
   };
 
+  const filteredTreatments = treatments.filter(treatment => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      treatment.nombre?.toLowerCase().includes(searchLower) ||
+      pets.find(p => p.id_mascota === treatment.id_mascota)?.nombre?.toLowerCase().includes(searchLower) ||
+      treatment.estado?.toLowerCase().includes(searchLower) ||
+      (appointments.find(a => a.id_cita === treatment.id_cita)?.veterinario?.nombre || '').toLowerCase().includes(searchLower) ||
+      (appointments.find(a => a.id_cita === treatment.id_cita)?.veterinario?.apellido || '').toLowerCase().includes(searchLower) ||
+      (pets.find(p => p.id_mascota === treatment.id_mascota)?.usuario?.nombre || '').toLowerCase().includes(searchLower) ||
+      (pets.find(p => p.id_mascota === treatment.id_mascota)?.usuario?.apellido || '').toLowerCase().includes(searchLower)
+    );
+  });
+
+  const sortedTreatments = [...filteredTreatments].sort((a, b) => {
+    if (orderBy === 'fecha') {
+      if (order === 'asc') {
+        return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
+      } else {
+        return new Date(b.fecha_inicio) - new Date(a.fecha_inicio);
+      }
+    } else if (orderBy === 'estado') {
+      if (order === 'asc') {
+        return (a.estado || '').localeCompare(b.estado || '');
+      } else {
+        return (b.estado || '').localeCompare(a.estado || '');
+      }
+    } else if (orderBy === 'dueno') {
+      const aName = (pets.find(p => p.id_mascota === a.id_mascota)?.usuario?.nombre || '') + ' ' + (pets.find(p => p.id_mascota === a.id_mascota)?.usuario?.apellido || '');
+      const bName = (pets.find(p => p.id_mascota === b.id_mascota)?.usuario?.nombre || '') + ' ' + (pets.find(p => p.id_mascota === b.id_mascota)?.usuario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    } else if (orderBy === 'veterinario') {
+      const aVet = (appointments.find(aApp => aApp.id_cita === a.id_cita)?.veterinario?.nombre || '') + ' ' + (appointments.find(aApp => aApp.id_cita === a.id_cita)?.veterinario?.apellido || '');
+      const bVet = (appointments.find(bApp => bApp.id_cita === b.id_cita)?.veterinario?.nombre || '') + ' ' + (appointments.find(bApp => bApp.id_cita === b.id_cita)?.veterinario?.apellido || '');
+      if (order === 'asc') {
+        return aVet.localeCompare(bVet);
+      } else {
+        return bVet.localeCompare(aVet);
+      }
+    }
+    return 0;
+  });
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Gestión de Tratamientos</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Gestión de Tratamientos
+        </Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
         >
           Nuevo Tratamiento
         </Button>
       </Box>
-
-      {treatments.length === 0 ? (
-        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No hay tratamientos registrados
-        </Typography>
-      ) : (
-        <List>
-          {treatments.map((treatment) => (
-            <ListItem
-              key={treatment.id_tratamiento}
-              sx={{
-                mb: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1
-              }}
-            >
-              <ListItemText
-                primary={
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography variant="h6">
-                      {pets.find(p => p.id_mascota === treatment.id_mascota)?.nombre}
-                    </Typography>
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Buscar"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+      </Box>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'mascota'}
+                  direction={orderBy === 'mascota' ? order : 'asc'}
+                  onClick={() => handleRequestSort('mascota')}
+                >
+                  Mascota
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'nombre'}
+                  direction={orderBy === 'nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('nombre')}
+                >
+                  Nombre
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'veterinario'}
+                  direction={orderBy === 'veterinario' ? order : 'asc'}
+                  onClick={() => handleRequestSort('veterinario')}
+                >
+                  Veterinario
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha'}
+                  direction={orderBy === 'fecha' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha')}
+                >
+                  Fecha de Inicio
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Fecha de Fin</TableCell>
+              <TableCell>Precio</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'estado'}
+                  direction={orderBy === 'estado' ? order : 'asc'}
+                  onClick={() => handleRequestSort('estado')}
+                >
+                  Estado
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Cambiar Estado</TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedTreatments.length > 0 ? (
+              sortedTreatments.map((treatment) => (
+                <TableRow key={treatment.id_tratamiento}>
+                  <TableCell>{treatment.cita?.mascota?.nombre}</TableCell>
+                  <TableCell>{treatment.nombre}</TableCell>
+                  <TableCell>{treatment.cita?.veterinario?.nombre} {treatment.cita?.veterinario?.apellido}</TableCell>
+                  <TableCell>{new Date(treatment.fecha_inicio).toLocaleDateString()}</TableCell>
+                  <TableCell>{treatment.fecha_fin ? new Date(treatment.fecha_fin).toLocaleDateString() : '-'}</TableCell>
+                  <TableCell>{treatment.precio ? `$${treatment.precio}` : '-'}</TableCell>
+                  <TableCell>
                     <Chip
                       label={treatment.estado}
                       color={getStatusColor(treatment.estado)}
                       size="small"
                     />
-                  </Stack>
-                }
-                secondary={
-                  <Typography component="div" variant="body2">
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Tipo: {treatment.tipo}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Descripción: {treatment.descripcion}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Fecha Inicio: {new Date(treatment.fecha_inicio).toLocaleDateString()}
-                    </Typography>
-                    {treatment.fecha_fin && (
-                      <Typography component="div" sx={{ mb: 0.5 }}>
-                        Fecha Fin: {new Date(treatment.fecha_fin).toLocaleDateString()}
-                      </Typography>
-                    )}
-                    {treatment.medicamentos && (
-                      <Typography component="div" sx={{ mb: 0.5 }}>
-                        Medicamentos: {treatment.medicamentos}
-                      </Typography>
-                    )}
-                    {treatment.instrucciones && (
-                      <Typography component="div">
-                        Instrucciones: {treatment.instrucciones}
-                      </Typography>
-                    )}
-                  </Typography>
-                }
-              />
-              <ListItemSecondaryAction>
-                <IconButton onClick={() => setChangingStateId(changingStateId === treatment.id_tratamiento ? null : treatment.id_tratamiento)}>
-                  <SwapHorizIcon />
-                </IconButton>
-                {changingStateId === treatment.id_tratamiento && (
-                  <>
-                    <IconButton onClick={() => handleChangeState(treatment, 'completado')} color="success">
-                      <CheckIcon />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => setChangingStateId(changingStateId === treatment.id_tratamiento ? null : treatment.id_tratamiento)}>
+                      <SwapHorizIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleChangeState(treatment, 'cancelado')} color="error">
-                      <CloseIcon />
+                    {changingStateId === treatment.id_tratamiento && (
+                      <>
+                        <IconButton onClick={() => handleChangeState(treatment, 'completado')} color="success">
+                          <CheckIcon />
+                        </IconButton>
+                        <IconButton onClick={() => handleChangeState(treatment, 'cancelado')} color="error">
+                          <CloseIcon />
+                        </IconButton>
+                      </>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleOpenDialog(treatment)}>
+                      <EditIcon />
                     </IconButton>
-                  </>
-                )}
-                <IconButton onClick={() => handleOpenDialog(treatment)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDelete(treatment.id_tratamiento)}>
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
-      )}
+                    <IconButton onClick={() => handleDelete(treatment.id_tratamiento)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={9} align="center">
+                  No hay tratamientos registrados
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Dialog 
         open={openDialog} 
@@ -383,6 +482,10 @@ const Treatments = () => {
               value={formData.fecha_inicio}
               onChange={(e) => setFormData({ ...formData, fecha_inicio: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: new Date().toISOString().split('T')[0]
+              }}
+              onKeyDown={e => e.preventDefault()}
               required
             />
             <TextField
@@ -392,6 +495,10 @@ const Treatments = () => {
               value={formData.fecha_fin}
               onChange={(e) => setFormData({ ...formData, fecha_fin: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: formData.fecha_inicio || new Date().toISOString().split('T')[0]
+              }}
+              onKeyDown={e => e.preventDefault()}
             />
             <TextField
               label="Medicamentos"

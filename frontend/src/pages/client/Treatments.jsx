@@ -32,7 +32,10 @@ import {
   CircularProgress,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  MenuItem,
+  TableSortLabel,
+  Tooltip
 } from '@mui/material';
 import { 
   LocalHospital as TreatmentIcon, 
@@ -44,6 +47,9 @@ const Treatments = () => {
   const { treatments, pets } = useApp();
   const { user } = useAuth();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno', 'veterinario'
 
   // Mover hooks antes del return temprano
   const treatmentsData = useMemo(() => {
@@ -104,109 +110,156 @@ const Treatments = () => {
     });
   };
 
+  const allTreatments = Object.values(treatmentsByPet).flatMap(obj => obj.treatments);
+  const filteredTreatments = allTreatments.filter(treatment => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      treatment.nombre?.toLowerCase().includes(searchLower) ||
+      treatment.cita?.mascota?.nombre?.toLowerCase().includes(searchLower) ||
+      treatment.cita?.veterinario?.nombre?.toLowerCase().includes(searchLower) ||
+      treatment.cita?.veterinario?.apellido?.toLowerCase().includes(searchLower) ||
+      treatment.estado?.toLowerCase().includes(searchLower)
+    );
+  });
+  const sortedTreatments = [...filteredTreatments].sort((a, b) => {
+    if (orderBy === 'fecha') {
+      if (order === 'asc') {
+        return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
+      } else {
+        return new Date(b.fecha_inicio) - new Date(a.fecha_inicio);
+      }
+    } else if (orderBy === 'estado') {
+      if (order === 'asc') {
+        return (a.estado || '').localeCompare(b.estado || '');
+      } else {
+        return (b.estado || '').localeCompare(a.estado || '');
+      }
+    } else if (orderBy === 'dueno') {
+      const aName = (a.cita?.mascota?.usuario?.nombre || '') + ' ' + (a.cita?.mascota?.usuario?.apellido || '');
+      const bName = (b.cita?.mascota?.usuario?.nombre || '') + ' ' + (b.cita?.mascota?.usuario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    } else if (orderBy === 'veterinario') {
+      const aVet = (a.cita?.veterinario?.nombre || '') + ' ' + (a.cita?.veterinario?.apellido || '');
+      const bVet = (b.cita?.veterinario?.nombre || '') + ' ' + (b.cita?.veterinario?.apellido || '');
+      if (order === 'asc') {
+        return aVet.localeCompare(bVet);
+      } else {
+        return bVet.localeCompare(aVet);
+      }
+    }
+    return 0;
+  });
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         Tratamientos de Mis Mascotas
       </Typography>
-
-      {Object.keys(treatmentsByPet).length === 0 ? (
-        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No hay tratamientos registrados para tus mascotas
-        </Typography>
-      ) : (
-        <Grid container spacing={3}>
-          {Object.values(treatmentsByPet).map(({ pet, treatments }) => (
-            <Grid item xs={12} key={pet.id_mascota}>
-              <Accordion>
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  sx={{
-                    bgcolor: 'primary.light',
-                    color: 'primary.contrastText',
-                    '&:hover': {
-                      bgcolor: 'primary.main',
-                    }
-                  }}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Buscar"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+      </Box>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'mascota'}
+                  direction={orderBy === 'mascota' ? order : 'asc'}
+                  onClick={() => handleRequestSort('mascota')}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <PetsIcon />
-                    <Typography variant="h6">
-                      {pet.nombre} - {pet.especie}
-                    </Typography>
+                  Mascota
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'nombre'}
+                  direction={orderBy === 'nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('nombre')}
+                >
+                  Nombre
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'veterinario'}
+                  direction={orderBy === 'veterinario' ? order : 'asc'}
+                  onClick={() => handleRequestSort('veterinario')}
+                >
+                  Veterinario
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha'}
+                  direction={orderBy === 'fecha' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha')}
+                >
+                  Fecha de Inicio
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Fecha de Fin</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'estado'}
+                  direction={orderBy === 'estado' ? order : 'asc'}
+                  onClick={() => handleRequestSort('estado')}
+                >
+                  Estado
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Precio</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedTreatments.length > 0 ? (
+              sortedTreatments.map((treatment) => (
+                <TableRow key={treatment.id_tratamiento}>
+                  <TableCell>{treatment.cita?.mascota?.nombre}</TableCell>
+                  <TableCell>{treatment.nombre}</TableCell>
+                  <TableCell>{treatment.cita?.veterinario?.nombre} {treatment.cita?.veterinario?.apellido}</TableCell>
+                  <TableCell>{formatDate(treatment.fecha_inicio)}</TableCell>
+                  <TableCell>{treatment.fecha_fin ? formatDate(treatment.fecha_fin) : '-'}</TableCell>
+                  <TableCell>
                     <Chip
-                      label={`${treatments.length} tratamientos`}
-                      color="primary"
+                      label={treatment.estado}
+                      color={getStatusColor(treatment.estado)}
                       size="small"
-                      sx={{ ml: 2 }}
                     />
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {treatments.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary" component="div">
-                      No hay tratamientos registrados para esta mascota
-                    </Typography>
-                  ) : (
-                    <List>
-                      {treatments.map((treatment) => (
-                        <ListItem
-                          key={treatment.id_tratamiento}
-                          sx={{
-                            mb: 2,
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 1
-                          }}
-                        >
-                          <ListItemIcon>
-                            <TreatmentIcon color="primary" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="h6" component="div">
-                                  {treatment.nombre}
-                                </Typography>
-                                <Chip
-                                  label={treatment.estado}
-                                  color={getStatusColor(treatment.estado)}
-                                  size="small"
-                                />
-                              </Box>
-                            }
-                            secondary={
-                              <Typography component="div"><Box>
-                                <Typography variant="body2" color="text.secondary" component="div">
-                                  {treatment.descripcion}
-                                </Typography>
-                                <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
-                                  <Typography variant="body2" component="div">
-                                    Fecha de inicio: {formatDate(treatment.fecha_inicio)}
-                                  </Typography>
-                                  {treatment.fecha_fin && (
-                                    <Typography variant="body2" component="div">
-                                      Fecha de fin: {formatDate(treatment.fecha_fin)}
-                                    </Typography>
-                                  )}
-                                </Box>
-                                <Typography variant="body2" component="div" sx={{ mt: 1 }}>
-                                  Precio: ${treatment.precio}
-                                </Typography>
-                              </Box></Typography>
-                            }
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  )}
-                </AccordionDetails>
-              </Accordion>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
+                  </TableCell>
+                  <TableCell>
+                    {treatment.precio ? `$${treatment.precio}` : '-'}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No hay tratamientos registrados para tus mascotas
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}

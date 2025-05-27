@@ -27,9 +27,11 @@ import {
   Paper,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Tooltip,
+  TableSortLabel
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon, Add as AddIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon, Add as AddIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
 
 const Appointments = () => {
   const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment, token } = useApp();
@@ -47,6 +49,12 @@ const Appointments = () => {
     id_usuario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [selectedHour, setSelectedHour] = useState('10');
+  const [selectedMinute, setSelectedMinute] = useState('00');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'veterinario'
+  const [changingStateId, setChangingStateId] = useState(null);
 
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
@@ -60,9 +68,41 @@ const Appointments = () => {
   const userPets = pets.filter(pet => pet.usuario?.id_usuario === user?.id_usuario);
 
   // Filtrar las citas que corresponden a las mascotas del usuario
-  const filteredAppointments = appointments.filter(appointment => 
-    userPets.some(pet => pet.id_mascota === appointment.mascota?.id_mascota)
-  );
+  const filteredAppointments = appointments.filter(appointment => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      appointment.motivo_consulta?.toLowerCase().includes(searchLower) ||
+      pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre?.toLowerCase().includes(searchLower) ||
+      appointment.estado?.toLowerCase().includes(searchLower) ||
+      appointment.veterinario?.nombre?.toLowerCase().includes(searchLower) ||
+      appointment.veterinario?.apellido?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    if (orderBy === 'fecha') {
+      if (order === 'asc') {
+        return new Date(a.fecha_hora) - new Date(b.fecha_hora);
+      } else {
+        return new Date(b.fecha_hora) - new Date(a.fecha_hora);
+      }
+    } else if (orderBy === 'estado') {
+      if (order === 'asc') {
+        return (a.estado || '').localeCompare(b.estado || '');
+      } else {
+        return (b.estado || '').localeCompare(a.estado || '');
+      }
+    } else if (orderBy === 'veterinario') {
+      const aName = (a.veterinario?.nombre || '') + ' ' + (a.veterinario?.apellido || '');
+      const bName = (b.veterinario?.nombre || '') + ' ' + (b.veterinario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    }
+    return 0;
+  });
 
   useEffect(() => {
     // Fetch veterinarians when component mounts
@@ -233,80 +273,211 @@ const Appointments = () => {
     } catch (e) { /* opcional: manejar error */ }
   };
 
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const handleChangeState = async (appointment, newState) => {
+    try {
+      if (!token) {
+        console.error('No hay token de autenticación');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:8000/api/citas/${appointment.id_cita}/estado`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ estado: newState }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const updatedAppointment = await response.json();
+        setAppointments(appointments.map(a => a.id_cita === updatedAppointment.id_cita ? updatedAppointment : a));
+        await refreshAppointments();
+        setSnackbar({ open: true, message: `Cita actualizada a ${newState} correctamente`, severity: 'success' });
+        setChangingStateId(null);
+      } else {
+        const errorData = await response.json();
+        console.error('Error al actualizar el estado de la cita:', errorData);
+        setSnackbar({ open: true, message: 'Error al actualizar el estado de la cita', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Error updating appointment state:', error);
+      setSnackbar({ open: true, message: 'Error al actualizar el estado de la cita', severity: 'error' });
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Mis Citas</Typography>
+        <Typography variant="h4">Gestión de Citas</Typography>
         <Button
           variant="contained"
           color="primary"
-          startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
         >
           Nueva Cita
         </Button>
       </Box>
 
-      {filteredAppointments.length === 0 ? (
-        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No tienes citas programadas
-        </Typography>
-      ) : (
-        <List>
-          {filteredAppointments.map((appointment) => (
-            <ListItem
-              key={appointment.id_cita}
-              sx={{
-                mb: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1
-              }}
-            >
-              <ListItemText
-                primary={
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography variant="h6">
-                      {appointment.mascota?.nombre}
-                    </Typography>
-                    <Chip
-                      label={appointment.tipo_consulta}
-                      color="primary"
-                      size="small"
-                    />
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Buscar"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+      </Box>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha'}
+                  direction={orderBy === 'fecha' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha')}
+                >
+                  Fecha y Hora
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'mascota'}
+                  direction={orderBy === 'mascota' ? order : 'asc'}
+                  onClick={() => handleRequestSort('mascota')}
+                >
+                  Mascota
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'veterinario'}
+                  direction={orderBy === 'veterinario' ? order : 'asc'}
+                  onClick={() => handleRequestSort('veterinario')}
+                >
+                  Veterinario
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Tipo de Consulta</TableCell>
+              <TableCell>Motivo</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'estado'}
+                  direction={orderBy === 'estado' ? order : 'asc'}
+                  onClick={() => handleRequestSort('estado')}
+                >
+                  Estado
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedAppointments.length > 0 ? (
+              sortedAppointments.map((appointment) => (
+                <TableRow key={appointment.id_cita}>
+                  <TableCell>
+                    {new Date(appointment.fecha_hora).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    {appointment.mascota?.nombre || pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
+                  </TableCell>
+                  <TableCell>
+                    {appointment.veterinario?.nombre} {appointment.veterinario?.apellido}
+                  </TableCell>
+                  <TableCell>{appointment.tipo_consulta}</TableCell>
+                  <TableCell>
+                    {appointment.motivo_consulta ? (
+                      <Tooltip title={appointment.motivo_consulta}>
+                        <Typography noWrap sx={{ maxWidth: 200 }}>
+                          {appointment.motivo_consulta}
+                        </Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography color="text.secondary">Sin motivo</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Chip
                       label={appointment.estado}
                       color={getStatusColor(appointment.estado)}
                       size="small"
                     />
-                  </Stack>
-                }
-                secondary={
-                  <Typography component="div">
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Fecha: {new Date(appointment.fecha_hora).toLocaleDateString()}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Hora: {new Date(appointment.fecha_hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Motivo: {appointment.motivo_consulta}
-                    </Typography>
-                  </Typography>
-                }
-              />
-              <ListItemSecondaryAction>
-                <IconButton onClick={() => handleOpenDialog(appointment)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDelete(appointment.id_cita)}>
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
-      )}
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Cambiar Estado">
+                        <IconButton 
+                          size="small" 
+                          onClick={() => setChangingStateId(changingStateId === appointment.id_cita ? null : appointment.id_cita)}
+                        >
+                          <SwapHorizIcon />
+                        </IconButton>
+                      </Tooltip>
+                      {changingStateId === appointment.id_cita && (
+                        <>
+                          <Tooltip title="Confirmar">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleChangeState(appointment, 'confirmada')} 
+                              color="success"
+                            >
+                              <CheckIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Cancelar">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleChangeState(appointment, 'cancelada')} 
+                              color="error"
+                            >
+                              <CloseIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
+                      <Tooltip title="Editar">
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleOpenDialog(appointment)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar">
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleDelete(appointment.id_cita)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No hay citas programadas
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Dialog 
         open={openDialog} 
@@ -353,22 +524,51 @@ const Appointments = () => {
               fullWidth
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              InputLabelProps={{
-                shrink: true,
+              InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: new Date().toISOString().split('T')[0]
               }}
               required
             />
-            <TextField
-              label="Hora"
-              type="time"
-              fullWidth
-              value={formData.time}
-              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              required
-            />
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <TextField
+                select
+                label="Hora"
+                value={selectedHour}
+                onChange={e => {
+                  setSelectedHour(e.target.value);
+                  setFormData({ ...formData, time: `${e.target.value}:${selectedMinute}` });
+                }}
+                sx={{ width: 100 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              >
+                {[...Array(8)].map((_, i) => {
+                  const hour = 10 + i;
+                  return (
+                    <MenuItem key={hour} value={hour.toString().padStart(2, '0')}>
+                      {hour.toString().padStart(2, '0')}
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+              <TextField
+                select
+                label="Minutos"
+                value={selectedMinute}
+                onChange={e => {
+                  setSelectedMinute(e.target.value);
+                  setFormData({ ...formData, time: `${selectedHour}:${e.target.value}` });
+                }}
+                sx={{ width: 100 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              >
+                {['00', '15', '30', '45'].map(min => (
+                  <MenuItem key={min} value={min}>{min}</MenuItem>
+                ))}
+              </TextField>
+            </Box>
             <TextField
               select
               label="Tipo de Consulta"

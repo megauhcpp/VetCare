@@ -19,7 +19,16 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
-  Divider
+  Divider,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableSortLabel,
+  Tooltip,
+  Paper
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
@@ -42,6 +51,9 @@ const Pets = () => {
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [clientes, setClientes] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('nombre');
 
   useEffect(() => {
     // Fetch clientes (usuarios con rol cliente)
@@ -181,80 +193,164 @@ const Pets = () => {
     }
   };
 
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const sortedPets = [...pets.filter(pet => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      pet.nombre?.toLowerCase().includes(searchLower) ||
+      pet.especie?.toLowerCase().includes(searchLower) ||
+      pet.raza?.toLowerCase().includes(searchLower) ||
+      pet.usuario?.nombre?.toLowerCase().includes(searchLower) ||
+      pet.usuario?.apellido?.toLowerCase().includes(searchLower)
+    );
+  })].sort((a, b) => {
+    if (orderBy === 'nombre') {
+      if (order === 'asc') {
+        return (a.nombre || '').localeCompare(b.nombre || '');
+      } else {
+        return (b.nombre || '').localeCompare(a.nombre || '');
+      }
+    } else if (orderBy === 'fecha_nacimiento') {
+      if (order === 'asc') {
+        return new Date(a.fecha_nacimiento) - new Date(b.fecha_nacimiento);
+      } else {
+        return new Date(b.fecha_nacimiento) - new Date(a.fecha_nacimiento);
+      }
+    } else if (orderBy === 'dueno') {
+      const aName = (a.usuario?.nombre || '') + ' ' + (a.usuario?.apellido || '');
+      const bName = (b.usuario?.nombre || '') + ' ' + (b.usuario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    }
+    return 0;
+  });
+
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Gestión de Mascotas</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Gestión de Mascotas
+        </Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
         >
           Nueva Mascota
         </Button>
       </Box>
-
-      {pets.length === 0 ? (
-        <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
-          No hay mascotas registradas
-        </Typography>
-      ) : (
-        <List>
-          {pets.map((pet, idx) => (
-            <ListItem
-              key={pet.id_mascota || `pet-${idx}`}
-              sx={{
-                mb: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1
-              }}
-            >
-              <ListItemText
-                primary={
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography variant="h6">
-                      {pet.nombre}
-                    </Typography>
-                    <Chip
-                      label={pet.especie}
-                      color="primary"
-                      size="small"
-                    />
-                  </Stack>
-                }
-                secondary={
-                  <Typography component="div" variant="body2">
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Raza: {pet.raza}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Fecha de Nacimiento: {pet.fecha_nacimiento}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 0.5 }}>
-                      Sexo: {pet.sexo}
-                    </Typography>
-                    {pet.notas && (
-                      <Typography component="div">
-                        Notas: {pet.notas}
-                      </Typography>
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Buscar"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+      </Box>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'nombre'}
+                  direction={orderBy === 'nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('nombre')}
+                >
+                  Nombre
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'especie'}
+                  direction={orderBy === 'especie' ? order : 'asc'}
+                  onClick={() => handleRequestSort('especie')}
+                >
+                  Especie
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'raza'}
+                  direction={orderBy === 'raza' ? order : 'asc'}
+                  onClick={() => handleRequestSort('raza')}
+                >
+                  Raza
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha_nacimiento'}
+                  direction={orderBy === 'fecha_nacimiento' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha_nacimiento')}
+                >
+                  Fecha de Nacimiento
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Sexo</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'dueno'}
+                  direction={orderBy === 'dueno' ? order : 'asc'}
+                  onClick={() => handleRequestSort('dueno')}
+                >
+                  Dueño
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>Notas</TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedPets.length > 0 ? (
+              sortedPets.map((pet) => (
+                <TableRow key={pet.id_mascota}>
+                  <TableCell>{pet.nombre}</TableCell>
+                  <TableCell>{pet.especie}</TableCell>
+                  <TableCell>{pet.raza}</TableCell>
+                  <TableCell>{new Date(pet.fecha_nacimiento).toLocaleDateString()}</TableCell>
+                  <TableCell>{pet.sexo}</TableCell>
+                  <TableCell>{pet.usuario?.nombre} {pet.usuario?.apellido}</TableCell>
+                  <TableCell>
+                    {pet.notas ? (
+                      <Tooltip title={pet.notas}>
+                        <Typography noWrap sx={{ maxWidth: 200 }}>{pet.notas}</Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography color="text.secondary">Sin notas</Typography>
                     )}
-                  </Typography>
-                }
-              />
-              <ListItemSecondaryAction>
-                <IconButton onClick={() => handleOpenDialog(pet)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDelete(pet.id_mascota)}>
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
-      )}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleOpenDialog(pet)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(pet.id_mascota)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No hay mascotas registradas
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Dialog 
         open={openDialog} 
@@ -321,6 +417,10 @@ const Pets = () => {
               onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                max: new Date().toISOString().split('T')[0]
+              }}
+              onKeyDown={e => e.preventDefault()}
               required
             />
             <TextField

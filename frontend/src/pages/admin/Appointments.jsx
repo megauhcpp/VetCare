@@ -26,7 +26,8 @@ import {
   Select,
   MenuItem,
   Alert,
-  Snackbar
+  Snackbar,
+  TableSortLabel
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -54,6 +55,10 @@ const AdminAppointments = () => {
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
+  const [selectedHour, setSelectedHour] = useState('10');
+  const [selectedMinute, setSelectedMinute] = useState('00');
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('fecha');
 
   // Extraer las citas del objeto de respuesta
   const appointmentsData = useMemo(() => {
@@ -291,8 +296,42 @@ const AdminAppointments = () => {
       appointment.mascota?.usuario?.nombre?.toLowerCase().includes(searchLower) ||
       appointment.mascota?.usuario?.apellido?.toLowerCase().includes(searchLower) ||
       appointment.veterinario?.nombre?.toLowerCase().includes(searchLower) ||
-      appointment.veterinario?.apellido?.toLowerCase().includes(searchLower)
+      appointment.veterinario?.apellido?.toLowerCase().includes(searchLower) ||
+      appointment.estado?.toLowerCase().includes(searchLower)
     );
+  });
+
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    if (orderBy === 'fecha') {
+      if (order === 'asc') {
+        return new Date(a.fecha_hora) - new Date(b.fecha_hora);
+      } else {
+        return new Date(b.fecha_hora) - new Date(a.fecha_hora);
+      }
+    } else if (orderBy === 'estado') {
+      if (order === 'asc') {
+        return (a.estado || '').localeCompare(b.estado || '');
+      } else {
+        return (b.estado || '').localeCompare(a.estado || '');
+      }
+    } else if (orderBy === 'dueno') {
+      const aName = (a.mascota?.usuario?.nombre || '') + ' ' + (a.mascota?.usuario?.apellido || '');
+      const bName = (b.mascota?.usuario?.nombre || '') + ' ' + (b.mascota?.usuario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    } else if (orderBy === 'veterinario') {
+      const aVet = (a.veterinario?.nombre || '') + ' ' + (a.veterinario?.apellido || '');
+      const bVet = (b.veterinario?.nombre || '') + ' ' + (b.veterinario?.apellido || '');
+      if (order === 'asc') {
+        return aVet.localeCompare(bVet);
+      } else {
+        return bVet.localeCompare(aVet);
+      }
+    }
+    return 0;
   });
 
   // Función para refrescar la lista de citas
@@ -312,6 +351,12 @@ const AdminAppointments = () => {
     } catch (e) { /* opcional: manejar error */ }
   };
 
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -327,20 +372,14 @@ const AdminAppointments = () => {
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Buscar citas..."
+          label="Buscar"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
+          onChange={e => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
         />
       </Box>
 
@@ -348,19 +387,51 @@ const AdminAppointments = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Fecha y Hora</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'fecha'}
+                  direction={orderBy === 'fecha' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha')}
+                >
+                  Fecha y Hora
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Mascota</TableCell>
-              <TableCell>Dueño</TableCell>
-              <TableCell>Veterinario</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'dueno'}
+                  direction={orderBy === 'dueno' ? order : 'asc'}
+                  onClick={() => handleRequestSort('dueno')}
+                >
+                  Dueño
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'veterinario'}
+                  direction={orderBy === 'veterinario' ? order : 'asc'}
+                  onClick={() => handleRequestSort('veterinario')}
+                >
+                  Veterinario
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Tipo de Consulta</TableCell>
               <TableCell>Motivo</TableCell>
-              <TableCell>Estado</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'estado'}
+                  direction={orderBy === 'estado' ? order : 'asc'}
+                  onClick={() => handleRequestSort('estado')}
+                >
+                  Estado
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredAppointments.length > 0 ? (
-              filteredAppointments.map((appointment) => (
+            {sortedAppointments.length > 0 ? (
+              sortedAppointments.map((appointment) => (
                 <TableRow key={appointment.id_cita}>
                   <TableCell>{formatDateTime(appointment.fecha_hora)}</TableCell>
                   <TableCell>{appointment.mascota?.nombre}</TableCell>
@@ -468,14 +539,65 @@ const AdminAppointments = () => {
               </Select>
             </FormControl>
             <TextField
-              name="fecha_hora"
-              label="Fecha y Hora"
-              type="datetime-local"
-              value={formData.fecha_hora}
-              onChange={handleInputChange}
+              name="fecha"
+              label="Fecha"
+              type="date"
+              value={formData.fecha_hora ? formData.fecha_hora.split('T')[0] : ''}
+              onChange={e => {
+                const date = e.target.value;
+                const time = formData.fecha_hora ? formData.fecha_hora.split('T')[1]?.slice(0,5) : '';
+                setFormData({ ...formData, fecha_hora: date && time ? `${date}T${time}` : date ? `${date}T10:00` : '' });
+              }}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: new Date().toISOString().split('T')[0]
+              }}
+              onKeyDown={e => e.preventDefault()}
             />
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <TextField
+                name="hora"
+                label="Hora"
+                select
+                value={selectedHour}
+                onChange={e => {
+                  setSelectedHour(e.target.value);
+                  const date = formData.fecha_hora ? formData.fecha_hora.split('T')[0] : '';
+                  setFormData({ ...formData, fecha_hora: date ? `${date}T${e.target.value}:${selectedMinute}` : '' });
+                }}
+                sx={{ width: 100, mr: 2 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              >
+                {[...Array(8)].map((_, i) => {
+                  const hour = 10 + i;
+                  return (
+                    <MenuItem key={hour} value={hour.toString().padStart(2, '0')}>
+                      {hour.toString().padStart(2, '0')}
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+              <TextField
+                name="minuto"
+                label="Minutos"
+                select
+                value={selectedMinute}
+                onChange={e => {
+                  setSelectedMinute(e.target.value);
+                  const date = formData.fecha_hora ? formData.fecha_hora.split('T')[0] : '';
+                  setFormData({ ...formData, fecha_hora: date ? `${date}T${selectedHour}:${e.target.value}` : '' });
+                }}
+                sx={{ width: 100 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              >
+                {['00', '15', '30', '45'].map(min => (
+                  <MenuItem key={min} value={min}>{min}</MenuItem>
+                ))}
+              </TextField>
+            </Box>
             <FormControl fullWidth>
               <InputLabel>Tipo de Consulta</InputLabel>
               <Select
