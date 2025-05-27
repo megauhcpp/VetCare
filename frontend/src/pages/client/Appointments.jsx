@@ -159,6 +159,7 @@ const Appointments = () => {
         } else {
           setAppointments([...appointments, updatedAppointment]);
         }
+        await refreshAppointments();
         handleCloseDialog();
         setSnackbar({ open: true, message: 'Cita guardada correctamente', severity: 'success' });
       } else {
@@ -192,6 +193,7 @@ const Appointments = () => {
 
         if (response.ok) {
           setAppointments(appointments.filter(a => a.id_cita !== appointmentId));
+          await refreshAppointments();
           setSnackbar({ open: true, message: 'Cita eliminada correctamente', severity: 'success' });
         } else {
           console.error('Error al eliminar la cita:', await response.text());
@@ -215,6 +217,22 @@ const Appointments = () => {
       default:
         return 'default';
     }
+  };
+
+  // Función para refrescar la lista de citas
+  const refreshAppointments = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/citas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAppointments(Array.isArray(data) ? data : (data.data || []));
+      }
+    } catch (e) { /* opcional: manejar error */ }
   };
 
   return (

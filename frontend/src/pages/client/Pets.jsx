@@ -129,22 +129,59 @@ const Pets = () => {
         const updatedPet = await response.json();
         console.log('Pet created/updated:', updatedPet); // Debug log
 
-        // Actualizar la lista de mascotas
         if (selectedPet) {
           setPets(pets.map(p => p.id_mascota === updatedPet.id_mascota ? updatedPet : p));
         } else {
-          // Asegurarse de que la nueva mascota tenga la relación con el usuario
-          const newPet = {
-            ...updatedPet,
-            usuario: {
-              id_usuario: user.id_usuario,
-              nombre: user.nombre,
-              apellido: user.apellido
+          // Fetch de la mascota completa para asegurar estructura
+          const petId = updatedPet.id_mascota || updatedPet.data?.id_mascota;
+          if (petId) {
+            try {
+              const petResponse = await fetch(`http://localhost:8000/api/mascotas/${petId}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Accept': 'application/json'
+                }
+              });
+              if (petResponse.ok) {
+                const fullPet = await petResponse.json();
+                setPets(prevPets => {
+                  const filtered = prevPets.filter(p => p.id_mascota !== fullPet.id_mascota);
+                  return [...filtered, fullPet];
+                });
+              } else {
+                // Si falla, usa el objeto provisional
+                const newPet = {
+                  ...updatedPet,
+                  usuario: {
+                    id_usuario: user.id_usuario,
+                    nombre: user.nombre,
+                    apellido: user.apellido
+                  }
+                };
+                setPets(prevPets => {
+                  const filtered = prevPets.filter(p => p.id_mascota !== newPet.id_mascota);
+                  return [...filtered, newPet];
+                });
+              }
+            } catch (e) {
+              // Si falla el fetch, usa el objeto provisional
+              const newPet = {
+                ...updatedPet,
+                usuario: {
+                  id_usuario: user.id_usuario,
+                  nombre: user.nombre,
+                  apellido: user.apellido
+                }
+              };
+              setPets(prevPets => {
+                const filtered = prevPets.filter(p => p.id_mascota !== newPet.id_mascota);
+                return [...filtered, newPet];
+              });
             }
-          };
-          setPets(prevPets => [...prevPets, newPet]);
+          }
         }
 
+        await refreshPets();
         handleCloseDialog();
         setError('');
         setSnackbar({ open: true, message: 'Mascota guardada correctamente', severity: 'success' });
@@ -178,6 +215,7 @@ const Pets = () => {
 
         if (response.ok) {
           setPets(pets.filter(p => p.id_mascota !== petId));
+          await refreshPets();
           setError('');
           setSnackbar({ open: true, message: 'Mascota eliminada correctamente', severity: 'success' });
         } else {
@@ -199,6 +237,23 @@ const Pets = () => {
       especie: nuevaEspecie,
       raza: '' // Resetear la raza cuando cambia la especie
     });
+  };
+
+  // Función para refrescar la lista de mascotas
+  const refreshPets = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/mascotas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Si la respuesta tiene 'data', úsala; si no, asume que es un array
+        setPets(Array.isArray(data) ? data : (data.data || []));
+      }
+    } catch (e) { /* opcional: manejar error */ }
   };
 
   return (
@@ -313,11 +368,11 @@ const Pets = () => {
                 sx={{ borderRadius: 2 }}
               >
                 {Object.entries(categoriasEspecies).map(([categoria, especiesList]) => [
-                  <MenuItem key={categoria} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
+                  <MenuItem key={`cat-${categoria}`} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
                     {categoria}
                   </MenuItem>,
                   ...especiesList.map(especie => (
-                    <MenuItem key={especie} value={especie} sx={{ pl: 4 }}>
+                    <MenuItem key={`esp-${categoria}-${especie}`} value={especie} sx={{ pl: 4 }}>
                       {especie.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </MenuItem>
                   ))

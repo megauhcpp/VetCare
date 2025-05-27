@@ -107,22 +107,21 @@ class MascotaController extends Controller
             ]);
 
             $user = Auth::user();
+            $usuarioSeleccionado = null;
             
-            // Verificar que el usuario tenga permisos para crear mascotas para otros usuarios
-            if ($user->rol !== 'admin' && $user->rol !== 'veterinario') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'No tienes permiso para crear mascotas para otros usuarios'
-                ], 403);
-            }
-
-            // Verificar que el usuario seleccionado sea un cliente
-            $usuarioSeleccionado = Usuario::find($request->id_usuario);
-            if (!$usuarioSeleccionado || $usuarioSeleccionado->rol !== 'cliente') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El usuario seleccionado debe ser un cliente'
-                ], 400);
+            if ($user->rol === 'admin' || $user->rol === 'veterinario') {
+                // Admin/vet pueden crear mascotas para cualquier usuario (cliente)
+                $usuarioSeleccionado = Usuario::find($request->id_usuario);
+                if (!$usuarioSeleccionado || $usuarioSeleccionado->rol !== 'cliente') {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'El usuario seleccionado debe ser un cliente'
+                    ], 400);
+                }
+                $idUsuario = $request->id_usuario;
+            } else {
+                // Cliente solo puede crear mascotas para sí mismo
+                $idUsuario = $user->id_usuario;
             }
             
             // Obtener el último ID de mascota
@@ -131,7 +130,7 @@ class MascotaController extends Controller
 
             $mascota = new Mascota();
             $mascota->id_mascota = $nuevoId;
-            $mascota->id_usuario = $request->id_usuario;
+            $mascota->id_usuario = $idUsuario;
             $mascota->nombre = $request->nombre;
             $mascota->especie = $request->especie;
             $mascota->raza = $request->raza;
@@ -142,7 +141,7 @@ class MascotaController extends Controller
 
             Log::info('Mascota creada exitosamente:', [
                 'mascota' => $mascota,
-                'usuario_asignado' => $usuarioSeleccionado
+                'usuario_asignado' => $usuarioSeleccionado ? $usuarioSeleccionado : $user
             ]);
 
             return response()->json([
@@ -174,9 +173,23 @@ class MascotaController extends Controller
         if ($user->rol !== 'admin' && $mascota->id_usuario !== $user->id_usuario) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
-        
-        $mascota->load('usuario', 'citas.tratamientos');
-        return response()->json($mascota);
+        $mascota->load('usuario');
+        $formattedPet = [
+            'id_mascota' => $mascota->id_mascota,
+            'nombre' => $mascota->nombre,
+            'especie' => $mascota->especie,
+            'raza' => $mascota->raza,
+            'fecha_nacimiento' => $mascota->fecha_nacimiento,
+            'sexo' => $mascota->sexo,
+            'notas' => $mascota->notas,
+            'usuario' => [
+                'id_usuario' => $mascota->usuario->id_usuario,
+                'nombre' => $mascota->usuario->nombre,
+                'apellido' => $mascota->usuario->apellido,
+                'email' => $mascota->usuario->email
+            ]
+        ];
+        return response()->json($formattedPet);
     }
 
     /**
