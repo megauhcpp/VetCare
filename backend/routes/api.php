@@ -78,29 +78,27 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Admin Routes
-    Route::middleware('admin')->group(function () {
-        // User Management
-        Route::get('/admin/users', [AdminController::class, 'getUsers']);
-        Route::post('/admin/users', [AdminController::class, 'createUser']);
-        Route::put('/admin/users/{user}', [AdminController::class, 'updateUser']);
-        Route::delete('/admin/users/{user}', [AdminController::class, 'deleteUser']);
-        
-        // Pet Management
-        Route::get('/admin/pets', [AdminController::class, 'getPets']);
-        Route::post('/admin/pets', [AdminController::class, 'createPet']);
-        Route::put('/admin/pets/{pet}', [AdminController::class, 'updatePet']);
-        Route::delete('/admin/pets/{pet}', [AdminController::class, 'deletePet']);
-        
-        // Treatment Management
-        Route::get('/admin/treatments', [AdminController::class, 'getTreatments']);
-        Route::post('/admin/treatments', [AdminController::class, 'createTreatment']);
-        Route::put('/admin/treatments/{treatment}', [AdminController::class, 'updateTreatment']);
-        Route::delete('/admin/treatments/{treatment}', [AdminController::class, 'deleteTreatment']);
-        
-        // Appointment Management
-        Route::get('/admin/appointments', [AdminController::class, 'getAppointments']);
-        Route::post('/admin/appointments', [AdminController::class, 'createAppointment']);
-        Route::put('/admin/appointments/{appointment}', [AdminController::class, 'updateAppointment']);
-        Route::delete('/admin/appointments/{appointment}', [AdminController::class, 'deleteAppointment']);
-    });
+    // User Management
+    Route::get('/admin/users', [AdminController::class, 'getUsers']);
+    Route::post('/admin/users', [AdminController::class, 'createUser']);
+    Route::put('/admin/users/{user}', [AdminController::class, 'updateUser']);
+    Route::delete('/admin/users/{user}', [AdminController::class, 'deleteUser']);
+    
+    // Pet Management
+    Route::get('/admin/pets', [AdminController::class, 'getPets']);
+    Route::post('/admin/pets', [AdminController::class, 'createPet']);
+    Route::put('/admin/pets/{pet}', [AdminController::class, 'updatePet']);
+    Route::delete('/admin/pets/{pet}', [AdminController::class, 'deletePet']);
+    
+    // Treatment Management
+    Route::get('/admin/treatments', [AdminController::class, 'getTreatments']);
+    Route::post('/admin/treatments', [AdminController::class, 'createTreatment']);
+    Route::put('/admin/treatments/{treatment}', [AdminController::class, 'updateTreatment']);
+    Route::delete('/admin/treatments/{treatment}', [AdminController::class, 'deleteTreatment']);
+    
+    // Appointment Management
+    Route::get('/admin/appointments', [AdminController::class, 'getAppointments']);
+    Route::post('/admin/appointments', [AdminController::class, 'createAppointment']);
+    Route::put('/admin/appointments/{appointment}', [AdminController::class, 'updateAppointment']);
+    Route::delete('/admin/appointments/{appointment}', [AdminController::class, 'deleteAppointment']);
 }); 
