@@ -31,7 +31,8 @@ import {
   Tooltip,
   TableSortLabel
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon, Add as AddIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Appointments = () => {
   const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment, token } = useApp();
@@ -52,9 +53,10 @@ const Appointments = () => {
   const [selectedHour, setSelectedHour] = useState('10');
   const [selectedMinute, setSelectedMinute] = useState('00');
   const [searchTerm, setSearchTerm] = useState('');
-  const [order, setOrder] = useState('desc');
-  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'veterinario'
-  const [changingStateId, setChangingStateId] = useState(null);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('fecha_hora');
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
 
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
@@ -80,25 +82,11 @@ const Appointments = () => {
   });
 
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    if (orderBy === 'fecha') {
+    if (orderBy === 'fecha_hora') {
       if (order === 'asc') {
         return new Date(a.fecha_hora) - new Date(b.fecha_hora);
       } else {
         return new Date(b.fecha_hora) - new Date(a.fecha_hora);
-      }
-    } else if (orderBy === 'estado') {
-      if (order === 'asc') {
-        return (a.estado || '').localeCompare(b.estado || '');
-      } else {
-        return (b.estado || '').localeCompare(a.estado || '');
-      }
-    } else if (orderBy === 'veterinario') {
-      const aName = (a.veterinario?.nombre || '') + ' ' + (a.veterinario?.apellido || '');
-      const bName = (b.veterinario?.nombre || '') + ' ' + (b.veterinario?.apellido || '');
-      if (order === 'asc') {
-        return aName.localeCompare(bName);
-      } else {
-        return bName.localeCompare(aName);
       }
     }
     return 0;
@@ -284,41 +272,6 @@ const Appointments = () => {
     setOrderBy(property);
   };
 
-  const handleChangeState = async (appointment, newState) => {
-    try {
-      if (!token) {
-        console.error('No hay token de autenticación');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:8000/api/citas/${appointment.id_cita}/estado`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ estado: newState }),
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const updatedAppointment = await response.json();
-        setAppointments(appointments.map(a => a.id_cita === updatedAppointment.id_cita ? updatedAppointment : a));
-        await refreshAppointments();
-        setSnackbar({ open: true, message: `Cita actualizada a ${newState} correctamente`, severity: 'success' });
-        setChangingStateId(null);
-      } else {
-        const errorData = await response.json();
-        console.error('Error al actualizar el estado de la cita:', errorData);
-        setSnackbar({ open: true, message: 'Error al actualizar el estado de la cita', severity: 'error' });
-      }
-    } catch (error) {
-      console.error('Error updating appointment state:', error);
-      setSnackbar({ open: true, message: 'Error al actualizar el estado de la cita', severity: 'error' });
-    }
-  };
-
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -350,42 +303,18 @@ const Appointments = () => {
             <TableRow>
               <TableCell>
                 <TableSortLabel
-                  active={orderBy === 'fecha'}
-                  direction={orderBy === 'fecha' ? order : 'asc'}
-                  onClick={() => handleRequestSort('fecha')}
+                  active={orderBy === 'fecha_hora'}
+                  direction={orderBy === 'fecha_hora' ? order : 'asc'}
+                  onClick={() => handleRequestSort('fecha_hora')}
                 >
                   Fecha y Hora
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'mascota'}
-                  direction={orderBy === 'mascota' ? order : 'asc'}
-                  onClick={() => handleRequestSort('mascota')}
-                >
-                  Mascota
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'veterinario'}
-                  direction={orderBy === 'veterinario' ? order : 'asc'}
-                  onClick={() => handleRequestSort('veterinario')}
-                >
-                  Veterinario
-                </TableSortLabel>
-              </TableCell>
+              <TableCell>Mascota</TableCell>
+              <TableCell>Veterinario</TableCell>
               <TableCell>Tipo de Consulta</TableCell>
               <TableCell>Motivo</TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'estado'}
-                  direction={orderBy === 'estado' ? order : 'asc'}
-                  onClick={() => handleRequestSort('estado')}
-                >
-                  Estado
-                </TableSortLabel>
-              </TableCell>
+              <TableCell>Estado</TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
@@ -423,36 +352,6 @@ const Appointments = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Cambiar Estado">
-                        <IconButton 
-                          size="small" 
-                          onClick={() => setChangingStateId(changingStateId === appointment.id_cita ? null : appointment.id_cita)}
-                        >
-                          <SwapHorizIcon />
-                        </IconButton>
-                      </Tooltip>
-                      {changingStateId === appointment.id_cita && (
-                        <>
-                          <Tooltip title="Confirmar">
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleChangeState(appointment, 'confirmada')} 
-                              color="success"
-                            >
-                              <CheckIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Cancelar">
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleChangeState(appointment, 'cancelada')} 
-                              color="error"
-                            >
-                              <CloseIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
                       <Tooltip title="Editar">
                         <IconButton 
                           size="small" 
@@ -586,6 +485,7 @@ const Appointments = () => {
               <MenuItem value="vacunacion">Vacunación</MenuItem>
               <MenuItem value="cirugia">Cirugía</MenuItem>
               <MenuItem value="urgencia">Urgencia</MenuItem>
+              <MenuItem value="control">Control</MenuItem>
             </TextField>
             <TextField
               label="Motivo de la Consulta"

@@ -94,7 +94,7 @@ const Pets = () => {
         fecha_nacimiento: pet.fecha_nacimiento ? pet.fecha_nacimiento.split('T')[0] : '',
         sexo: pet.sexo,
         notas: pet.notas || '',
-        id_usuario: pet.id_usuario || ''
+        id_usuario: pet.usuario?.id_usuario || ''
       });
     } else {
       setSelectedPet(null);

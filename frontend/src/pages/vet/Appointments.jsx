@@ -101,12 +101,12 @@ const Appointments = () => {
     if (appointment) {
       setSelectedAppointment(appointment);
       setFormData({
-        petId: appointment.id_mascota,
+        petId: String(appointment.id_mascota || appointment.mascota?.id_mascota),
         date: appointment.fecha_hora.split('T')[0],
         time: appointment.fecha_hora.split('T')[1].substring(0, 5),
         type: appointment.tipo_consulta,
         motivo: appointment.motivo_consulta || '',
-        id_veterinario: appointment.id_usuario
+        id_veterinario: appointment.veterinario?.id_usuario || appointment.id_usuario
       });
     } else {
       setSelectedAppointment(null);
@@ -566,7 +566,7 @@ const Appointments = () => {
               required
             >
               {pets.map((pet) => (
-                <MenuItem key={pet.id_mascota} value={pet.id_mascota}>
+                <MenuItem key={pet.id_mascota} value={String(pet.id_mascota)}>
                   {pet.nombre}
                 </MenuItem>
               ))}

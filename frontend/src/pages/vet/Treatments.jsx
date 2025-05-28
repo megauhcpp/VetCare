@@ -46,10 +46,9 @@ const Treatments = () => {
     descripcion: '',
     fecha_inicio: '',
     fecha_fin: '',
-    estado: 'activo',
-    medicamentos: '',
-    instrucciones: ''
+    estado: 'activo'
   });
+  const [extraCita, setExtraCita] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,17 +65,27 @@ const Treatments = () => {
 
   const handleOpenDialog = (treatment = null) => {
     if (treatment) {
+      let cita = appointments.find(c => String(c.id_cita) === String(treatment.id_cita));
+      // Si no está, crea una opción temporal
+      if (!cita && treatment.cita) {
+        cita = {
+          id_cita: String(treatment.cita.id_cita),
+          mascota: treatment.cita.mascota,
+          motivo_consulta: treatment.cita.motivo_consulta
+        };
+        setExtraCita(cita);
+      } else {
+        setExtraCita(null);
+      }
       setSelectedTreatment(treatment);
       setFormData({
-        id_cita: treatment.id_cita || '',
+        id_cita: cita ? String(cita.id_cita) : '',
         nombre: treatment.nombre || '',
         precio: treatment.precio || '',
         descripcion: treatment.descripcion,
         fecha_inicio: treatment.fecha_inicio.split('T')[0],
         fecha_fin: treatment.fecha_fin ? treatment.fecha_fin.split('T')[0] : '',
-        estado: treatment.estado,
-        medicamentos: treatment.medicamentos || '',
-        instrucciones: treatment.instrucciones || ''
+        estado: treatment.estado
       });
     } else {
       setSelectedTreatment(null);
@@ -87,10 +96,9 @@ const Treatments = () => {
         descripcion: '',
         fecha_inicio: '',
         fecha_fin: '',
-        estado: 'activo',
-        medicamentos: '',
-        instrucciones: ''
+        estado: 'activo'
       });
+      setExtraCita(null);
     }
     setOpenDialog(true);
   };
@@ -445,11 +453,18 @@ const Treatments = () => {
               required
             >
               {appointments.map((cita) => (
-                <MenuItem key={cita.id_cita} value={cita.id_cita}>
+                <MenuItem key={cita.id_cita} value={String(cita.id_cita)}>
                   {(cita.mascota?.nombre || pets.find(p => p.id_mascota === cita.id_mascota)?.nombre || 'Mascota')}
                   {cita.motivo_consulta ? ` - ${cita.motivo_consulta}` : ''}
                 </MenuItem>
               ))}
+              {extraCita && (
+                <MenuItem key={extraCita.id_cita} value={String(extraCita.id_cita)}>
+                  {(extraCita.mascota?.nombre || 'Mascota')}
+                  {extraCita.motivo_consulta ? ` - ${extraCita.motivo_consulta}` : ''}
+                  {' (No disponible)'}
+                </MenuItem>
+              )}
             </TextField>
             <TextField
               label="Nombre Tratamiento"
@@ -499,22 +514,6 @@ const Treatments = () => {
                 min: formData.fecha_inicio || new Date().toISOString().split('T')[0]
               }}
               onKeyDown={e => e.preventDefault()}
-            />
-            <TextField
-              label="Medicamentos"
-              fullWidth
-              multiline
-              rows={2}
-              value={formData.medicamentos}
-              onChange={(e) => setFormData({ ...formData, medicamentos: e.target.value })}
-            />
-            <TextField
-              label="Instrucciones"
-              fullWidth
-              multiline
-              rows={3}
-              value={formData.instrucciones}
-              onChange={(e) => setFormData({ ...formData, instrucciones: e.target.value })}
             />
           </Box>
         </DialogContent>

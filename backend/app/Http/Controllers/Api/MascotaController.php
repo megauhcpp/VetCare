@@ -199,7 +199,7 @@ class MascotaController extends Controller
     {
         $user = Auth::user();
         
-        if ($user->rol !== 'admin' && $mascota->id_usuario !== $user->id_usuario) {
+        if ($user->rol !== 'admin' && $user->rol !== 'veterinario' && $mascota->id_usuario !== $user->id_usuario) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
@@ -209,10 +209,18 @@ class MascotaController extends Controller
             'raza' => 'sometimes|required|string|max:255',
             'fecha_nacimiento' => 'sometimes|required|date',
             'sexo' => 'sometimes|required|string|max:10',
-            'notas' => 'nullable|string'
+            'notas' => 'nullable|string',
+            'id_usuario' => 'sometimes|required|exists:usuarios,id_usuario'
         ]);
 
-        $mascota->update($request->all());
+        // Si es veterinario o admin, permitir cambiar el dueño
+        if ($user->rol === 'admin' || $user->rol === 'veterinario') {
+            $mascota->update($request->all());
+        } else {
+            // Si es cliente, no permitir cambiar el dueño
+            $data = $request->except('id_usuario');
+            $mascota->update($data);
+        }
 
         return response()->json($mascota);
     }

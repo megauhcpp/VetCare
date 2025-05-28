@@ -187,8 +187,12 @@ class TratamientoController extends Controller
      */
     public function update(Request $request, Tratamiento $tratamiento)
     {
-        // Verificar que el tratamiento pertenece al usuario
-        if ($tratamiento->cita->mascota->id_usuario !== Auth::user()->id_usuario) {
+        // Permitir que admin y veterinario también puedan modificar tratamientos
+        if (
+            Auth::user()->rol !== 'admin' &&
+            Auth::user()->rol !== 'veterinario' &&
+            $tratamiento->cita->mascota->id_usuario !== Auth::user()->id_usuario
+        ) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 

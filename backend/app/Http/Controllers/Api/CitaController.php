@@ -202,7 +202,7 @@ class CitaController extends Controller
             'id_mascota' => 'sometimes|required|exists:mascotas,id_mascota',
             'motivo_consulta' => 'sometimes|required|string',
             'fecha_hora' => 'sometimes|required|date',
-            'tipo_consulta' => 'sometimes|required|string|in:consulta_general,vacunacion,cirugia,urgencia',
+            'tipo_consulta' => 'sometimes|required|string|in:consulta_general,vacunacion,cirugia,urgencia,control',
             'estado' => 'sometimes|required|string|in:pendiente,confirmada,completada,cancelada',
             'id_usuario' => 'sometimes|required|exists:usuarios,id_usuario'
         ]);
@@ -238,7 +238,19 @@ class CitaController extends Controller
         }
 
         $cita->update($request->all());
-        $cita->load(['mascota.usuario', 'veterinario']);
+        
+        // Cargar las relaciones con los datos necesarios
+        $cita->load([
+            'mascota' => function($query) {
+                $query->select('id_mascota', 'id_usuario', 'nombre', 'especie', 'raza', 'fecha_nacimiento', 'sexo', 'notas');
+            },
+            'mascota.usuario' => function($query) {
+                $query->select('id_usuario', 'nombre', 'apellido', 'email');
+            },
+            'veterinario' => function($query) {
+                $query->select('id_usuario', 'nombre', 'apellido', 'email');
+            }
+        ]);
 
         return response()->json($cita);
     }
