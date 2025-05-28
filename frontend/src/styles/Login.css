@@ -16,11 +16,12 @@
 
 /* Estructura principal */
 .login-page {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  
+  padding: 0;
+  background: #e5eaf1;
 }
 
 .login-container {
@@ -112,7 +113,7 @@
 }
 
 .login-form-container {
-  max-width: 400px;
+  max-width: 432px;
   width: 100%;
   margin: 0 auto;
 }
@@ -162,6 +163,11 @@
 
 /* Botón */
 .login-button {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+  margin-left: 0;
+  margin-right: 0;
   background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
   color: white;
   border: none;

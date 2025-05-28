@@ -16,11 +16,12 @@
 
 /* Estructura principal */
 .register-page {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-
+  padding: 0;
+  background: #e5eaf1;
 }
 
 .register-container {
@@ -112,7 +113,7 @@
 }
 
 .register-form-container {
-  max-width: 400px;
+  max-width: 432px;
   width: 100%;
   margin: 0 auto;
 }
@@ -154,6 +155,7 @@
   transition: var(--transition);
   background-color: var(--light-color);
   appearance: none;
+  color: var(--dark-color);
 }
 
 .form-group input:focus,
@@ -205,6 +207,11 @@
   cursor: pointer;
   transition: var(--transition);
   margin-top: 0.5rem;
+  width: 466px;
+  max-width: 100vw;
+  display: block;
+  margin: 1.5rem auto 0 auto;
+  box-sizing: border-box;
 }
 
 .register-button:hover {

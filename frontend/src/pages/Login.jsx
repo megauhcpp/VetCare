@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Login.css';
+import vetcareLogo from '../../vetcarelogonobg.png';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -48,24 +49,7 @@ const Login = () => {
         <div className="login-page">
             <div className="login-container">
                 <div className="login-left">
-                    <div className="login-content">
-                        <h1>VetCare</h1>
-                        <p className="subtitle">Gestión de Citas Veterinarias</p>
-                        <div className="features">
-                            <div className="feature">
-                                <i className="fas fa-calendar-check"></i>
-                                <span>Gestiona tus citas</span>
-                            </div>
-                            <div className="feature">
-                                <i className="fas fa-paw"></i>
-                                <span>Historial de mascotas</span>
-                            </div>
-                            <div className="feature">
-                                <i className="fas fa-bell"></i>
-                                <span>Recordatorios automáticos</span>
-                            </div>
-                        </div>
-                    </div>
+                    <img src={vetcareLogo} alt="VetCare Logo" style={{ width: 500, margin: '0 auto', display: 'block' }} />
                 </div>
                 <div className="login-right">
                     <div className="login-form-container">
