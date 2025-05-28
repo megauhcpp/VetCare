@@ -97,11 +97,11 @@ const AdminPets = () => {
       setSelectedPet(pet);
       setFormData({
         nombre: pet.nombre,
-        especie: pet.especie,
+        especie: pet.especie?.toLowerCase() || '',
         raza: pet.raza,
         fecha_nacimiento: pet.fecha_nacimiento.split('T')[0],
-        sexo: pet.sexo,
-        id_usuario: pet.id_usuario,
+        sexo: pet.sexo?.toLowerCase() || '',
+        id_usuario: pet.usuario?.id_usuario || pet.id_usuario || '',
         notas: pet.notas || ''
       });
     } else {
@@ -163,18 +163,26 @@ const AdminPets = () => {
       }
 
       const url = selectedPet
-        ? `/api/pets/${selectedPet.id_mascota}`
-        : '/api/pets';
+        ? `/api/admin/pets/${selectedPet.id_mascota}`
+        : '/api/admin/pets';
       
       const method = selectedPet ? 'PUT' : 'POST';
       
+      // Cambiar id_usuario a usuario_id para el backend y capitalizar sexo
+      const dataToSend = {
+        ...formData,
+        usuario_id: formData.id_usuario,
+        sexo: formData.sexo.charAt(0).toUpperCase() + formData.sexo.slice(1)
+      };
+      delete dataToSend.id_usuario;
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       const data = await response.json();
@@ -458,22 +466,27 @@ const AdminPets = () => {
                 ])}
               </Select>
             </FormControl>
-            <FormControl fullWidth>
-              <InputLabel>Raza</InputLabel>
-              <Select
-                name="raza"
-                value={formData.raza}
-                onChange={handleInputChange}
-                label="Raza"
-                disabled={!formData.especie}
-              >
-                {formData.especie && especies[formData.especie].map((raza) => (
+            <TextField
+              select
+              label="Raza"
+              fullWidth
+              value={formData.raza}
+              onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
+              required
+              disabled={!formData.especie}
+            >
+              {formData.especie && especies[formData.especie]?.length > 0 ? (
+                especies[formData.especie]?.map((raza) => (
                   <MenuItem key={raza} value={raza}>
                     {raza}
                   </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                ))
+              ) : (
+                <MenuItem disabled value="">
+                  Seleccione una especie primero
+                </MenuItem>
+              )}
+            </TextField>
             <FormControl fullWidth>
               <InputLabel>Dueño</InputLabel>
               <Select
@@ -482,11 +495,17 @@ const AdminPets = () => {
                 onChange={handleInputChange}
                 label="Dueño"
               >
-                {clientes.map((cliente) => (
-                  <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
-                    {cliente.nombre} {cliente.apellido} ({cliente.email})
+                {clientes.length > 0 ? (
+                  clientes.map((cliente) => (
+                    <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
+                      {cliente.nombre} {cliente.apellido} ({cliente.email})
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    Sin clientes disponibles
                   </MenuItem>
-                ))}
+                )}
               </Select>
             </FormControl>
             <TextField

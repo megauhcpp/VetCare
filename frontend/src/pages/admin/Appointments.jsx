@@ -103,8 +103,8 @@ const AdminAppointments = () => {
     if (appointment) {
       const date = new Date(appointment.fecha_hora);
       setFormData({
-        id_mascota: appointment.id_mascota,
-        id_usuario: appointment.id_usuario,
+        id_mascota: appointment.id_mascota || appointment.mascota?.id_mascota || '',
+        id_usuario: appointment.id_usuario || appointment.veterinario?.id_usuario || '',
         fecha_hora: date.toISOString().slice(0, 16),
         tipo_consulta: appointment.tipo_consulta,
         motivo_consulta: appointment.motivo_consulta,

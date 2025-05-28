@@ -54,9 +54,7 @@ const AdminTreatments = () => {
     precio: '',
     descripcion: '',
     fecha_inicio: '',
-    fecha_fin: '',
-    medicamentos: '',
-    instrucciones: ''
+    fecha_fin: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
@@ -101,14 +99,12 @@ const AdminTreatments = () => {
   const handleOpenDialog = (treatment = null) => {
     if (treatment) {
       setFormData({
-        id_cita: treatment.id_cita || '',
+        id_cita: treatment.id_cita || treatment.cita?.id_cita || '',
         nombre: treatment.nombre || '',
         precio: treatment.precio || '',
         descripcion: treatment.descripcion,
-        fecha_inicio: treatment.fecha_inicio,
-        fecha_fin: treatment.fecha_fin || '',
-        medicamentos: treatment.medicamentos || '',
-        instrucciones: treatment.instrucciones || ''
+        fecha_inicio: treatment.fecha_inicio ? treatment.fecha_inicio.split('T')[0] : (treatment.cita?.fecha_inicio ? treatment.cita.fecha_inicio.split('T')[0] : ''),
+        fecha_fin: treatment.fecha_fin ? treatment.fecha_fin.split('T')[0] : (treatment.cita?.fecha_fin ? treatment.cita.fecha_fin.split('T')[0] : '')
       });
       setSelectedTreatment(treatment);
     } else {
@@ -118,9 +114,7 @@ const AdminTreatments = () => {
         precio: '',
         descripcion: '',
         fecha_inicio: '',
-        fecha_fin: '',
-        medicamentos: '',
-        instrucciones: ''
+        fecha_fin: ''
       });
       setSelectedTreatment(null);
     }
@@ -152,50 +146,47 @@ const AdminTreatments = () => {
 
   const handleSubmit = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setSnackbar({ open: true, message: 'No hay token de autenticación', severity: 'error' });
+        return;
+      }
+
       const url = selectedTreatment
-        ? `/api/treatments/${selectedTreatment.id_tratamiento}`
-        : '/api/treatments';
+        ? `/api/tratamientos/${selectedTreatment.id_tratamiento}`
+        : '/api/tratamientos';
       
       const method = selectedTreatment ? 'PUT' : 'POST';
       
-      const dataToSend = selectedTreatment
-        ? formData
-        : { ...formData, estado: 'activo' };
-      
-      const token = localStorage.getItem('token');
-      console.log('Tratamiento a enviar:', dataToSend);
+      const treatmentData = {
+        ...formData,
+        estado: 'activo'
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(treatmentData),
       });
 
-      if (!response.ok) {
-        let errorData = {};
-        try {
-          errorData = await response.json();
-        } catch (e) {}
-        console.error('Error al guardar el tratamiento:', errorData);
-        throw new Error(errorData.message || 'Error al guardar el tratamiento');
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: `Tratamiento ${selectedTreatment ? 'actualizado' : 'creado'} exitosamente`,
+          severity: 'success'
+        });
+        await refreshTreatments();
+        handleCloseDialog();
+      } else {
+        const errorData = await response.json();
+        setSnackbar({ open: true, message: errorData.message || 'Error al guardar el tratamiento', severity: 'error' });
       }
-
-      setSnackbar({
-        open: true,
-        message: `Tratamiento ${selectedTreatment ? 'actualizado' : 'creado'} exitosamente`,
-        severity: 'success'
-      });
-      await refreshTreatments();
-      handleCloseDialog();
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: error.message,
-        severity: 'error'
-      });
+      setSnackbar({ open: true, message: error.message, severity: 'error' });
     }
   };
 
@@ -581,22 +572,6 @@ const AdminTreatments = () => {
                 min: formData.fecha_inicio || new Date().toISOString().split('T')[0]
               }}
               onKeyDown={e => e.preventDefault()}
-            />
-            <TextField
-              label="Medicamentos"
-              fullWidth
-              multiline
-              rows={2}
-              value={formData.medicamentos}
-              onChange={e => setFormData({ ...formData, medicamentos: e.target.value })}
-            />
-            <TextField
-              label="Instrucciones"
-              fullWidth
-              multiline
-              rows={3}
-              value={formData.instrucciones}
-              onChange={e => setFormData({ ...formData, instrucciones: e.target.value })}
             />
           </Box>
         </DialogContent>

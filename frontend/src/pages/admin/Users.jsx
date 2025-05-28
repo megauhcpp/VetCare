@@ -39,7 +39,6 @@ import {
 const AdminUsers = () => {
   const { users, setUsers } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('todos');
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -51,7 +50,6 @@ const AdminUsers = () => {
     rol: 'cliente'
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [filters, setFilters] = useState({ nombre: '', email: '', rol: '' });
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
 
@@ -117,13 +115,33 @@ const AdminUsers = () => {
 
   const handleSubmit = async () => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const url = selectedUser
-        ? `/api/admin/users/${selectedUser.id_usuario}`
-        : '/api/admin/users';
+        ? `${apiUrl}/api/admin/users/${selectedUser.id_usuario}`
+        : `${apiUrl}/api/admin/users`;
       
       const method = selectedUser ? 'PUT' : 'POST';
       
       const token = localStorage.getItem('token');
+      if (!token) {
+        setSnackbar({
+          open: true,
+          message: 'No hay token de autenticación',
+          severity: 'error'
+        });
+        return;
+      }
+
+      // Si es una actualización y no se proporcionó contraseña, no la enviamos
+      const dataToSend = selectedUser && !formData.password
+        ? {
+            nombre: formData.nombre,
+            apellido: formData.apellido,
+            email: formData.email,
+            rol: formData.rol
+          }
+        : formData;
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -131,10 +149,13 @@ const AdminUsers = () => {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
-      if (!response.ok) throw new Error('Error al guardar el usuario');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al guardar el usuario');
+      }
 
       setSnackbar({
         open: true,
@@ -144,9 +165,10 @@ const AdminUsers = () => {
       await refreshUsers();
       handleCloseDialog();
     } catch (error) {
+      console.error('Error al guardar usuario:', error);
       setSnackbar({
         open: true,
-        message: error.message,
+        message: error.message || 'Error al guardar el usuario',
         severity: 'error'
       });
     }
@@ -199,10 +221,13 @@ const AdminUsers = () => {
   };
 
   const filteredUsers = usersData.filter(user => {
-    const nombreMatch = user.nombre?.toLowerCase().includes(filters.nombre.toLowerCase()) || user.apellido?.toLowerCase().includes(filters.nombre.toLowerCase());
-    const emailMatch = user.email?.toLowerCase().includes(filters.email.toLowerCase());
-    const rolMatch = !filters.rol || user.rol === filters.rol;
-    return nombreMatch && emailMatch && rolMatch;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.nombre?.toLowerCase().includes(searchLower) ||
+      user.apellido?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.rol?.toLowerCase().includes(searchLower)
+    );
   });
 
   const handleRequestSort = (property) => {
@@ -269,35 +294,13 @@ const AdminUsers = () => {
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <TextField
-          label="Buscar por nombre"
-          value={filters.nombre}
-          onChange={e => setFilters(f => ({ ...f, nombre: e.target.value }))}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           variant="outlined"
           size="small"
           fullWidth
+          placeholder="Buscar"
         />
-        <TextField
-          label="Buscar por email"
-          value={filters.email}
-          onChange={e => setFilters(f => ({ ...f, email: e.target.value }))}
-          variant="outlined"
-          size="small"
-          fullWidth
-        />
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Filtrar por rol</InputLabel>
-          <Select
-            value={filters.rol}
-            onChange={e => setFilters(f => ({ ...f, rol: e.target.value }))}
-            label="Filtrar por rol"
-            size="small"
-          >
-            <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="admin">Administrador</MenuItem>
-            <MenuItem value="veterinario">Veterinario</MenuItem>
-            <MenuItem value="cliente">Cliente</MenuItem>
-          </Select>
-        </FormControl>
       </Box>
 
       <TableContainer component={Paper}>

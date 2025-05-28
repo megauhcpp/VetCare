@@ -170,4 +170,4 @@ export const categoriasEspecies = {
 };
 
 // Opciones de sexo
-export const sexos = ['Macho', 'Hembra']; 
+export const sexos = ['macho', 'hembra']; 
