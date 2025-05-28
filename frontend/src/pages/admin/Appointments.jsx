@@ -39,6 +39,7 @@ import {
   Check as CheckIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import '../client/client-table.css';
 
 const AdminAppointments = () => {
   const { appointments, pets, users, setAppointments } = useApp();
@@ -373,18 +374,16 @@ const AdminAppointments = () => {
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
-          label="Buscar"
+        <input
+          className="client-search-bar"
+          placeholder="Buscar por mascota, dueño, motivo, veterinario..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
         />
       </Box>
 
       <TableContainer component={Paper}>
-        <Table>
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>

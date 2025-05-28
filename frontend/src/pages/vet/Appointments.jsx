@@ -33,6 +33,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import '../client/client-table.css';
 
 const Appointments = () => {
   const { appointments, pets, setAppointments } = useApp();
@@ -391,7 +392,7 @@ const Appointments = () => {
         </Button>
       </Box>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
+        <input className="client-search-bar"
           fullWidth
           variant="outlined"
           placeholder="Buscar por mascota, dueño, motivo..."
@@ -407,7 +408,7 @@ const Appointments = () => {
         />
       </Box>
       <TableContainer component={Paper}>
-        <Table>
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>

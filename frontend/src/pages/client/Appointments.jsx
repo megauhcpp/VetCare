@@ -33,6 +33,8 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import './client-table.css';
+import { Add as AddIcon } from '@mui/icons-material';
 
 const Appointments = () => {
   const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment, token } = useApp();
@@ -276,29 +278,20 @@ const Appointments = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Gestión de Citas</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenDialog()}
-        >
-          Nueva Cita
-        </Button>
+        <button className="client-create-btn" onClick={() => handleOpenDialog()}>
+          <AddIcon style={{ fontSize: 22 }} /> Nueva Cita
+        </button>
       </Box>
 
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Buscar"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
-          sx={{ mb: 2 }}
-        />
-      </Box>
+      <input
+        className="client-search-bar"
+        placeholder="Buscar cita, mascota, veterinario..."
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+      />
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} className="client-table-container">
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>
@@ -388,12 +381,19 @@ const Appointments = () => {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle className="client-modal-title">
           {selectedAppointment ? 'Editar Cita' : 'Nueva Cita'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+        <DialogContent className="client-modal-content">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               select
               label="Mascota"
@@ -498,11 +498,13 @@ const Appointments = () => {
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">
+        <DialogActions className="client-modal-actions">
+          <button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </button>
+          <button onClick={handleSubmit} className="client-create-btn">
             {selectedAppointment ? 'Actualizar' : 'Guardar'}
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
 

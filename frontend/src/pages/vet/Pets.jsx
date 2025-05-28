@@ -34,6 +34,7 @@ import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/ico
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { especies, categoriasEspecies } from '../../data/petSpecies';
+import '../client/client-table.css';
 
 const Pets = () => {
   const { pets, setPets } = useApp();
@@ -289,18 +290,15 @@ const Pets = () => {
         </Button>
       </Box>
       <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Buscar"
+        <input
+          className="client-search-bar"
+          placeholder="Buscar por nombre, especie, raza o dueño..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
-          sx={{ mb: 2 }}
         />
       </Box>
       <TableContainer component={Paper}>
-        <Table>
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>

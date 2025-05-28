@@ -33,6 +33,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Check as CheckIcon, Close as CloseIcon, SwapHoriz as SwapHorizIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import '../client/client-table.css';
 
 const Treatments = () => {
   const { treatments, pets, setTreatments, appointments } = useApp();
@@ -315,18 +316,15 @@ const Treatments = () => {
         </Button>
       </Box>
       <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Buscar"
+        <input
+          className="client-search-bar"
+          placeholder="Buscar por tratamiento, mascota, estado, veterinario..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
-          sx={{ mb: 2 }}
         />
       </Box>
       <TableContainer component={Paper}>
-        <Table>
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>

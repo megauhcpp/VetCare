@@ -36,6 +36,7 @@ import {
   Search as SearchIcon
 } from '@mui/icons-material';
 import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
+import '../client/client-table.css';
 
 const AdminPets = () => {
   const { pets, setPets, users } = useApp();
@@ -326,18 +327,16 @@ const AdminPets = () => {
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
-          label="Buscar"
+        <input
+          className="client-search-bar"
+          placeholder="Buscar por nombre, especie, raza o dueño..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
         />
       </Box>
 
       <TableContainer component={Paper}>
-        <Table>
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>

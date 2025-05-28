@@ -35,6 +35,7 @@ import {
   Add as AddIcon,
   Search as SearchIcon
 } from '@mui/icons-material';
+import '../client/client-table.css';
 
 const AdminUsers = () => {
   const { users, setUsers } = useApp();
@@ -293,18 +294,16 @@ const AdminUsers = () => {
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
+        <input
+          className="client-search-bar"
+          placeholder="Buscar por nombre, email o rol..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
-          placeholder="Buscar"
+          onChange={e => setSearchTerm(e.target.value)}
         />
       </Box>
 
       <TableContainer component={Paper}>
-        <Table>
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>

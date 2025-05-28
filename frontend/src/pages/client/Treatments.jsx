@@ -42,6 +42,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   Pets as PetsIcon
 } from '@mui/icons-material';
+import './client-table.css';
 
 const Treatments = () => {
   const { treatments, pets } = useApp();
@@ -166,18 +167,15 @@ const Treatments = () => {
         Tratamientos de Mis Mascotas
       </Typography>
       <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Buscar"
+        <input
+          className="client-search-bar"
+          placeholder="Buscar tratamiento, mascota, veterinario..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
-          sx={{ mb: 2 }}
         />
       </Box>
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} className="client-table-container">
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>

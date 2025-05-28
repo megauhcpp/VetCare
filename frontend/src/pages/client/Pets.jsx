@@ -35,6 +35,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import PetsIcon from '@mui/icons-material/Pets';
 import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
+import './client-table.css';
 
 const Pets = () => {
   const { pets, setPets, addPet, updatePet, deletePet } = useApp();
@@ -300,27 +301,18 @@ const Pets = () => {
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Mis Mascotas</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenDialog()}
-        >
-          Agregar Mascota
-        </Button>
+        <button className="client-create-btn" onClick={() => handleOpenDialog()}>
+          <AddIcon style={{ fontSize: 22 }} /> Agregar Mascota
+        </button>
       </Box>
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Buscar"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
-          sx={{ mb: 2 }}
-        />
-      </Box>
-      <TableContainer component={Paper}>
-        <Table>
+      <input
+        className="client-search-bar"
+        placeholder="Buscar mascota, especie o raza..."
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+      />
+      <TableContainer component={Paper} className="client-table-container">
+        <Table className="client-table">
           <TableHead>
             <TableRow>
               <TableCell>
@@ -408,6 +400,7 @@ const Pets = () => {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
+        className="client-modal"
         PaperProps={{
           sx: {
             borderRadius: 2,
@@ -415,30 +408,18 @@ const Pets = () => {
           }
         }}
       >
-        <DialogTitle sx={{ 
-          bgcolor: 'primary.main', 
-          color: 'white',
-          py: 2,
-          px: 3,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
-        }}>
-          <PetsIcon />
+        <DialogTitle className="client-modal-title">
+          <PetsIcon style={{ marginRight: 8, verticalAlign: 'middle' }} />
           {selectedPet ? 'Editar Mascota' : 'Agregar Mascota'}
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
+        <DialogContent className="client-modal-content">
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              autoFocus
-              label="Nombre"
-              fullWidth
+            <label className="client-modal-label">Nombre</label>
+            <input
+              className="client-modal-input"
               value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              variant="outlined"
-              InputProps={{
-                sx: { borderRadius: 2 }
-              }}
+              onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+              required
             />
             <FormControl fullWidth>
               <InputLabel>Especie</InputLabel>
@@ -522,13 +503,13 @@ const Pets = () => {
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={handleCloseDialog} variant="outlined">
+        <DialogActions className="client-modal-actions">
+          <button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
             Cancelar
-          </Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
+          </button>
+          <button onClick={handleSubmit} className="client-create-btn">
             {selectedPet ? 'Actualizar' : 'Guardar'}
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
 

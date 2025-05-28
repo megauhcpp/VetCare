@@ -1,0 +1,147 @@
+/* Tabla principal */
+.client-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(60,60,60,0.07);
+}
+
+.client-table th {
+  background: #f8f9fa;
+  color: #222;
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem 0.75rem;
+  border-bottom: 1.5px solid #ececec;
+}
+
+.client-table td {
+  padding: 1rem 0.75rem;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+  background: transparent;
+}
+
+.client-table tr:last-child td {
+  border-bottom: none;
+}
+
+.client-table tr {
+  transition: background 0.15s;
+}
+
+.client-table tr:hover {
+  background: #f8f9fa;
+}
+
+.client-table th:first-child,
+.client-table td:first-child {
+  border-top-left-radius: 8px;
+}
+
+.client-table th:last-child,
+.client-table td:last-child {
+  border-top-right-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .client-table-container {
+    padding: 0.25rem;
+  }
+  .client-table th, .client-table td {
+    padding: 0.5rem;
+  }
+}
+
+/* Buscador */
+.client-search-bar {
+  width: 98%;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(60,60,60,0.06);
+  outline: none;
+  transition: box-shadow 0.2s, border 0.2s;
+  display: block;
+}
+.client-search-bar:focus {
+  box-shadow: 0 2px 8px rgba(33,150,243,0.10);
+  border: 1.5px solid #2196f3;
+  background: #fff;
+}
+
+/* Botón de crear */
+.client-create-btn {
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 1px 4px rgba(33,150,243,0.08);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+}
+.client-create-btn:hover {
+  background: #1769aa;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.13);
+  transform: translateY(-1px) scale(1.03);
+}
+
+/* Modal (Dialog) */
+.client-modal .MuiPaper-root {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(33,150,243,0.10) !important;
+  padding: 0;
+}
+.client-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1769aa;
+  margin-bottom: 1.2rem;
+  letter-spacing: -0.5px;
+}
+.client-modal-content {
+  padding: 2rem 2rem 1rem 2rem;
+  background: #fff;
+  border-radius: 0 0 16px 16px;
+}
+.client-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem 2rem 2rem;
+  background: #fff;
+  border-radius: 0 0 16px 16px;
+}
+.client-modal-input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+  background: #f8f9fa;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.client-modal-input:focus {
+  border: 1.5px solid #2196f3;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.10);
+  outline: none;
+}
+.client-modal-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.4rem;
+  display: block;
+} 
