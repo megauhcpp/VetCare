@@ -30,7 +30,7 @@ import {
   Paper,
   InputAdornment
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon, Search as SearchIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon, Search as SearchIcon, Visibility as VisibilityIcon, Add as AddIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import '../client/client-table.css';
@@ -399,7 +399,7 @@ const Appointments = () => {
         </Typography>
         <Button
           variant="contained"
-          color="primary"
+          startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
         >
           Nueva Cita
@@ -513,9 +513,9 @@ const Appointments = () => {
                   <TableCell>
                     <Chip
                       label={appointment.estado}
-                      color="primary"
+                      color={getStatusColor(appointment.estado)}
                       size="small"
-                      sx={{ fontWeight: 600, color: 'white', textTransform: 'capitalize' }}
+                      sx={{ fontWeight: 600, color: 'white', textTransform: 'capitalize', minWidth: 110, maxWidth: 110, justifyContent: 'center' }}
                     />
                   </TableCell>
                   <TableCell>

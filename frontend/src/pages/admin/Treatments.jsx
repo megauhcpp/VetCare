@@ -84,12 +84,10 @@ const AdminTreatments = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pendiente':
-        return 'warning';
-      case 'en_progreso':
-        return 'primary';
       case 'completado':
         return 'success';
+      case 'activo':
+        return 'primary';
       case 'cancelado':
         return 'error';
       default:
@@ -470,6 +468,7 @@ const AdminTreatments = () => {
                       label={treatment.estado}
                       color={getStatusColor(treatment.estado)}
                       size="small"
+                      sx={{ minWidth: 110, maxWidth: 110, justifyContent: 'center', fontWeight: 600, color: 'white', textTransform: 'capitalize' }}
                     />
                   </TableCell>
                   <TableCell>

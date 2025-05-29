@@ -396,14 +396,15 @@ const AdminPets = () => {
                   <TableCell>
                     <Chip
                       label={pet.sexo ? pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1) : ''}
-                      color={pet.sexo === 'macho' ? 'primary' : 'secondary'}
+                      color={pet.sexo && pet.sexo.toLowerCase() === 'macho' ? 'primary' : pet.sexo && pet.sexo.toLowerCase() === 'hembra' ? 'secondary' : 'default'}
                       size="small"
+                      sx={{ minWidth: 90, maxWidth: 90, justifyContent: 'center' }}
                     />
                   </TableCell>
                   <TableCell>
                     {pet.notas ? (
                       <Tooltip title={pet.notas}>
-                        <Typography noWrap sx={{ maxWidth: 200 }}>
+                        <Typography noWrap sx={{ maxWidth: 200, fontSize: 'inherit' }}>
                           {pet.notas}
                         </Typography>
                       </Tooltip>

@@ -242,12 +242,10 @@ const Treatments = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pendiente':
-        return 'warning';
-      case 'en_progreso':
-        return 'primary';
       case 'completado':
         return 'success';
+      case 'activo':
+        return 'primary';
       case 'cancelado':
         return 'error';
       default:
@@ -402,33 +400,36 @@ const Treatments = () => {
                       label={treatment.estado}
                       color={getStatusColor(treatment.estado)}
                       size="small"
+                      sx={{ minWidth: 110, maxWidth: 110, justifyContent: 'center', fontWeight: 600, color: 'white', textTransform: 'capitalize' }}
                     />
                   </TableCell>
                   <TableCell>
-                    <IconButton onClick={() => setChangingStateId(changingStateId === treatment.id_tratamiento ? null : treatment.id_tratamiento)}>
-                      <SwapHorizIcon />
-                    </IconButton>
-                    <Tooltip title="Ver detalles">
-                      <IconButton size="small" onClick={() => { setDetailsTreatment(treatment); setOpenDetailsDialog(true); }}>
-                        <VisibilityIcon />
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton onClick={() => setChangingStateId(changingStateId === treatment.id_tratamiento ? null : treatment.id_tratamiento)}>
+                        <SwapHorizIcon />
                       </IconButton>
-                    </Tooltip>
-                    {changingStateId === treatment.id_tratamiento && (
-                      <>
-                        <IconButton onClick={() => handleChangeState(treatment, 'completado')} color="success">
-                          <CheckIcon />
+                      {changingStateId === treatment.id_tratamiento && (
+                        <>
+                          <IconButton onClick={() => handleChangeState(treatment, 'completado')} color="success">
+                            <CheckIcon />
+                          </IconButton>
+                          <IconButton onClick={() => handleChangeState(treatment, 'cancelado')} color="error">
+                            <CloseIcon />
+                          </IconButton>
+                        </>
+                      )}
+                      <Tooltip title="Ver detalles">
+                        <IconButton size="small" onClick={() => { setDetailsTreatment(treatment); setOpenDetailsDialog(true); }}>
+                          <VisibilityIcon />
                         </IconButton>
-                        <IconButton onClick={() => handleChangeState(treatment, 'cancelado')} color="error">
-                          <CloseIcon />
-                        </IconButton>
-                      </>
-                    )}
-                    <IconButton onClick={() => handleOpenDialog(treatment)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(treatment.id_tratamiento)}>
-                      <DeleteIcon />
-                    </IconButton>
+                      </Tooltip>
+                      <IconButton onClick={() => handleOpenDialog(treatment)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(treatment.id_tratamiento)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))

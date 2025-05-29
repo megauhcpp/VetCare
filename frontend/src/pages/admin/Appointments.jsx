@@ -86,7 +86,7 @@ const AdminAppointments = () => {
       case 'pendiente':
         return 'warning';
       case 'confirmada':
-        return 'primary';
+        return 'success';
       case 'completada':
         return 'success';
       case 'cancelada':
@@ -460,6 +460,7 @@ const AdminAppointments = () => {
                       label={appointment.estado}
                       color={getStatusColor(appointment.estado)}
                       size="small"
+                      sx={{ minWidth: 110, maxWidth: 110, justifyContent: 'center', fontWeight: 600, color: 'white', textTransform: 'capitalize' }}
                     />
                   </TableCell>
                   <TableCell>

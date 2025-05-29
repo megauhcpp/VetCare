@@ -364,12 +364,21 @@ const Pets = () => {
                   <TableCell>{pet.especie}</TableCell>
                   <TableCell>{pet.raza}</TableCell>
                   <TableCell>{new Date(pet.fecha_nacimiento).toLocaleDateString()}</TableCell>
-                  <TableCell>{pet.sexo}</TableCell>
+                  <TableCell>
+                    {pet.sexo ? (
+                      <Chip
+                        label={pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1)}
+                        color={pet.sexo.toLowerCase() === 'macho' ? 'primary' : pet.sexo.toLowerCase() === 'hembra' ? 'secondary' : 'default'}
+                        size="small"
+                        sx={{ minWidth: 90, maxWidth: 90, justifyContent: 'center' }}
+                      />
+                    ) : ''}
+                  </TableCell>
                   <TableCell>{pet.usuario?.nombre} {pet.usuario?.apellido}</TableCell>
                   <TableCell>
                     {pet.notas ? (
                       <Tooltip title={pet.notas}>
-                        <Typography noWrap sx={{ maxWidth: 200 }}>{pet.notas}</Typography>
+                        <Typography noWrap sx={{ maxWidth: 200, fontSize: 'inherit' }}>{pet.notas}</Typography>
                       </Tooltip>
                     ) : (
                       <Typography color="text.secondary">Sin notas</Typography>

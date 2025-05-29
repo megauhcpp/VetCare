@@ -353,6 +353,7 @@ const AdminUsers = () => {
                       label={user.rol}
                       color={getRoleColor(user.rol)}
                       size="small"
+                      sx={{ minWidth: 110, maxWidth: 110, justifyContent: 'center', fontWeight: 600, textTransform: 'capitalize' }}
                     />
                   </TableCell>
                   <TableCell>

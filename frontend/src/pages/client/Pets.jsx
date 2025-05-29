@@ -30,7 +30,8 @@ import {
   InputLabel,
   Select,
   TableSortLabel,
-  Tooltip
+  Tooltip,
+  Chip
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -306,9 +307,13 @@ const Pets = () => {
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Mis Mascotas</Typography>
-        <button className="client-create-btn" onClick={() => handleOpenDialog()}>
-          <AddIcon style={{ fontSize: 22 }} /> Agregar Mascota
-        </button>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+        >
+          Nueva Mascota
+        </Button>
       </Box>
       <input
         className="client-search-bar"
@@ -370,12 +375,19 @@ const Pets = () => {
                   <TableCell>{pet.raza}</TableCell>
                   <TableCell>{new Date(pet.fecha_nacimiento).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    {pet.sexo ? pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1) : ''}
+                    {pet.sexo ? (
+                      <Chip
+                        label={pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1)}
+                        color={pet.sexo.toLowerCase() === 'macho' ? 'primary' : pet.sexo.toLowerCase() === 'hembra' ? 'secondary' : 'default'}
+                        size="small"
+                        sx={{ minWidth: 90, maxWidth: 90, justifyContent: 'center' }}
+                      />
+                    ) : ''}
                   </TableCell>
                   <TableCell>
                     {pet.notas ? (
                       <Tooltip title={pet.notas}>
-                        <Typography noWrap sx={{ maxWidth: 200 }}>{pet.notas}</Typography>
+                        <Typography noWrap sx={{ maxWidth: 200, fontSize: 'inherit' }}>{pet.notas}</Typography>
                       </Tooltip>
                     ) : (
                       <Typography color="text.secondary">Sin notas</Typography>
@@ -421,7 +433,6 @@ const Pets = () => {
         }}
       >
         <DialogTitle className="client-modal-title">
-          <PetsIcon style={{ marginRight: 8, verticalAlign: 'middle' }} />
           {selectedPet ? 'Editar Mascota' : 'Agregar Mascota'}
         </DialogTitle>
         <DialogContent className="client-modal-content">

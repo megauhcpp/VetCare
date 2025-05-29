@@ -285,9 +285,13 @@ const Appointments = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Gestión de Citas</Typography>
-        <button className="client-create-btn" onClick={() => handleOpenDialog()}>
-          <AddIcon style={{ fontSize: 22 }} /> Nueva Cita
-        </button>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+        >
+          Nueva Cita
+        </Button>
       </Box>
 
       <input
@@ -348,6 +352,7 @@ const Appointments = () => {
                       label={appointment.estado}
                       color={getStatusColor(appointment.estado)}
                       size="small"
+                      sx={{ minWidth: 110, maxWidth: 110, justifyContent: 'center', fontWeight: 600, color: 'white', textTransform: 'capitalize' }}
                     />
                   </TableCell>
                   <TableCell>
