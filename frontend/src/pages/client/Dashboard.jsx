@@ -111,7 +111,7 @@ const ClientDashboard = () => {
   ];
 
   return (
-    <Box sx={{ p: 3, background: '#f8f9fb', minHeight: '100vh' }}>
+    <Box sx={{ p: 3, background: '#f8f9fb' }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#111' }}>
         ¡Bienvenido/a, {user?.nombre || 'Cliente'}!
       </Typography>

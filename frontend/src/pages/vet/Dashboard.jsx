@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Grid, Paper, CircularProgress } from '@mui/material';
+import { Box, Typography, Grid, Paper, CircularProgress, Button } from '@mui/material';
 import { useApp } from '../../context/AppContext';
 import { Calendar, Clock, Users, Activity } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const VetDashboard = () => {
   const { appointments, pets, treatments } = useApp();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalAppointments: 0,
@@ -19,7 +21,7 @@ const VetDashboard = () => {
         totalAppointments: appointments.length,
         pendingAppointments: appointments.filter(apt => apt.estado === 'pendiente').length,
         totalPets: pets.length,
-        activeTreatments: treatments.filter(t => t.estado === 'en_progreso').length
+        activeTreatments: treatments.filter(t => t.estado === 'en_progreso' || t.estado === 'activo').length
       });
       setLoading(false);
     }
@@ -33,102 +35,91 @@ const VetDashboard = () => {
     );
   }
 
+  // Estilo para los números grandes y textos oscuros
+  const statNumberStyle = { fontWeight: 800, color: '#111', fontSize: '2.8rem', lineHeight: 1.1, mb: 1, textAlign: 'center' };
+  const statLabelStyle = { color: '#222', fontSize: '1rem', textAlign: 'center', mb: 0.5, fontWeight: 400 };
+
+  const statsCards = [
+    {
+      icon: <Calendar size={32} color="#4CAF50" style={{ marginBottom: 8 }} />,
+      value: stats.totalAppointments,
+      label: 'Total de Citas',
+      link: '/vet/appointments',
+      linkText: 'Ir a citas',
+    },
+    {
+      icon: <Clock size={32} color="#FFA726" style={{ marginBottom: 8 }} />,
+      value: stats.pendingAppointments,
+      label: 'Citas Pendientes',
+      link: '/vet/appointments',
+      linkText: 'Ir a citas',
+    },
+    {
+      icon: <Users size={32} color="#2196F3" style={{ marginBottom: 8 }} />,
+      value: stats.totalPets,
+      label: 'Total de Mascotas',
+      link: '/vet/pets',
+      linkText: 'Ir a mascotas',
+    },
+    {
+      icon: <Activity size={32} color="#F44336" style={{ marginBottom: 8 }} />,
+      value: stats.activeTreatments,
+      label: 'Tratamientos Activos',
+      link: '/vet/treatments',
+      linkText: 'Ir a tratamientos',
+    },
+  ];
+
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 4, color: '#111' }}>
-        Dashboard
+      <Typography variant="h4" sx={{ mb: 1, color: '#111', fontWeight: 700 }}>
+        ¡Bienvenido/a, {user?.nombre || 'Veterinario'}!
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom sx={{ mb: 3 }}>
+        Aquí tienes un resumen de tu actividad y tus pacientes.
       </Typography>
 
       {/* Estadísticas principales */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              bgcolor: '#f8f9fa',
-              borderRadius: 2,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}
-          >
-            <Calendar size={24} color="#4CAF50" />
-            <Typography variant="h6" sx={{ mt: 1, color: '#2c3e50' }}>
-              {stats.totalAppointments}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total de Citas
-            </Typography>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              bgcolor: '#f8f9fa',
-              borderRadius: 2,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}
-          >
-            <Clock size={24} color="#FFA726" />
-            <Typography variant="h6" sx={{ mt: 1, color: '#2c3e50' }}>
-              {stats.pendingAppointments}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Citas Pendientes
-            </Typography>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              bgcolor: '#f8f9fa',
-              borderRadius: 2,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}
-          >
-            <Users size={24} color="#2196F3" />
-            <Typography variant="h6" sx={{ mt: 1, color: '#2c3e50' }}>
-              {stats.totalPets}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total de Mascotas
-            </Typography>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              bgcolor: '#f8f9fa',
-              borderRadius: 2,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}
-          >
-            <Activity size={24} color="#F44336" />
-            <Typography variant="h6" sx={{ mt: 1, color: '#2c3e50' }}>
-              {stats.activeTreatments}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tratamientos Activos
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', mb: 4 }}>
+        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'nowrap', justifyContent: 'center', minWidth: 1200 }}>
+          {statsCards.map((stat, idx) => (
+            <Box
+              key={stat.label}
+              sx={{
+                flex: '0 0 377.5px',
+                width: '377.5px',
+                maxWidth: '377.5px',
+                minWidth: '280px',
+                height: 214,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid #e5e7eb',
+                borderRadius: 2,
+                background: '#fff',
+                boxShadow: 'none',
+                px: 3,
+                py: 2,
+                boxSizing: 'border-box',
+                transition: 'box-shadow 0.2s',
+                '&:hover': { boxShadow: 3 }
+              }}
+            >
+              {stat.icon}
+              <Typography variant="body2" sx={statLabelStyle}>{stat.label}</Typography>
+              <Typography variant="h3" sx={statNumberStyle}>{stat.value}</Typography>
+              <Button
+                href={stat.link}
+                variant="text"
+                sx={{ color: '#1976d2', fontWeight: 600, textTransform: 'none', fontSize: 15, mt: 1 }}
+              >
+                {stat.linkText} →
+              </Button>
+            </Box>
+          ))}
+        </Box>
+      </Box>
     </Box>
   );
 };
