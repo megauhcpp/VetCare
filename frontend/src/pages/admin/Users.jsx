@@ -377,11 +377,23 @@ const AdminUsers = () => {
       </TableContainer>
 
       {/* Modal para crear/editar usuario */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.10)'
+          }
+        }}
+      >
+        <DialogTitle className="client-modal-title">
           {selectedUser ? 'Editar Usuario' : 'Nuevo Usuario'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent className="client-modal-content">
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <TextField
               name="nombre"
@@ -427,9 +439,11 @@ const AdminUsers = () => {
             </FormControl>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">
+        <DialogActions className="client-modal-actions">
+          <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
             {selectedUser ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

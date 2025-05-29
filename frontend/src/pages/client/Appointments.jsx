@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -59,6 +59,7 @@ const Appointments = () => {
   const [orderBy, setOrderBy] = useState('fecha_hora');
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const dateInputRef = useRef(null);
 
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
@@ -429,8 +430,11 @@ const Appointments = () => {
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInputRef}
               inputProps={{
-                min: new Date().toISOString().split('T')[0]
+                min: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
               required
             />

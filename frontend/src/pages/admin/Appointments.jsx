@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Box,
@@ -60,6 +60,7 @@ const AdminAppointments = () => {
   const [selectedMinute, setSelectedMinute] = useState('00');
   const [order, setOrder] = useState('desc');
   const [orderBy, setOrderBy] = useState('fecha');
+  const dateInputRef = useRef(null);
 
   // Extraer las citas del objeto de respuesta
   const appointmentsData = useMemo(() => {
@@ -103,6 +104,9 @@ const AdminAppointments = () => {
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       const date = new Date(appointment.fecha_hora);
+      const hour = date.getHours().toString().padStart(2, '0');
+      const minute = date.getMinutes().toString().padStart(2, '0');
+      // No mapear 'control' a 'consulta_general', solo usar el valor tal cual
       setFormData({
         id_mascota: appointment.id_mascota || appointment.mascota?.id_mascota || '',
         id_usuario: appointment.id_usuario || appointment.veterinario?.id_usuario || '',
@@ -110,6 +114,8 @@ const AdminAppointments = () => {
         tipo_consulta: appointment.tipo_consulta,
         motivo_consulta: appointment.motivo_consulta,
       });
+      setSelectedHour(hour);
+      setSelectedMinute(minute);
       setSelectedAppointment(appointment);
     } else {
       setFormData({
@@ -119,6 +125,8 @@ const AdminAppointments = () => {
         tipo_consulta: '',
         motivo_consulta: '',
       });
+      setSelectedHour('10');
+      setSelectedMinute('00');
       setSelectedAppointment(null);
     }
     setOpenDialog(true);
@@ -501,12 +509,24 @@ const AdminAppointments = () => {
       </TableContainer>
 
       {/* Modal para crear/editar cita */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.10)'
+          }
+        }}
+      >
+        <DialogTitle className="client-modal-title">
           {selectedAppointment ? 'Editar Cita' : 'Nueva Cita'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+        <DialogContent className="client-modal-content">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <FormControl fullWidth>
               <InputLabel>Mascota</InputLabel>
               <Select
@@ -549,10 +569,14 @@ const AdminAppointments = () => {
               }}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInputRef}
               inputProps={{
-                min: new Date().toISOString().split('T')[0]
+                min: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
+              required
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <TextField
@@ -568,6 +592,7 @@ const AdminAppointments = () => {
                 sx={{ width: 100, mr: 2 }}
                 InputLabelProps={{ shrink: true }}
                 required
+                InputProps={{ sx: { borderRadius: 2 } }}
               >
                 {[...Array(8)].map((_, i) => {
                   const hour = 10 + i;
@@ -591,6 +616,7 @@ const AdminAppointments = () => {
                 sx={{ width: 100 }}
                 InputLabelProps={{ shrink: true }}
                 required
+                InputProps={{ sx: { borderRadius: 2 } }}
               >
                 {['00', '15', '30', '45'].map(min => (
                   <MenuItem key={min} value={min}>{min}</MenuItem>
@@ -609,6 +635,7 @@ const AdminAppointments = () => {
                 <MenuItem value="vacunacion">Vacunación</MenuItem>
                 <MenuItem value="cirugia">Cirugía</MenuItem>
                 <MenuItem value="urgencia">Urgencia</MenuItem>
+                <MenuItem value="control">Control</MenuItem>
               </Select>
             </FormControl>
             <TextField
@@ -619,12 +646,15 @@ const AdminAppointments = () => {
               fullWidth
               multiline
               rows={3}
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">
+        <DialogActions className="client-modal-actions">
+          <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
             {selectedAppointment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

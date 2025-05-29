@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -55,6 +55,7 @@ const Pets = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
+  const dateInputRef = useRef(null);
 
   useEffect(() => {
     // Fetch clientes (usuarios con rol cliente)
@@ -396,18 +397,26 @@ const Pets = () => {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.10)'
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle className="client-modal-title">
           {selectedPet ? 'Editar Mascota' : 'Nueva Mascota'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+        <DialogContent className="client-modal-content">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               label="Nombre"
               fullWidth
               value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
               required
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
             <TextField
               select
@@ -416,6 +425,7 @@ const Pets = () => {
               value={formData.especie}
               onChange={(e) => setFormData({ ...formData, especie: e.target.value, raza: '' })}
               required
+              InputProps={{ sx: { borderRadius: 2 } }}
             >
               {Object.entries(categoriasEspecies).flatMap(([categoria, especiesList]) => [
                 <MenuItem key={`cat-${categoria}`} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
@@ -436,6 +446,7 @@ const Pets = () => {
               onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
               required
               disabled={!formData.especie}
+              InputProps={{ sx: { borderRadius: 2 } }}
             >
               {formData.especie ? (
                 especies[formData.especie]?.map((raza) => (
@@ -456,11 +467,14 @@ const Pets = () => {
               onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInputRef}
               inputProps={{
-                max: new Date().toISOString().split('T')[0]
+                max: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
               required
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
             <TextField
               select
@@ -469,6 +483,7 @@ const Pets = () => {
               value={formData.sexo}
               onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
               required
+              InputProps={{ sx: { borderRadius: 2 } }}
             >
               <MenuItem value="macho">Macho</MenuItem>
               <MenuItem value="hembra">Hembra</MenuItem>
@@ -480,6 +495,7 @@ const Pets = () => {
               rows={3}
               value={formData.notas}
               onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
             <TextField
               select
@@ -490,6 +506,7 @@ const Pets = () => {
               onChange={e => setFormData(prev => ({ ...prev, id_usuario: e.target.value }))}
               required
               sx={{ mb: 2 }}
+              InputProps={{ sx: { borderRadius: 2 } }}
             >
               {clientes.length === 0 ? (
                 <MenuItem disabled value="">
@@ -505,9 +522,11 @@ const Pets = () => {
             </TextField>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
+        <DialogActions className="client-modal-actions">
+          <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
             {selectedPet ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

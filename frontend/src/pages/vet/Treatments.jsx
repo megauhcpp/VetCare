@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -55,6 +55,8 @@ const Treatments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [order, setOrder] = useState('desc');
   const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno', 'veterinario'
+  const dateInicioRef = useRef(null);
+  const dateFinRef = useRef(null);
 
   if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
@@ -436,12 +438,19 @@ const Treatments = () => {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.10)'
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle className="client-modal-title">
           {selectedTreatment ? 'Editar Tratamiento' : 'Nuevo Tratamiento'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+        <DialogContent className="client-modal-content">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               select
               label="Cita"
@@ -495,10 +504,12 @@ const Treatments = () => {
               value={formData.fecha_inicio}
               onChange={(e) => setFormData({ ...formData, fecha_inicio: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInicioRef}
               inputProps={{
-                min: new Date().toISOString().split('T')[0]
+                min: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
               required
             />
             <TextField
@@ -508,16 +519,20 @@ const Treatments = () => {
               value={formData.fecha_fin}
               onChange={(e) => setFormData({ ...formData, fecha_fin: e.target.value })}
               InputLabelProps={{ shrink: true }}
+              inputRef={dateFinRef}
               inputProps={{
-                min: formData.fecha_inicio || new Date().toISOString().split('T')[0]
+                min: formData.fecha_inicio || new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
+        <DialogActions className="client-modal-actions">
+          <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
             {selectedTreatment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

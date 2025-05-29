@@ -101,14 +101,21 @@ const Appointments = () => {
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
+      const dateObj = new Date(appointment.fecha_hora);
+      const date = dateObj.toISOString().split('T')[0];
+      const hour = dateObj.getHours().toString().padStart(2, '0');
+      const minute = dateObj.getMinutes().toString().padStart(2, '0');
+      const time = `${hour}:${minute}`;
       setFormData({
         petId: String(appointment.id_mascota || appointment.mascota?.id_mascota),
-        date: appointment.fecha_hora.split('T')[0],
-        time: appointment.fecha_hora.split('T')[1].substring(0, 5),
+        date,
+        time,
         type: appointment.tipo_consulta,
         motivo: appointment.motivo_consulta || '',
         id_veterinario: appointment.veterinario?.id_usuario || appointment.id_usuario
       });
+      setSelectedHour(hour);
+      setSelectedMinute(minute);
     } else {
       setSelectedAppointment(null);
       setFormData({
@@ -119,6 +126,8 @@ const Appointments = () => {
         motivo: '',
         id_veterinario: user?.id_usuario || ''
       });
+      setSelectedHour('10');
+      setSelectedMinute('00');
     }
     setOpenDialog(true);
   };
@@ -552,12 +561,19 @@ const Appointments = () => {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.10)'
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle className="client-modal-title">
           {selectedAppointment ? 'Editar Cita' : 'Nueva Cita'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+        <DialogContent className="client-modal-content">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               select
               label="Mascota"
@@ -661,9 +677,11 @@ const Appointments = () => {
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
+        <DialogActions className="client-modal-actions">
+          <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
             {selectedAppointment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

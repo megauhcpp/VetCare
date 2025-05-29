@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Box,
@@ -59,6 +59,9 @@ const AdminTreatments = () => {
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changingStateId, setChangingStateId] = useState(null);
+
+  const dateInicioRef = useRef(null);
+  const dateFinRef = useRef(null);
 
   // Extraer los tratamientos del objeto de respuesta
   const treatmentsData = useMemo(() => {
@@ -502,12 +505,24 @@ const AdminTreatments = () => {
       </TableContainer>
 
       {/* Modal para crear/editar tratamiento */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.10)'
+          }
+        }}
+      >
+        <DialogTitle className="client-modal-title">
           {selectedTreatment ? 'Editar Tratamiento' : 'Nuevo Tratamiento'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+        <DialogContent className="client-modal-content">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               select
               label="Cita"
@@ -554,10 +569,12 @@ const AdminTreatments = () => {
               onChange={e => setFormData({ ...formData, fecha_inicio: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInicioRef}
               inputProps={{
-                min: new Date().toISOString().split('T')[0]
+                min: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
               required
             />
             <TextField
@@ -567,16 +584,20 @@ const AdminTreatments = () => {
               onChange={e => setFormData({ ...formData, fecha_fin: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputRef={dateFinRef}
               inputProps={{
-                min: formData.fecha_inicio || new Date().toISOString().split('T')[0]
+                min: formData.fecha_inicio || new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">
+        <DialogActions className="client-modal-actions">
+          <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
             {selectedTreatment ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

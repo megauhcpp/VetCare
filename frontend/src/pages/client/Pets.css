@@ -209,4 +209,113 @@
     margin: 1rem;
     padding: 1.5rem;
   }
-} 
+}
+
+/* Ajustes para el modal de mascotas en client */
+.client-modal .MuiPaper-root {
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 440px !important;
+}
+
+.client-modal-content {
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  padding-right: 2rem !important;
+  padding-left: 2rem !important;
+}
+
+body .MuiDialog-root {
+  overflow-x: hidden !important;
+}
+
+.client-modal-input,
+.css-wb57ya-MuiFormControl-root-MuiTextField-root {
+  background: none !important;
+}
+
+.client-modal-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+/* Ajuste para el input de nombre */
+.client-modal-content .MuiTextField-root {
+  margin-bottom: 1.2rem;
+}
+
+/* Asegurar que el input de fecha muestre el icono de calendario */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 1;
+  cursor: pointer;
+}
+input[type="date"] {
+  background: white;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 1.2rem;
+}
+
+/* Unificar fondo y borde de todos los TextField en el modal de mascotas */
+.client-modal .MuiOutlinedInput-root,
+.client-modal .MuiInputBase-root,
+.client-modal .MuiOutlinedInput-input,
+.client-modal .MuiInputBase-input {
+  background: #fff !important;
+}
+.client-modal .MuiOutlinedInput-root.Mui-focused {
+  background: #fff !important;
+  border: 1.5px solid #2196f3 !important;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.10);
+}
+
+/* Input de fecha: fondo blanco, borde igual, icono visible */
+.client-modal input[type="date"] {
+  background: #fff !important;
+  border-radius: 8px !important;
+  padding: 0.7rem 1rem !important;
+  font-size: 1rem;
+  border: 1px solid #e0e0e0 !important;
+  margin-bottom: 1.2rem;
+  color: #222 !important;
+}
+.client-modal input[type="date"]::-webkit-input-placeholder {
+  color: #888 !important;
+  opacity: 1;
+}
+.client-modal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+  opacity: 1 !important;
+  color: #222 !important;
+}
+.client-modal input[type="date"]::-ms-input-placeholder {
+  color: #888 !important;
+}
+.client-modal input[type="date"]::placeholder {
+  color: #888 !important;
+}
+
+.client-modal input,
+.client-modal select,
+.client-modal textarea,
+.client-modal .MuiInputBase-input,
+.client-modal .MuiOutlinedInput-input,
+.client-modal .css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input {
+  background: #fff !important;
+}
+
+.client-modal .MuiOutlinedInput-root,
+.client-modal .MuiInputBase-input,
+.client-modal .MuiOutlinedInput-input {
+  background: #fff !important;
+}
+
+
+

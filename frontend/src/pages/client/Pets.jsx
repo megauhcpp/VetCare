@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -55,6 +55,7 @@ const Pets = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
+  const dateInputRef = useRef(null);
 
   if (!Array.isArray(pets)) {
     return (
@@ -414,11 +415,13 @@ const Pets = () => {
         </DialogTitle>
         <DialogContent className="client-modal-content">
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <label className="client-modal-label">Nombre</label>
-            <input
-              className="client-modal-input"
+            <TextField
+              label="Nombre"
+              fullWidth
+              variant="outlined"
               value={formData.nombre}
               onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+              InputProps={{ sx: { borderRadius: 2 } }}
               required
             />
             <FormControl fullWidth>
@@ -467,10 +470,12 @@ const Pets = () => {
               onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               variant="outlined"
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInputRef}
               inputProps={{
-                max: new Date().toISOString().split('T')[0]
+                max: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
               required
             />
             <FormControl fullWidth>

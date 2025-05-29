@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Box,
@@ -57,6 +57,7 @@ const AdminPets = () => {
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [clientes, setClientes] = useState([]);
+  const dateInputRef = useRef(null);
 
   // Extraer las mascotas del objeto de respuesta
   const petsData = useMemo(() => {
@@ -432,18 +433,31 @@ const AdminPets = () => {
       </TableContainer>
 
       {/* Modal para crear/editar mascota */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.10)'
+          }
+        }}
+      >
+        <DialogTitle className="client-modal-title">
           {selectedPet ? 'Editar Mascota' : 'Nueva Mascota'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+        <DialogContent className="client-modal-content">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               name="nombre"
               label="Nombre"
               value={formData.nombre}
               onChange={handleInputChange}
               fullWidth
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
             <FormControl fullWidth>
               <InputLabel>Especie</InputLabel>
@@ -515,10 +529,12 @@ const AdminPets = () => {
               onChange={handleInputChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInputRef}
               inputProps={{
-                max: new Date().toISOString().split('T')[0]
+                max: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
-              onKeyDown={e => e.preventDefault()}
               required
             />
             <FormControl fullWidth>
@@ -547,9 +563,11 @@ const AdminPets = () => {
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">
+        <DialogActions className="client-modal-actions">
+          <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
             {selectedPet ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
