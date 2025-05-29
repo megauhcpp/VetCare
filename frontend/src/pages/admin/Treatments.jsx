@@ -422,6 +422,15 @@ const AdminTreatments = () => {
               <TableCell>Fecha Fin</TableCell>
               <TableCell>
                 <TableSortLabel
+                  active={orderBy === 'precio'}
+                  direction={orderBy === 'precio' ? order : 'asc'}
+                  onClick={() => handleRequestSort('precio')}
+                >
+                  Precio
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
                   active={orderBy === 'estado'}
                   direction={orderBy === 'estado' ? order : 'asc'}
                   onClick={() => handleRequestSort('estado')}
@@ -446,6 +455,11 @@ const AdminTreatments = () => {
                   </TableCell>
                   <TableCell>{formatDate(treatment.fecha_inicio)}</TableCell>
                   <TableCell>{treatment.fecha_fin ? formatDate(treatment.fecha_fin) : '-'}</TableCell>
+                  <TableCell>
+                    {typeof treatment.precio === 'number' || !isNaN(Number(treatment.precio))
+                      ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(Number(treatment.precio))
+                      : '-'}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={treatment.estado}

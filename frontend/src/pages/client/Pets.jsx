@@ -76,7 +76,7 @@ const Pets = () => {
         especie: pet.especie,
         raza: pet.raza,
         fecha_nacimiento: pet.fecha_nacimiento.split('T')[0],
-        sexo: pet.sexo,
+        sexo: pet.sexo?.toLowerCase() || '',
         notas: pet.notas || ''
       });
     } else {
@@ -365,7 +365,9 @@ const Pets = () => {
                   <TableCell>{pet.especie}</TableCell>
                   <TableCell>{pet.raza}</TableCell>
                   <TableCell>{new Date(pet.fecha_nacimiento).toLocaleDateString()}</TableCell>
-                  <TableCell>{pet.sexo}</TableCell>
+                  <TableCell>
+                    {pet.sexo ? pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1) : ''}
+                  </TableCell>
                   <TableCell>
                     {pet.notas ? (
                       <Tooltip title={pet.notas}>
@@ -489,7 +491,7 @@ const Pets = () => {
               >
                 {sexos.map((sexo) => (
                   <MenuItem key={sexo} value={sexo}>
-                    {sexo}
+                    {sexo.charAt(0).toUpperCase() + sexo.slice(1)}
                   </MenuItem>
                 ))}
               </Select>

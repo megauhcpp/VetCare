@@ -99,7 +99,7 @@ const AdminPets = () => {
       setSelectedPet(pet);
       setFormData({
         nombre: pet.nombre,
-        especie: pet.especie?.toLowerCase() || '',
+        especie: pet.especie,
         raza: pet.raza,
         fecha_nacimiento: pet.fecha_nacimiento.split('T')[0],
         sexo: pet.sexo?.toLowerCase() || '',
@@ -389,8 +389,8 @@ const AdminPets = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={pet.sexo}
-                      color={pet.sexo === 'Macho' ? 'primary' : 'secondary'}
+                      label={pet.sexo ? pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1) : ''}
+                      color={pet.sexo === 'macho' ? 'primary' : 'secondary'}
                       size="small"
                     />
                   </TableCell>

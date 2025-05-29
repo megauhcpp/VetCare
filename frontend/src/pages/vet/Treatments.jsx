@@ -376,7 +376,6 @@ const Treatments = () => {
                   Estado
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Cambiar Estado</TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
@@ -389,7 +388,11 @@ const Treatments = () => {
                   <TableCell>{treatment.cita?.veterinario?.nombre} {treatment.cita?.veterinario?.apellido}</TableCell>
                   <TableCell>{new Date(treatment.fecha_inicio).toLocaleDateString()}</TableCell>
                   <TableCell>{treatment.fecha_fin ? new Date(treatment.fecha_fin).toLocaleDateString() : '-'}</TableCell>
-                  <TableCell>{treatment.precio ? `$${treatment.precio}` : '-'}</TableCell>
+                  <TableCell>
+                    {typeof treatment.precio === 'number' || !isNaN(Number(treatment.precio))
+                      ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(Number(treatment.precio))
+                      : '-'}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={treatment.estado}
@@ -411,8 +414,6 @@ const Treatments = () => {
                         </IconButton>
                       </>
                     )}
-                  </TableCell>
-                  <TableCell>
                     <IconButton onClick={() => handleOpenDialog(treatment)}>
                       <EditIcon />
                     </IconButton>

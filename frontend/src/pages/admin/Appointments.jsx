@@ -576,7 +576,7 @@ const AdminAppointments = () => {
                 onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
               required
-              InputProps={{ sx: { borderRadius: 2 } }}
+              sx={{ borderRadius: 2 }}
             />
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <TextField
@@ -589,10 +589,9 @@ const AdminAppointments = () => {
                   const date = formData.fecha_hora ? formData.fecha_hora.split('T')[0] : '';
                   setFormData({ ...formData, fecha_hora: date ? `${date}T${e.target.value}:${selectedMinute}` : '' });
                 }}
-                sx={{ width: 100, mr: 2 }}
+                sx={{ width: 100, mr: 2, borderRadius: 2 }}
                 InputLabelProps={{ shrink: true }}
                 required
-                InputProps={{ sx: { borderRadius: 2 } }}
               >
                 {[...Array(8)].map((_, i) => {
                   const hour = 10 + i;
@@ -613,10 +612,9 @@ const AdminAppointments = () => {
                   const date = formData.fecha_hora ? formData.fecha_hora.split('T')[0] : '';
                   setFormData({ ...formData, fecha_hora: date ? `${date}T${selectedHour}:${e.target.value}` : '' });
                 }}
-                sx={{ width: 100 }}
+                sx={{ width: 100, borderRadius: 2 }}
                 InputLabelProps={{ shrink: true }}
                 required
-                InputProps={{ sx: { borderRadius: 2 } }}
               >
                 {['00', '15', '30', '45'].map(min => (
                   <MenuItem key={min} value={min}>{min}</MenuItem>
@@ -646,7 +644,7 @@ const AdminAppointments = () => {
               fullWidth
               multiline
               rows={3}
-              InputProps={{ sx: { borderRadius: 2 } }}
+              sx={{ borderRadius: 2 }}
             />
           </Box>
         </DialogContent>

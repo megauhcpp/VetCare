@@ -401,7 +401,8 @@ const Appointments = () => {
         </Button>
       </Box>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <input className="client-search-bar"
+        <TextField
+          className="client-search-bar"
           fullWidth
           variant="outlined"
           placeholder="Buscar por mascota, dueño, motivo..."
@@ -604,7 +605,6 @@ const Appointments = () => {
             <TextField
               label="Fecha"
               type="date"
-              fullWidth
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               InputLabelProps={{ shrink: true }}
@@ -612,6 +612,7 @@ const Appointments = () => {
                 min: new Date().toISOString().split('T')[0]
               }}
               required
+              sx={{ width: '100%' }}
             />
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <TextField
@@ -655,10 +656,10 @@ const Appointments = () => {
             <TextField
               select
               label="Tipo de Consulta"
-              fullWidth
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               required
+              sx={{ width: '100%' }}
             >
               <MenuItem value="consulta_general">Consulta General</MenuItem>
               <MenuItem value="vacunacion">Vacunación</MenuItem>
@@ -668,12 +669,12 @@ const Appointments = () => {
             </TextField>
             <TextField
               label="Motivo de la Consulta"
-              fullWidth
               multiline
               rows={2}
               value={formData.motivo}
               onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
               required
+              sx={{ width: '100%' }}
             />
           </Box>
         </DialogContent>

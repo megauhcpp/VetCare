@@ -244,7 +244,9 @@ const Treatments = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    {treatment.precio ? `$${treatment.precio}` : '-'}
+                    {typeof treatment.precio === 'number' || !isNaN(Number(treatment.precio))
+                      ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(Number(treatment.precio))
+                      : '-'}
                   </TableCell>
                 </TableRow>
               ))
