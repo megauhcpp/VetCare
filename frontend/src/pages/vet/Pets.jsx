@@ -285,8 +285,8 @@ const Pets = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ color: '#111' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4" sx={{ color: '#111' }}>
           Gestión de Mascotas
         </Typography>
         <Button
@@ -297,15 +297,13 @@ const Pets = () => {
           Nueva Mascota
         </Button>
       </Box>
-      <Box sx={{ mb: 2 }}>
-        <input
-          className="client-search-bar"
-          placeholder="Buscar por nombre, especie, raza o dueño..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
-        />
-      </Box>
+      <input
+        className="client-search-bar"
+        placeholder="Buscar por nombre, especie, raza o dueño..."
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
+      />
       <TableContainer component={Paper} sx={{ 
         borderRadius: '12px',
         boxShadow: '0 1px 6px rgba(60,60,60,0.07)'

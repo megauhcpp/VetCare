@@ -112,7 +112,7 @@ const ClientDashboard = () => {
 
   return (
     <Box sx={{ p: 3, background: '#f8f9fb', minHeight: '100vh' }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#111' }}>
         ¡Bienvenido/a, {user?.nombre || 'Cliente'}!
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
@@ -213,50 +213,30 @@ const ClientDashboard = () => {
             <tbody>
               {weeks.map((week, i) => (
                 <tr key={i}>
-                  {week.map((day, j) => (
-                    <td key={j} style={{ padding: 4, color: day ? '#222' : '#ccc' }}>{day || ''}</td>
-                  ))}
+                  {week.map((day, j) => {
+                    const isToday = day === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
+                    return (
+                      <td
+                        key={j}
+                        style={{
+                          padding: 4,
+                          color: day ? (isToday ? '#fff' : '#222') : '#ccc',
+                          background: isToday ? '#1976d2' : 'transparent',
+                          borderRadius: isToday ? 8 : 0,
+                          fontWeight: isToday ? 700 : 400,
+                          transition: 'background 0.2s'
+                        }}
+                      >
+                        {day || ''}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
           </table>
         </Card>
       </Box>
-
-      {/* Tratamientos activos */}
-      <Card sx={{ mt: 3, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }} gutterBottom>
-          Tratamientos Activos
-        </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Tratamientos activos para tus mascotas
-        </Typography>
-        <List>
-          {activeTreatments.length > 0 ? (
-            activeTreatments.map((treatment) => (
-              <ListItem key={treatment.id_tratamiento} sx={{ mb: 1, border: '1px solid #e5e7eb', borderRadius: 2, background: '#f9fafb', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                  <ListItemIcon>
-                    <TreatmentIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={<span style={{ fontWeight: 600 }}>{treatment.cita.mascota.nombre} - {treatment.nombre}</span>}
-                    secondary={<span style={{ color: '#555' }}>{treatment.descripcion}</span>}
-                  />
-                </Box>
-                {treatment.fecha_inicio && treatment.fecha_fin && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, ml: 5 }}>
-                    {new Date(treatment.fecha_inicio).toLocaleDateString()} a {new Date(treatment.fecha_fin).toLocaleDateString()}
-                  </Typography>
-                )}
-              </ListItem>
-            ))
-          ) : (
-            <Typography variant="body2" color="text.secondary">No hay tratamientos activos.</Typography>
-          )}
-        </List>
-        <Button href="/treatments" size="small" sx={{ mt: 1, pl: 0 }}>Ver todos los tratamientos →</Button>
-      </Card>
     </Box>
   );
 };

@@ -53,7 +53,7 @@ const AdminDashboard = () => {
 
   return (
     <Box sx={{ p: 3, background: '#f8f9fb', minHeight: '100vh' }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#111' }}>
         Bienvenido, {user?.nombre || 'Administrador'}
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
