@@ -27,13 +27,17 @@ import {
   Snackbar,
   Chip,
   InputAdornment,
-  TableSortLabel
+  TableSortLabel,
+  Avatar,
+  Divider
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
+  Pets as PetsIcon
 } from '@mui/icons-material';
 import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
 import '../client/client-table.css';
@@ -58,6 +62,8 @@ const AdminPets = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [clientes, setClientes] = useState([]);
   const dateInputRef = useRef(null);
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [detailsPet, setDetailsPet] = useState(null);
 
   // Extraer las mascotas del objeto de respuesta
   const petsData = useMemo(() => {
@@ -407,6 +413,11 @@ const AdminPets = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Ver detalles">
+                        <IconButton size="small" onClick={() => { setDetailsPet(pet); setOpenDetailsDialog(true); }}>
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Editar">
                         <IconButton size="small" onClick={() => handleOpenDialog(pet)}>
                           <EditIcon />
@@ -585,6 +596,64 @@ const AdminPets = () => {
           <Button onClick={handleCloseDeleteDialog}>Cancelar</Button>
           <Button onClick={handleDelete} color="error" variant="contained">
             Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de detalles de mascota */}
+      <Dialog 
+        open={openDetailsDialog} 
+        onClose={() => setOpenDetailsDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.13)',
+            background: 'linear-gradient(135deg, #f8fafc 60%, #e3f2fd 100%)'
+          }
+        }}
+      >
+        <DialogTitle className="client-modal-title" sx={{ display: 'flex', alignItems: 'center', gap: 2, pb: 0 }}>
+          <Avatar sx={{ bgcolor: '#1976d2', width: 48, height: 48 }}>
+            {detailsPet?.nombre ? detailsPet.nombre.charAt(0).toUpperCase() : <PetsIcon sx={{ fontSize: 32 }} />}
+          </Avatar>
+          <Box>
+            <Typography variant="h5" fontWeight={700} color="primary.main" sx={{ letterSpacing: 1 }}>{detailsPet?.nombre}</Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ fontStyle: 'italic' }}>{detailsPet?.especie}</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent className="client-modal-content" sx={{ pt: 0 }}>
+          {detailsPet && (
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', gap: 2, mt: 1,
+              bgcolor: 'rgba(255,255,255,0.85)', borderRadius: 2, p: 2, boxShadow: '0 2px 8px rgba(33,150,243,0.04)'
+            }}>
+              <Divider sx={{ mb: 1 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Raza</Typography>
+                <Typography fontWeight={500}>{detailsPet.raza}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Fecha de Nacimiento</Typography>
+                <Typography fontWeight={500}>{new Date(detailsPet.fecha_nacimiento).toLocaleDateString()}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Sexo</Typography>
+                <Typography fontWeight={500}>{detailsPet.sexo ? detailsPet.sexo.charAt(0).toUpperCase() + detailsPet.sexo.slice(1) : ''}</Typography>
+              </Box>
+              <Divider sx={{ my: 1 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary">Notas</Typography>
+                <Typography sx={{ minHeight: 40, fontStyle: detailsPet.notas ? 'normal' : 'italic', color: detailsPet.notas ? 'text.primary' : 'text.secondary', fontWeight: 400, fontSize: 15, textAlign: 'right' }}>{detailsPet.notas || 'Sin notas'}</Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions className="client-modal-actions">
+          <Button onClick={() => setOpenDetailsDialog(false)} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>

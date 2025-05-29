@@ -27,13 +27,17 @@ import {
   Snackbar,
   Chip,
   InputAdornment,
-  TableSortLabel
+  TableSortLabel,
+  Avatar,
+  Divider
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
+  Pets as PetsIcon
 } from '@mui/icons-material';
 import '../client/client-table.css';
 
@@ -53,6 +57,8 @@ const AdminUsers = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [detailsUser, setDetailsUser] = useState(null);
 
   // Extraer los usuarios del objeto de respuesta
   const usersData = useMemo(() => {
@@ -351,6 +357,11 @@ const AdminUsers = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Ver detalles">
+                        <IconButton size="small" onClick={() => { setDetailsUser(user); setOpenDetailsDialog(true); }}>
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Editar">
                         <IconButton size="small" onClick={() => handleOpenDialog(user)}>
                           <EditIcon />
@@ -461,6 +472,55 @@ const AdminUsers = () => {
           <Button onClick={handleCloseDeleteDialog}>Cancelar</Button>
           <Button onClick={handleDelete} color="error" variant="contained">
             Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de detalles de usuario */}
+      <Dialog 
+        open={openDetailsDialog} 
+        onClose={() => setOpenDetailsDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.13)',
+            background: 'linear-gradient(135deg, #f8fafc 60%, #e3f2fd 100%)'
+          }
+        }}
+      >
+        <DialogTitle className="client-modal-title" sx={{ display: 'flex', alignItems: 'center', gap: 2, pb: 0 }}>
+          <Avatar sx={{ bgcolor: '#1976d2', width: 48, height: 48 }}>
+            {detailsUser?.nombre ? detailsUser.nombre.charAt(0).toUpperCase() : <PetsIcon sx={{ fontSize: 32 }} />}
+          </Avatar>
+          <Box>
+            <Typography variant="h5" fontWeight={700} color="primary.main" sx={{ letterSpacing: 1 }}>{detailsUser?.nombre} {detailsUser?.apellido}</Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ fontStyle: 'italic' }}>{detailsUser?.rol}</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent className="client-modal-content" sx={{ pt: 0 }}>
+          {detailsUser && (
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', gap: 2, mt: 1,
+              bgcolor: 'rgba(255,255,255,0.85)', borderRadius: 2, p: 2, boxShadow: '0 2px 8px rgba(33,150,243,0.04)'
+            }}>
+              <Divider sx={{ mb: 1 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Email</Typography>
+                <Typography fontWeight={500}>{detailsUser.email}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Rol</Typography>
+                <Typography fontWeight={500}>{detailsUser.rol}</Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions className="client-modal-actions">
+          <Button onClick={() => setOpenDetailsDialog(false)} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>

@@ -35,6 +35,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import './client-table.css';
 import { Add as AddIcon } from '@mui/icons-material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import PetsIcon from '@mui/icons-material/Pets';
+import Avatar from '@mui/material/Avatar';
+import Divider from '@mui/material/Divider';
 
 const Appointments = () => {
   const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment, token } = useApp();
@@ -60,6 +64,8 @@ const Appointments = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
   const dateInputRef = useRef(null);
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [detailsAppointment, setDetailsAppointment] = useState(null);
 
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
@@ -345,24 +351,21 @@ const Appointments = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Editar">
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleOpenDialog(appointment)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleDelete(appointment.id_cita)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                    <Tooltip title="Ver detalles">
+                      <IconButton size="small" onClick={() => { setDetailsAppointment(appointment); setOpenDetailsDialog(true); }}>
+                        <VisibilityIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Editar">
+                      <IconButton size="small" onClick={() => handleOpenDialog(appointment)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Eliminar">
+                      <IconButton size="small" onClick={() => handleDelete(appointment.id_cita)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))
@@ -525,6 +528,72 @@ const Appointments = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Modal de detalles de cita */}
+      <Dialog 
+        open={openDetailsDialog} 
+        onClose={() => setOpenDetailsDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        className="client-modal"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(33,150,243,0.13)',
+            background: 'linear-gradient(135deg, #f8fafc 60%, #e3f2fd 100%)'
+          }
+        }}
+      >
+        <DialogTitle className="client-modal-title" sx={{ display: 'flex', alignItems: 'center', gap: 2, pb: 0 }}>
+          <Avatar sx={{ bgcolor: '#1976d2', width: 48, height: 48 }}>
+            <PetsIcon sx={{ fontSize: 32 }} />
+          </Avatar>
+          <Box>
+            <Typography variant="h5" fontWeight={700} color="primary.main" sx={{ letterSpacing: 1 }}>Cita</Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ fontStyle: 'italic' }}>{detailsAppointment?.mascota?.nombre || pets.find(p => p.id_mascota === detailsAppointment?.id_mascota)?.nombre}</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent className="client-modal-content" sx={{ pt: 0 }}>
+          {detailsAppointment && (
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', gap: 2, mt: 1,
+              bgcolor: 'rgba(255,255,255,0.85)', borderRadius: 2, p: 2, boxShadow: '0 2px 8px rgba(33,150,243,0.04)'
+            }}>
+              <Divider sx={{ mb: 1 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Veterinario</Typography>
+                <Typography fontWeight={500}>{detailsAppointment.veterinario?.nombre} {detailsAppointment.veterinario?.apellido}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Fecha</Typography>
+                <Typography fontWeight={500}>{new Date(detailsAppointment.fecha_hora).toLocaleDateString()}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Hora</Typography>
+                <Typography fontWeight={500}>{detailsAppointment.fecha_hora ? detailsAppointment.fecha_hora.split('T')[1]?.substring(0,5) : ''}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Tipo de Consulta</Typography>
+                <Typography fontWeight={500}>{detailsAppointment.tipo_consulta}</Typography>
+              </Box>
+              <Divider sx={{ my: 1 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary">Motivo</Typography>
+                <Typography sx={{ minHeight: 40, fontStyle: detailsAppointment.motivo_consulta ? 'normal' : 'italic', color: detailsAppointment.motivo_consulta ? 'text.primary' : 'text.secondary', fontWeight: 400, fontSize: 15, textAlign: 'right' }}>{detailsAppointment.motivo_consulta || 'Sin motivo'}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Estado</Typography>
+                <Typography fontWeight={500}>{detailsAppointment.estado}</Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions className="client-modal-actions">
+          <Button onClick={() => setOpenDetailsDialog(false)} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

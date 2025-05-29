@@ -113,7 +113,6 @@
 .client-modal-content {
   padding: 2rem 2rem 1rem 2rem;
   background: #fff;
-  border-radius: 0 0 16px 16px;
 }
 .client-modal-actions {
   display: flex;
@@ -121,7 +120,6 @@
   gap: 1rem;
   padding: 1.5rem 2rem 2rem 2rem;
   background: #fff;
-  border-radius: 0 0 16px 16px;
 }
 .client-modal-input {
   width: 100%;
