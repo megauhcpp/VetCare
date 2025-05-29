@@ -168,18 +168,18 @@ const Treatments = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4" sx={{ color: '#111', textAlign: 'left' }}>
           Tratamientos de Mis Mascotas
         </Typography>
-        <input
-          className="client-search-bar"
-          placeholder="Buscar tratamiento, mascota, veterinario..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
-        />
       </Box>
+      <input
+        className="client-search-bar"
+        placeholder="Buscar tratamiento, mascota, veterinario..."
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
+      />
       <TableContainer component={Paper} sx={{ 
         borderRadius: '12px',
         boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
