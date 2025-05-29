@@ -28,7 +28,8 @@ import {
   TableRow,
   TableSortLabel,
   Paper,
-  InputAdornment
+  InputAdornment,
+  TablePagination
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon, Close as CloseIcon, Search as SearchIcon, Visibility as VisibilityIcon, Add as AddIcon } from '@mui/icons-material';
 import { useApp } from '../../context/AppContext';
@@ -61,6 +62,8 @@ const Appointments = () => {
   const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno'
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsAppointment, setDetailsAppointment] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     // Fetch veterinarians when component mounts
@@ -394,7 +397,7 @@ const Appointments = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" sx={{ color: '#111' }}>
           Gestión de Citas
         </Typography>
         <Button
@@ -405,24 +408,19 @@ const Appointments = () => {
           Nueva Cita
         </Button>
       </Box>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
+      <Box sx={{ mb: 2 }}>
+        <input
           className="client-search-bar"
-          fullWidth
-          variant="outlined"
           placeholder="Buscar por mascota, dueño, motivo..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
+          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
         />
       </Box>
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ 
+        borderRadius: '12px',
+        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
+      }}>
         <Table className="client-table">
           <TableHead>
             <TableRow>
@@ -493,8 +491,8 @@ const Appointments = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedAppointments.length > 0 ? (
-              sortedAppointments.map((appointment) => (
+            {sortedAppointments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 ? (
+              sortedAppointments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((appointment) => (
                 <TableRow key={appointment.id_cita}>
                   <TableCell>{formatDateTime(appointment.fecha_hora)}</TableCell>
                   <TableCell>{appointment.mascota?.nombre || pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}</TableCell>
@@ -565,6 +563,27 @@ const Appointments = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={sortedAppointments.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          labelRowsPerPage="Filas por página:"
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          sx={{
+            background: '#fff',
+            borderTop: 'none',
+            borderRadius: '0 0 12px 12px',
+            boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+            padding: 0,
+            '.MuiTablePagination-toolbar': { minHeight: 40, paddingLeft: 2, paddingRight: 2 },
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: 15 },
+            '.MuiTablePagination-actions': { marginRight: 1 }
+          }}
+        />
       </TableContainer>
 
       <Dialog 

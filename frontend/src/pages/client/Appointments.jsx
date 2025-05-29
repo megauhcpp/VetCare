@@ -29,7 +29,8 @@ import {
   Alert,
   CircularProgress,
   Tooltip,
-  TableSortLabel
+  TableSortLabel,
+  TablePagination
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -66,6 +67,8 @@ const Appointments = () => {
   const dateInputRef = useRef(null);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsAppointment, setDetailsAppointment] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
@@ -284,7 +287,9 @@ const Appointments = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Gestión de Citas</Typography>
+        <Typography variant="h4" sx={{ color: '#111' }}>
+          Gestión de Citas
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -299,9 +304,13 @@ const Appointments = () => {
         placeholder="Buscar cita, mascota, veterinario..."
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
+        style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
       />
 
-      <TableContainer component={Paper} className="client-table-container">
+      <TableContainer component={Paper} sx={{ 
+        borderRadius: '12px',
+        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
+      }}>
         <Table className="client-table">
           <TableHead>
             <TableRow>
@@ -323,8 +332,8 @@ const Appointments = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedAppointments.length > 0 ? (
-              sortedAppointments.map((appointment) => (
+            {sortedAppointments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 ? (
+              sortedAppointments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((appointment) => (
                 <TableRow key={appointment.id_cita}>
                   <TableCell>
                     {new Date(appointment.fecha_hora).toLocaleString()}
@@ -383,6 +392,27 @@ const Appointments = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={sortedAppointments.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          labelRowsPerPage="Filas por página:"
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          sx={{
+            background: '#fff',
+            borderTop: 'none',
+            borderRadius: '0 0 12px 12px',
+            boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+            padding: 0,
+            '.MuiTablePagination-toolbar': { minHeight: 40, paddingLeft: 2, paddingRight: 2 },
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: 15 },
+            '.MuiTablePagination-actions': { marginRight: 1 }
+          }}
+        />
       </TableContainer>
 
       <Dialog 

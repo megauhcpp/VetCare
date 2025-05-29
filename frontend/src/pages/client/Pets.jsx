@@ -31,7 +31,8 @@ import {
   Select,
   TableSortLabel,
   Tooltip,
-  Chip
+  Chip,
+  TablePagination
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -61,6 +62,8 @@ const Pets = () => {
   const dateInputRef = useRef(null);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsPet, setDetailsPet] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   if (!Array.isArray(pets)) {
     return (
@@ -306,7 +309,9 @@ const Pets = () => {
         </Alert>
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Mis Mascotas</Typography>
+        <Typography variant="h4" sx={{ color: '#111' }}>
+          Mis Mascotas
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -320,8 +325,12 @@ const Pets = () => {
         placeholder="Buscar mascota, especie o raza..."
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
+        style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
       />
-      <TableContainer component={Paper} className="client-table-container">
+      <TableContainer component={Paper} sx={{ 
+        borderRadius: '12px',
+        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
+      }}>
         <Table className="client-table">
           <TableHead>
             <TableRow>
@@ -367,8 +376,8 @@ const Pets = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedPets.length > 0 ? (
-              sortedPets.map((pet) => (
+            {sortedPets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 ? (
+              sortedPets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((pet) => (
                 <TableRow key={pet.id_mascota}>
                   <TableCell>{pet.nombre}</TableCell>
                   <TableCell>{pet.especie}</TableCell>
@@ -417,6 +426,27 @@ const Pets = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={sortedPets.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          labelRowsPerPage="Filas por página:"
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          sx={{
+            background: '#fff',
+            borderTop: 'none',
+            borderRadius: '0 0 12px 12px',
+            boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+            padding: 0,
+            '.MuiTablePagination-toolbar': { minHeight: 40, paddingLeft: 2, paddingRight: 2 },
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: 15 },
+            '.MuiTablePagination-actions': { marginRight: 1 }
+          }}
+        />
       </TableContainer>
 
       <Dialog 

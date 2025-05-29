@@ -334,10 +334,31 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #f8f9fb;
 }
 
 .dashboard-main {
   flex: 1;
   padding: 0;
-  background: transparent;
+  background: #F9FAFB;
+}
+
+.MuiBox-root.css-19kzrtu {
+  background: #f8f9fb;
+}
+
+.client-search-bar {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #222;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.client-search-bar:focus {
+  border-color: #4361ee;
 }

@@ -16,7 +16,7 @@ const AdminLayout = () => {
       </div>
       <div className="dashboard-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'auto' }}>
         <DashboardHeader isAdmin={true} />
-        <main className="dashboard-main" style={{ flex: 1, overflow: 'auto', padding: 0 }}>
+        <main className="dashboard-main" style={{ flex: '1 1 0%', overflow: 'auto', padding: 0, backgroundColor: '#f8f9fb' }}>
           <Outlet />
         </main>
       </div>

@@ -36,7 +36,8 @@ import {
   MenuItem,
   TableSortLabel,
   Tooltip,
-  Avatar
+  Avatar,
+  TablePagination
 } from '@mui/material';
 import { 
   LocalHospital as TreatmentIcon, 
@@ -55,6 +56,8 @@ const Treatments = () => {
   const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno', 'veterinario'
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsTreatment, setDetailsTreatment] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // Mover hooks antes del return temprano
   const treatmentsData = useMemo(() => {
@@ -165,18 +168,22 @@ const Treatments = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Tratamientos de Mis Mascotas
-      </Typography>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+        <Typography variant="h4" sx={{ color: '#111', textAlign: 'left' }}>
+          Tratamientos de Mis Mascotas
+        </Typography>
         <input
           className="client-search-bar"
           placeholder="Buscar tratamiento, mascota, veterinario..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
+          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
         />
       </Box>
-      <TableContainer component={Paper} className="client-table-container">
+      <TableContainer component={Paper} sx={{ 
+        borderRadius: '12px',
+        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
+      }}>
         <Table className="client-table">
           <TableHead>
             <TableRow>
@@ -231,8 +238,8 @@ const Treatments = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedTreatments.length > 0 ? (
-              sortedTreatments.map((treatment) => (
+            {sortedTreatments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 ? (
+              sortedTreatments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((treatment) => (
                 <TableRow key={treatment.id_tratamiento}>
                   <TableCell>{treatment.cita?.mascota?.nombre}</TableCell>
                   <TableCell>{treatment.nombre}</TableCell>
@@ -263,13 +270,34 @@ const Treatments = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={8} align="center">
                   No hay tratamientos registrados para tus mascotas
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={sortedTreatments.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          labelRowsPerPage="Filas por página:"
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          sx={{
+            background: '#fff',
+            borderTop: 'none',
+            borderRadius: '0 0 12px 12px',
+            boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+            padding: 0,
+            '.MuiTablePagination-toolbar': { minHeight: 40, paddingLeft: 2, paddingRight: 2 },
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: 15 },
+            '.MuiTablePagination-actions': { marginRight: 1 }
+          }}
+        />
       </TableContainer>
       <Snackbar
         open={snackbar.open}

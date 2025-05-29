@@ -4,8 +4,9 @@
   border-collapse: separate;
   border-spacing: 0;
   background: #fff;
-  border-radius: 12px;
+  /* border-radius: 12px; */
   box-shadow: 0 1px 6px rgba(60,60,60,0.07);
+  border-bottom: none !important;
 }
 
 .client-table th {
@@ -36,14 +37,13 @@
   background: #f8f9fa;
 }
 
+/* Remove corner radius from table headers and cells */
 .client-table th:first-child,
-.client-table td:first-child {
-  border-top-left-radius: 8px;
-}
-
+.client-table td:first-child,
 .client-table th:last-child,
 .client-table td:last-child {
-  border-top-right-radius: 8px;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
 }
 
 @media (max-width: 768px) {
@@ -142,4 +142,8 @@
   color: #333;
   margin-bottom: 0.4rem;
   display: block;
+}
+
+.client-table.MuiTable-root {
+  border-bottom: none !important;
 } 

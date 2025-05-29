@@ -1,45 +1,36 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useApp } from '../../context/AppContext';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  CircularProgress,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
-  IconButton,
-  Tooltip,
-  Alert,
-  Snackbar,
   Chip,
-  InputAdornment,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Divider,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
   TableSortLabel,
+  Tooltip,
+  Paper,
   Avatar,
-  Divider
+  TablePagination,
+  IconButton
 } from '@mui/material';
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Add as AddIcon,
-  Search as SearchIcon,
-  Visibility as VisibilityIcon,
-  Pets as PetsIcon
-} from '@mui/icons-material';
-import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
+import PetsIcon from '@mui/icons-material/Pets';
+import { useApp } from '../../context/AppContext';
+import { especies, categoriasEspecies } from '../../data/petSpecies';
 import '../client/client-table.css';
 
 const AdminPets = () => {
@@ -48,7 +39,6 @@ const AdminPets = () => {
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
   const [openDialog, setOpenDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -56,20 +46,16 @@ const AdminPets = () => {
     raza: '',
     fecha_nacimiento: '',
     sexo: '',
-    id_usuario: '',
-    notas: ''
+    notas: '',
+    id_usuario: ''
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [clientes, setClientes] = useState([]);
   const dateInputRef = useRef(null);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsPet, setDetailsPet] = useState(null);
-
-  // Extraer las mascotas del objeto de respuesta
-  const petsData = useMemo(() => {
-    console.log('Raw pets:', pets);
-    return Array.isArray(pets) ? pets : (pets?.data || []);
-  }, [pets]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     // Fetch clientes (usuarios con rol cliente)
@@ -107,10 +93,10 @@ const AdminPets = () => {
         nombre: pet.nombre,
         especie: pet.especie,
         raza: pet.raza,
-        fecha_nacimiento: pet.fecha_nacimiento.split('T')[0],
+        fecha_nacimiento: pet.fecha_nacimiento ? pet.fecha_nacimiento.split('T')[0] : '',
         sexo: pet.sexo?.toLowerCase() || '',
-        id_usuario: pet.usuario?.id_usuario || pet.id_usuario || '',
-        notas: pet.notas || ''
+        notas: pet.notas || '',
+        id_usuario: pet.usuario?.id_usuario || ''
       });
     } else {
       setSelectedPet(null);
@@ -120,8 +106,8 @@ const AdminPets = () => {
         raza: '',
         fecha_nacimiento: '',
         sexo: '',
-        id_usuario: '',
-        notas: ''
+        notas: '',
+        id_usuario: ''
       });
     }
     setOpenDialog(true);
@@ -131,160 +117,6 @@ const AdminPets = () => {
     setOpenDialog(false);
     setSelectedPet(null);
   };
-
-  const handleOpenDeleteDialog = (pet) => {
-    setSelectedPet(pet);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setOpenDeleteDialog(false);
-    setSelectedPet(null);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleEspecieChange = (e) => {
-    const nuevaEspecie = e.target.value;
-    setFormData({
-      ...formData,
-      especie: nuevaEspecie,
-      raza: '' // Resetear la raza cuando cambia la especie
-    });
-  };
-
-  const handleSubmit = async () => {
-    try {
-      if (!formData.id_usuario) {
-        setSnackbar({
-          open: true,
-          message: 'Debes seleccionar un dueño para la mascota',
-          severity: 'error'
-        });
-        return;
-      }
-
-      const url = selectedPet
-        ? `/api/admin/pets/${selectedPet.id_mascota}`
-        : '/api/admin/pets';
-      
-      const method = selectedPet ? 'PUT' : 'POST';
-      
-      // Cambiar id_usuario a usuario_id para el backend y capitalizar sexo
-      const dataToSend = {
-        ...formData,
-        usuario_id: formData.id_usuario,
-        sexo: formData.sexo.charAt(0).toUpperCase() + formData.sexo.slice(1)
-      };
-      delete dataToSend.id_usuario;
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(dataToSend),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al guardar la mascota');
-      }
-
-      setSnackbar({
-        open: true,
-        message: `Mascota ${selectedPet ? 'actualizada' : 'creada'} exitosamente`,
-        severity: 'success'
-      });
-      
-      await refreshPets();
-      handleCloseDialog();
-    } catch (error) {
-      console.error('Error:', error);
-      setSnackbar({
-        open: true,
-        message: error.message,
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const response = await fetch(`/api/pets/${selectedPet.id_mascota}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error al eliminar la mascota');
-      }
-
-      setSnackbar({
-        open: true,
-        message: 'Mascota eliminada exitosamente',
-        severity: 'success'
-      });
-      
-      await refreshPets();
-      handleCloseDeleteDialog();
-    } catch (error) {
-      console.error('Error al eliminar mascota:', error);
-      setSnackbar({
-        open: true,
-        message: error.message,
-        severity: 'error'
-      });
-    }
-  };
-
-  const filteredPets = petsData.filter(pet => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      pet.nombre?.toLowerCase().includes(searchLower) ||
-      pet.especie?.toLowerCase().includes(searchLower) ||
-      pet.raza?.toLowerCase().includes(searchLower) ||
-      pet.usuario?.nombre?.toLowerCase().includes(searchLower) ||
-      pet.usuario?.apellido?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const sortedPets = [...filteredPets].sort((a, b) => {
-    if (orderBy === 'nombre') {
-      if (order === 'asc') {
-        return (a.nombre || '').localeCompare(b.nombre || '');
-      } else {
-        return (b.nombre || '').localeCompare(a.nombre || '');
-      }
-    } else if (orderBy === 'fecha_nacimiento') {
-      if (order === 'asc') {
-        return new Date(a.fecha_nacimiento) - new Date(b.fecha_nacimiento);
-      } else {
-        return new Date(b.fecha_nacimiento) - new Date(a.fecha_nacimiento);
-      }
-    } else if (orderBy === 'dueno') {
-      const aName = (a.usuario?.nombre || '') + ' ' + (a.usuario?.apellido || '');
-      const bName = (b.usuario?.nombre || '') + ' ' + (b.usuario?.apellido || '');
-      if (order === 'asc') {
-        return aName.localeCompare(bName);
-      } else {
-        return bName.localeCompare(aName);
-      }
-    }
-    return 0;
-  });
 
   // Función para refrescar la lista de mascotas
   const refreshPets = async () => {
@@ -312,16 +144,128 @@ const AdminPets = () => {
     }
   };
 
+  const handleSubmit = async () => {
+    try {
+      if (!formData.id_usuario) {
+        setSnackbar({
+          open: true,
+          message: 'Debes seleccionar un dueño para la mascota',
+          severity: 'error'
+        });
+        return;
+      }
+      const url = selectedPet
+        ? `/api/admin/pets/${selectedPet.id_mascota}`
+        : '/api/admin/pets';
+      const method = selectedPet ? 'PUT' : 'POST';
+      const dataToSend = {
+        ...formData,
+        usuario_id: formData.id_usuario,
+        sexo: formData.sexo.charAt(0).toUpperCase() + formData.sexo.slice(1)
+      };
+      delete dataToSend.id_usuario;
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(dataToSend),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al guardar la mascota');
+      }
+      setSnackbar({
+        open: true,
+        message: `Mascota ${selectedPet ? 'actualizada' : 'creada'} exitosamente`,
+        severity: 'success'
+      });
+      await refreshPets();
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Error:', error);
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleDelete = async (petId) => {
+    try {
+      const response = await fetch(`/api/pets/${petId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al eliminar la mascota');
+      }
+      setSnackbar({
+        open: true,
+        message: 'Mascota eliminada exitosamente',
+        severity: 'success'
+      });
+      await refreshPets();
+    } catch (error) {
+      console.error('Error al eliminar mascota:', error);
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
+    }
+  };
+
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
+  const sortedPets = [...pets.filter(pet => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      pet.nombre?.toLowerCase().includes(searchLower) ||
+      pet.especie?.toLowerCase().includes(searchLower) ||
+      pet.raza?.toLowerCase().includes(searchLower) ||
+      pet.usuario?.nombre?.toLowerCase().includes(searchLower) ||
+      pet.usuario?.apellido?.toLowerCase().includes(searchLower)
+    );
+  })].sort((a, b) => {
+    if (orderBy === 'nombre') {
+      if (order === 'asc') {
+        return (a.nombre || '').localeCompare(b.nombre || '');
+      } else {
+        return (b.nombre || '').localeCompare(a.nombre || '');
+      }
+    } else if (orderBy === 'fecha_nacimiento') {
+      if (order === 'asc') {
+        return new Date(a.fecha_nacimiento) - new Date(b.fecha_nacimiento);
+      } else {
+        return new Date(b.fecha_nacimiento) - new Date(a.fecha_nacimiento);
+      }
+    } else if (orderBy === 'dueno') {
+      const aName = (a.usuario?.nombre || '') + ' ' + (a.usuario?.apellido || '');
+      const bName = (b.usuario?.nombre || '') + ' ' + (b.usuario?.apellido || '');
+      if (order === 'asc') {
+        return aName.localeCompare(bName);
+      } else {
+        return bName.localeCompare(aName);
+      }
+    }
+    return 0;
+  });
+
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3 }} className="MuiBox-root css-19kzrtu">
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom sx={{ color: '#111' }}>
           Gestión de Mascotas
         </Typography>
         <Button
@@ -332,17 +276,19 @@ const AdminPets = () => {
           Nueva Mascota
         </Button>
       </Box>
-
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+      <Box sx={{ mb: 2 }}>
         <input
           className="client-search-bar"
           placeholder="Buscar por nombre, especie, raza o dueño..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
+          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
         />
       </Box>
-
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ 
+        borderRadius: '12px',
+        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
+      }}>
         <Table className="client-table">
           <TableHead>
             <TableRow>
@@ -355,15 +301,22 @@ const AdminPets = () => {
                   Nombre
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Especie</TableCell>
-              <TableCell>Raza</TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={orderBy === 'dueno'}
-                  direction={orderBy === 'dueno' ? order : 'asc'}
-                  onClick={() => handleRequestSort('dueno')}
+                  active={orderBy === 'especie'}
+                  direction={orderBy === 'especie' ? order : 'asc'}
+                  onClick={() => handleRequestSort('especie')}
                 >
-                  Dueño
+                  Especie
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'raza'}
+                  direction={orderBy === 'raza' ? order : 'asc'}
+                  onClick={() => handleRequestSort('raza')}
+                >
+                  Raza
                 </TableSortLabel>
               </TableCell>
               <TableCell>
@@ -376,75 +329,94 @@ const AdminPets = () => {
                 </TableSortLabel>
               </TableCell>
               <TableCell>Sexo</TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'dueno'}
+                  direction={orderBy === 'dueno' ? order : 'asc'}
+                  onClick={() => handleRequestSort('dueno')}
+                >
+                  Dueño
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Notas</TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedPets.length > 0 ? (
-              sortedPets.map((pet) => (
+            {sortedPets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 ? (
+              sortedPets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((pet) => (
                 <TableRow key={pet.id_mascota}>
                   <TableCell>{pet.nombre}</TableCell>
                   <TableCell>{pet.especie}</TableCell>
                   <TableCell>{pet.raza}</TableCell>
+                  <TableCell>{new Date(pet.fecha_nacimiento).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    {pet.usuario?.nombre} {pet.usuario?.apellido}
+                    {pet.sexo ? (
+                      <Chip
+                        label={pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1)}
+                        color={pet.sexo.toLowerCase() === 'macho' ? 'primary' : pet.sexo.toLowerCase() === 'hembra' ? 'secondary' : 'default'}
+                        size="small"
+                        sx={{ minWidth: 90, maxWidth: 90, justifyContent: 'center' }}
+                      />
+                    ) : ''}
                   </TableCell>
-                  <TableCell>
-                    {new Date(pet.fecha_nacimiento).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={pet.sexo ? pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1) : ''}
-                      color={pet.sexo && pet.sexo.toLowerCase() === 'macho' ? 'primary' : pet.sexo && pet.sexo.toLowerCase() === 'hembra' ? 'secondary' : 'default'}
-                      size="small"
-                      sx={{ minWidth: 90, maxWidth: 90, justifyContent: 'center' }}
-                    />
-                  </TableCell>
+                  <TableCell>{pet.usuario?.nombre} {pet.usuario?.apellido}</TableCell>
                   <TableCell>
                     {pet.notas ? (
                       <Tooltip title={pet.notas}>
-                        <Typography noWrap sx={{ maxWidth: 200, fontSize: 'inherit' }}>
-                          {pet.notas}
-                        </Typography>
+                        <Typography noWrap sx={{ maxWidth: 200, fontSize: 'inherit' }}>{pet.notas}</Typography>
                       </Tooltip>
                     ) : (
                       <Typography color="text.secondary">Sin notas</Typography>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Ver detalles">
-                        <IconButton size="small" onClick={() => { setDetailsPet(pet); setOpenDetailsDialog(true); }}>
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Editar">
-                        <IconButton size="small" onClick={() => handleOpenDialog(pet)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton size="small" onClick={() => handleOpenDeleteDialog(pet)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                    <Tooltip title="Ver detalles">
+                      <IconButton size="small" onClick={() => { setDetailsPet(pet); setOpenDetailsDialog(true); }}>
+                        <VisibilityIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <IconButton onClick={() => handleOpenDialog(pet)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(pet.id_mascota)}>
+                      <DeleteIcon />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={8} align="center">
                   No hay mascotas registradas
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={sortedPets.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          labelRowsPerPage="Filas por página:"
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          sx={{
+            background: '#fff',
+            borderTop: 'none',
+            borderRadius: '0 0 12px 12px',
+            boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+            padding: 0,
+            '.MuiTablePagination-toolbar': { minHeight: 40, paddingLeft: 2, paddingRight: 2 },
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: 15 },
+            '.MuiTablePagination-actions': { marginRight: 1 }
+          }}
+        />
       </TableContainer>
 
-      {/* Modal para crear/editar mascota */}
       <Dialog 
         open={openDialog} 
         onClose={handleCloseDialog}
@@ -464,33 +436,33 @@ const AdminPets = () => {
         <DialogContent className="client-modal-content">
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              name="nombre"
               label="Nombre"
-              value={formData.nombre}
-              onChange={handleInputChange}
               fullWidth
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              required
               InputProps={{ sx: { borderRadius: 2 } }}
             />
-            <FormControl fullWidth>
-              <InputLabel>Especie</InputLabel>
-              <Select
-                name="especie"
-                value={formData.especie}
-                onChange={handleEspecieChange}
-                label="Especie"
-              >
-                {Object.entries(categoriasEspecies).map(([categoria, especiesList]) => [
-                  <MenuItem key={categoria} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
-                    {categoria}
-                  </MenuItem>,
-                  ...especiesList.map(especie => (
-                    <MenuItem key={especie} value={especie} sx={{ pl: 4 }}>
-                      {especie.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </MenuItem>
-                  ))
-                ])}
-              </Select>
-            </FormControl>
+            <TextField
+              select
+              label="Especie"
+              fullWidth
+              value={formData.especie}
+              onChange={(e) => setFormData({ ...formData, especie: e.target.value, raza: '' })}
+              required
+              InputProps={{ sx: { borderRadius: 2 } }}
+            >
+              {Object.entries(categoriasEspecies).flatMap(([categoria, especiesList]) => [
+                <MenuItem key={`cat-${categoria}`} disabled sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>
+                  {categoria}
+                </MenuItem>,
+                ...especiesList.map(especie => (
+                  <MenuItem key={especie} value={especie} sx={{ pl: 4 }}>
+                    {especie.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </MenuItem>
+                ))
+              ])}
+            </TextField>
             <TextField
               select
               label="Raza"
@@ -499,8 +471,9 @@ const AdminPets = () => {
               onChange={(e) => setFormData({ ...formData, raza: e.target.value })}
               required
               disabled={!formData.especie}
+              InputProps={{ sx: { borderRadius: 2 } }}
             >
-              {formData.especie && especies[formData.especie]?.length > 0 ? (
+              {formData.especie ? (
                 especies[formData.especie]?.map((raza) => (
                   <MenuItem key={raza} value={raza}>
                     {raza}
@@ -512,33 +485,11 @@ const AdminPets = () => {
                 </MenuItem>
               )}
             </TextField>
-            <FormControl fullWidth>
-              <InputLabel>Dueño</InputLabel>
-              <Select
-                name="id_usuario"
-                value={formData.id_usuario}
-                onChange={handleInputChange}
-                label="Dueño"
-              >
-                {clientes.length > 0 ? (
-                  clientes.map((cliente) => (
-                    <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
-                      {cliente.nombre} {cliente.apellido} ({cliente.email})
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled value="">
-                    Sin clientes disponibles
-                  </MenuItem>
-                )}
-              </Select>
-            </FormControl>
             <TextField
-              name="fecha_nacimiento"
               label="Fecha de Nacimiento"
               type="date"
               value={formData.fecha_nacimiento}
-              onChange={handleInputChange}
+              onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
               inputRef={dateInputRef}
@@ -548,31 +499,52 @@ const AdminPets = () => {
                 onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
               required
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
-            <FormControl fullWidth>
-              <InputLabel>Sexo</InputLabel>
-              <Select
-                name="sexo"
-                value={formData.sexo}
-                onChange={handleInputChange}
-                label="Sexo"
-              >
-                {sexos.map((sexo) => (
-                  <MenuItem key={sexo} value={sexo}>
-                    {sexo}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <TextField
-              name="notas"
+              select
+              label="Sexo"
+              fullWidth
+              value={formData.sexo}
+              onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
+              required
+              InputProps={{ sx: { borderRadius: 2 } }}
+            >
+              <MenuItem value="macho">Macho</MenuItem>
+              <MenuItem value="hembra">Hembra</MenuItem>
+            </TextField>
+            <TextField
               label="Notas"
-              value={formData.notas}
-              onChange={handleInputChange}
               fullWidth
               multiline
               rows={3}
+              value={formData.notas}
+              onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+              InputProps={{ sx: { borderRadius: 2 } }}
             />
+            <TextField
+              select
+              label="Dueño"
+              name="id_usuario"
+              fullWidth
+              value={formData.id_usuario}
+              onChange={e => setFormData(prev => ({ ...prev, id_usuario: e.target.value }))}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{ sx: { borderRadius: 2 } }}
+            >
+              {clientes.length === 0 ? (
+                <MenuItem disabled value="">
+                  No hay clientes disponibles
+                </MenuItem>
+              ) : (
+                clientes.map((cliente) => (
+                  <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
+                    {cliente.nombre} {cliente.apellido} ({cliente.email})
+                  </MenuItem>
+                ))
+              )}
+            </TextField>
           </Box>
         </DialogContent>
         <DialogActions className="client-modal-actions">
@@ -585,21 +557,15 @@ const AdminPets = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Modal de confirmación para eliminar */}
-      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Confirmar Eliminación</DialogTitle>
-        <DialogContent>
-          <Typography>
-            ¿Estás seguro de que deseas eliminar la mascota {selectedPet?.nombre}?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Cancelar</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
       {/* Modal de detalles de mascota */}
       <Dialog 
@@ -658,20 +624,6 @@ const AdminPets = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Snackbar para notificaciones */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };
