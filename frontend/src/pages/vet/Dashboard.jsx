@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Grid, Paper, CircularProgress, Button } from '@mui/material';
 import { useApp } from '../../context/AppContext';
 import { Calendar, Clock, PawPrint, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+
+// Estilos constantes fuera del componente
+const statNumberStyle = { fontWeight: 800, color: '#111', fontSize: '2.8rem', lineHeight: 1.1, mb: 0.5, textAlign: 'center' };
+const statLabelStyle = { color: '#222', fontSize: '1.15rem', textAlign: 'center', mb: 0.5, fontWeight: 500 };
 
 const VetDashboard = () => {
   const { appointments, pets, treatments } = useApp();
@@ -39,19 +43,8 @@ const VetDashboard = () => {
     }
   }, [appointments, pets, treatments, user]);
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  // Estilo para los números grandes y textos oscuros
-  const statNumberStyle = { fontWeight: 800, color: '#111', fontSize: '2.8rem', lineHeight: 1.1, mb: 0.5, textAlign: 'center' };
-  const statLabelStyle = { color: '#222', fontSize: '1.15rem', textAlign: 'center', mb: 0.5, fontWeight: 500 };
-
-  const statsCards = [
+  // Memoizar statsCards para evitar recreaciones innecesarias
+  const statsCards = useMemo(() => [
     {
       icon: <Calendar size={38} color="#4CAF50" style={{ marginBottom: 8 }} />,
       value: stats.totalAppointments,
@@ -80,7 +73,15 @@ const VetDashboard = () => {
       link: '/vet/treatments',
       linkText: 'Ver tratamientos',
     },
-  ];
+  ], [stats]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: { xs: 1, md: 3 } }}>
