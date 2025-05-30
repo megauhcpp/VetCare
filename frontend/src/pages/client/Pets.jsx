@@ -214,35 +214,33 @@ const Pets = () => {
   };
 
   const handleDelete = async (petId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta mascota?')) {
-      try {
-        if (!token) {
-          setError('No hay token de autenticación');
-          return;
-        }
-
-        const response = await fetch(`http://localhost:8000/api/mascotas/${petId}`, {
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          setPets(pets.filter(p => p.id_mascota !== petId));
-          await refreshPets();
-          setError('');
-          setSnackbar({ open: true, message: 'Mascota eliminada correctamente', severity: 'success' });
-        } else {
-          const errorData = await response.json();
-          setError(errorData.message || 'Error al eliminar la mascota');
-        }
-      } catch (error) {
-        console.error('Error deleting pet:', error);
-        setError('Error al eliminar la mascota');
+    try {
+      if (!token) {
+        setError('No hay token de autenticación');
+        return;
       }
+
+      const response = await fetch(`http://localhost:8000/api/mascotas/${petId}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        setPets(pets.filter(p => p.id_mascota !== petId));
+        await refreshPets();
+        setError('');
+        setSnackbar({ open: true, message: 'Mascota eliminada correctamente', severity: 'success' });
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Error al eliminar la mascota');
+      }
+    } catch (error) {
+      console.error('Error deleting pet:', error);
+      setError('Error al eliminar la mascota');
     }
   };
 

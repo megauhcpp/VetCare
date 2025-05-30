@@ -232,35 +232,33 @@ const Appointments = () => {
   };
 
   const handleDelete = async (appointmentId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
-      try {
-        if (!token) {
-          console.error('No hay token de autenticación');
-          return;
-        }
+    try {
+      if (!token) {
+        console.error('No hay token de autenticación');
+        return;
+      }
 
-        const response = await fetch(`http://localhost:8000/api/citas/${appointmentId}`, {
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include'
-        });
+      const response = await fetch(`http://localhost:8000/api/citas/${appointmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
 
-        if (response.ok) {
-          setAppointments(appointments.filter(a => a.id_cita !== appointmentId));
-          await refreshAppointments();
-          setSnackbar({ open: true, message: 'Cita eliminada correctamente', severity: 'success' });
-        } else {
-          const errorData = await response.json();
-          console.error('Error al eliminar la cita:', errorData);
-          setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
-        }
-      } catch (error) {
-        console.error('Error deleting appointment:', error);
+      if (response.ok) {
+        setAppointments(appointments.filter(a => a.id_cita !== appointmentId));
+        await refreshAppointments();
+        setSnackbar({ open: true, message: 'Cita eliminada correctamente', severity: 'success' });
+      } else {
+        const errorData = await response.json();
+        console.error('Error al eliminar la cita:', errorData);
         setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
       }
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      setSnackbar({ open: true, message: 'Error al eliminar la cita', severity: 'error' });
     }
   };
 
