@@ -112,4 +112,51 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function updateUser(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            $request->validate([
+                'nombre' => 'required|string|max:255',
+                'apellido' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:usuarios,email,' . $user->id_usuario . ',id_usuario',
+            ]);
+
+            $user->update([
+                'nombre' => $request->nombre,
+                'apellido' => $request->apellido,
+                'email' => $request->email
+            ]);
+
+            return response()->json($user);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al actualizar el usuario',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'current' => 'required|string',
+            'new' => 'required|string|min:8',
+            'confirm' => 'required|string|same:new',
+        ]);
+
+        if (!Hash::check($request->current, $user->password)) {
+            return response()->json(['error' => 'La contraseña actual es incorrecta'], 400);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new)
+        ]);
+
+        return response()->json(['message' => 'Contraseña actualizada correctamente']);
+    }
 }

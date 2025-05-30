@@ -115,11 +115,21 @@ export const AuthProvider = ({ children }) => {
 
     const updateUser = async (userData) => {
         try {
-            const response = await axios.put('/api/user', userData);
+            const response = await axios.post('/api/user', userData);
             setUser(response.data);
             return response.data;
         } catch (error) {
             console.error('Update user error:', error);
+            throw error;
+        }
+    };
+
+    const changePassword = async (passwordData) => {
+        try {
+            const response = await axios.post('/api/user/change-password', passwordData);
+            return response.data;
+        } catch (error) {
+            console.error('Change password error:', error);
             throw error;
         }
     };
@@ -132,7 +142,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        updateUser
+        updateUser,
+        changePassword
     };
 
     return (
