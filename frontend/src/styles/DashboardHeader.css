@@ -63,6 +63,23 @@
   color: #7b61ff;
 }
 
+.dashboard-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #1a1a1a;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  margin-right: 0.5rem;
+}
+
 @media (max-width: 900px) {
   .dashboard-topbar {
     padding: 1rem 1rem 1rem 1rem;
@@ -72,5 +89,11 @@
   }
   .dashboard-search {
     min-width: 120px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .dashboard-menu-btn {
+    display: block;
   }
 } 

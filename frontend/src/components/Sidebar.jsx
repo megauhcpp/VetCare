@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, User, Calendar, PawPrint, Stethoscope, Users } from 'lucide-react';
+import { LogOut, User, Calendar, PawPrint, Stethoscope, Users, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Sidebar.css';
 import vetcareLogo from '../vetcarelogonobg.png';
 
-const Sidebar = ({ isAdmin, isVet }) => {
+const Sidebar = ({ isAdmin, isVet, onClose }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
@@ -36,31 +36,32 @@ const Sidebar = ({ isAdmin, isVet }) => {
 
   const navItems = isAdmin ? adminNavItems : isVet ? vetNavItems : clientNavItems;
 
+  const handleNavClick = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
     <aside className="sidebar">
-      <div className="sidebar-header" style={{ borderBottom: 'none', paddingBottom: '0.5rem' }}>
+      <button 
+        className="mobile-close-btn"
+        onClick={onClose}
+        aria-label="Close menu"
+      >
+        <X size={24} />
+      </button>
+
+      <div className="sidebar-header">
         <div className="sidebar-logo">
-          <img src={vetcareLogo} alt="VetCare Logo" style={{ height: 130, width: 'auto', display: 'block', objectFit: 'contain', margin: '0 auto' }} />
+          <img src={vetcareLogo} alt="VetCare Logo" />
         </div>
       </div>
-      <div className="sidebar-user" style={{ paddingTop: '0.5rem' }}>
+
+      <div className="sidebar-user">
         <div className="user-avatar">
           {user?.nombre ? (
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: '#fff',
-              color: '#7b61ff',
-              fontWeight: 700,
-              fontSize: '2.1rem',
-              fontFamily: 'Roboto, Arial, sans-serif',
-              border: '2px solid #e2e8f0',
-              boxShadow: '0 2px 8px rgba(60,60,60,0.07)'
-            }}>
+            <span>
               {user.nombre.charAt(0).toUpperCase()}
             </span>
           ) : (
@@ -74,18 +75,21 @@ const Sidebar = ({ isAdmin, isVet }) => {
           </span>
         </div>
       </div>
+
       <nav className="sidebar-nav">
         {navItems.map(item => (
           <Link
             key={item.to}
             to={item.to}
             className={`sidebar-link${location.pathname === item.to ? ' active' : ''}`}
+            onClick={handleNavClick}
           >
             <span className="sidebar-icon">{item.icon}</span>
             {item.label}
           </Link>
         ))}
       </nav>
+
       <div className="sidebar-footer">
         <button className="sidebar-logout" onClick={logout}>
           <LogOut size={18} /> Cerrar sesión

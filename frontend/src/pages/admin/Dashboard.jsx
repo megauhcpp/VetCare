@@ -62,16 +62,27 @@ const AdminDashboard = () => {
 
       {/* Stats Cards */}
       <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', mb: 4 }}>
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'nowrap', justifyContent: 'center', minWidth: 1200 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 3,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            minWidth: 0,
+            '@media (max-width: 900px)': {
+              gap: 2,
+            },
+          }}
+        >
           {stats.map((stat, index) => (
             <Box
               key={index}
               sx={{
-                flex: '0 0 377.5px',
-                width: '377.5px',
+                flex: '1 1 320px',
+                width: '100%',
                 maxWidth: '377.5px',
-                minWidth: '280px',
-                height: 214,
+                minWidth: '220px',
+                height: 'auto',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -84,7 +95,18 @@ const AdminDashboard = () => {
                 py: 2,
                 boxSizing: 'border-box',
                 transition: 'box-shadow 0.2s',
-                '&:hover': { boxShadow: 3 }
+                mb: { xs: 2, sm: 0 },
+                '&:hover': { boxShadow: 3 },
+                '@media (max-width: 900px)': {
+                  minWidth: '180px',
+                  maxWidth: '100%',
+                  flex: '1 1 100%',
+                },
+                '@media (max-width: 600px)': {
+                  minWidth: '100%',
+                  maxWidth: '100%',
+                  flex: '1 1 100%',
+                },
               }}
             >
               <Typography variant="h6" sx={{ fontWeight: 700, textAlign: 'center', mb: 0.5, color: 'text.primary' }}>{stat.title}</Typography>

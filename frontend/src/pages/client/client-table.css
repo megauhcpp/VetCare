@@ -57,7 +57,7 @@
 
 /* Buscador */
 .client-search-bar {
-  width: 98%;
+  width: 100%;
   background: #f8f9fa;
   border: none;
   border-radius: 8px;
@@ -68,6 +68,7 @@
   outline: none;
   transition: box-shadow 0.2s, border 0.2s;
   display: block;
+  box-sizing: border-box;
 }
 .client-search-bar:focus {
   box-shadow: 0 2px 8px rgba(33,150,243,0.10);
@@ -146,4 +147,19 @@
 
 .client-table.MuiTable-root {
   border-bottom: none !important;
+}
+
+/* Contenedor de la tabla */
+.table-container {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(60,60,60,0.07);
+}
+
+/* Contenedor del buscador */
+.search-container {
+  width: 100%;
+  margin-bottom: 1.5rem;
 } 

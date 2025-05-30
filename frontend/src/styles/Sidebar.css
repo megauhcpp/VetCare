@@ -1,20 +1,53 @@
 .sidebar {
   width: 250px;
+  height: 100vh;
   background: #fff;
   border-right: 1px solid #e2e8f0;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 0;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 10;
+  position: relative;
+}
+
+.mobile-close-btn {
+  display: none;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #7b61ff;
+  cursor: pointer;
 }
 
 .sidebar-header {
-  padding: 0 2rem 1.5rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: none;
+  padding-bottom: 0.5rem;
+}
+
+.sidebar-logo img {
+  height: auto;
+  max-height: 130px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.user-avatar span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  color: #7b61ff;
+  font-weight: 700;
+  font-size: 2.1rem;
+  font-family: 'Roboto, Arial, sans-serif';
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(60,60,60,0.07);
 }
 
 .sidebar-logo {
@@ -46,6 +79,7 @@
   gap: 1rem;
   padding: 2rem 2rem 1.5rem 2rem;
   border-bottom: 1px solid #e2e8f0;
+  justify-content: center;
 }
 .user-avatar {
   background: #f3f0ff;
@@ -103,6 +137,8 @@
 .sidebar-footer {
   margin-top: auto;
   padding: 2rem;
+  justify-content: center;
+  display: flex;
 }
 .sidebar-logout {
   background: none;
@@ -120,6 +156,23 @@
   color: #ef233c;
 }
 
+/* Media queries para dispositivos móviles */
+@media screen and (max-width: 768px) {
+  .mobile-close-btn {
+    display: block;
+  }
+
+  .sidebar-logo img {
+    max-height: 100px;
+  }
+
+  .user-avatar span {
+    width: 40px;
+    height: 40px;
+    font-size: 1.8rem;
+  }
+}
+
 @media (max-width: 900px) {
   .sidebar {
     width: 70px;
@@ -135,5 +188,92 @@
   .sidebar-link {
     justify-content: center;
     padding: 0.75rem 0.5rem;
+  }
+}
+
+/* Sidebar base */
+.sidebar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 250px;
+  max-width: 80vw;
+  background: #fff;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.12);
+  z-index: 1001;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  will-change: transform;
+}
+.sidebar-container.sidebar-open {
+  transform: translateX(0);
+}
+
+/* Overlay para móvil */
+.sidebar-overlay {
+  display: none;
+}
+@media (max-width: 768px) {
+  .sidebar-container {
+    width: 90vw;
+    max-width: 400px;
+    min-width: 0;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.18);
+    border-radius: 0;
+  }
+  .sidebar {
+    width: 90vw;
+    max-width: 400px;
+    min-width: 0;
+    height: 100vh;
+  }
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    transition: background 0.3s;
+  }
+  .mobile-close-btn {
+    display: block;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: #7b61ff;
+    font-size: 1.8rem;
+    z-index: 1100;
+    cursor: pointer;
+  }
+}
+
+/* Asegura que la sidebar en desktop no se vea afectada */
+@media (min-width: 769px) {
+  .sidebar-container {
+    position: relative;
+    transform: none !important;
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+    box-shadow: none;
+    border-radius: 0;
+    z-index: 1;
+  }
+  .sidebar-overlay {
+    display: none !important;
+  }
+  .mobile-close-btn {
+    display: none !important;
   }
 } 

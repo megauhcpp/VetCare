@@ -23,6 +23,8 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   transition: transform 0.2s;
+  width: 100%;
+  overflow: visible;
 }
 
 .profile-card:hover {
@@ -156,4 +158,13 @@
   .profile-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.profile-grid .profile-card:nth-of-type(2) {
+  min-height: 292.52px;
+}
+
+.css-kkk48c-MuiCardContent-root {
+  height: 292.52px !important;
+  min-height: 292.52px !important;
 } 

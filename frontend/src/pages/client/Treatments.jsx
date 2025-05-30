@@ -168,21 +168,26 @@ const Treatments = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" sx={{ color: '#111', textAlign: 'left' }}>
-          Tratamientos de Mis Mascotas
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" gutterBottom sx={{ color: '#111' }}>
+          Mis Tratamientos
         </Typography>
       </Box>
-      <input
-        className="client-search-bar"
-        placeholder="Buscar tratamiento, mascota, veterinario..."
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
-      />
+
+      <Box sx={{ mb: 2, width: '100%' }}>
+        <input
+          className="client-search-bar"
+          placeholder="Buscar por nombre, mascota o estado..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222', width: '100%' }}
+        />
+      </Box>
+
       <TableContainer component={Paper} sx={{ 
         borderRadius: '12px',
-        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
+        boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+        width: '100%'
       }}>
         <Table className="client-table">
           <TableHead>

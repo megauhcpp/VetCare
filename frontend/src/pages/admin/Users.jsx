@@ -302,119 +302,122 @@ const AdminUsers = () => {
         </Button>
       </Box>
 
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, width: '100%' }}>
         <input
           className="client-search-bar"
           placeholder="Buscar por nombre, email o rol..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
+          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222', width: '100%' }}
         />
       </Box>
 
-      <TableContainer component={Paper} sx={{ 
-        borderRadius: '12px',
-        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
-      }}>
-        <Table className="client-table">
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'nombre'}
-                  direction={orderBy === 'nombre' ? order : 'asc'}
-                  onClick={() => handleRequestSort('nombre')}
-                >
-                  Nombre
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'email'}
-                  direction={orderBy === 'email' ? order : 'asc'}
-                  onClick={() => handleRequestSort('email')}
-                >
-                  Email
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'rol'}
-                  direction={orderBy === 'rol' ? order : 'asc'}
-                  onClick={() => handleRequestSort('rol')}
-                >
-                  Rol
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 ? (
-              sortedUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user) => (
-                <TableRow key={user.id_usuario}>
-                  <TableCell>{user.nombre} {user.apellido}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={user.rol}
-                      color={getRoleColor(user.rol)}
-                      size="small"
-                      sx={{ minWidth: 110, maxWidth: 110, justifyContent: 'center', fontWeight: 600, textTransform: 'capitalize' }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Ver detalles">
-                        <IconButton size="small" onClick={() => { setDetailsUser(user); setOpenDetailsDialog(true); }}>
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Editar">
-                        <IconButton size="small" onClick={() => handleOpenDialog(user)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton size="small" onClick={() => handleOpenDeleteDialog(user)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+      <div className="table-container">
+        <TableContainer component={Paper} sx={{ 
+          borderRadius: '12px',
+          boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+          width: '100%'
+        }}>
+          <Table className="client-table">
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'nombre'}
+                    direction={orderBy === 'nombre' ? order : 'asc'}
+                    onClick={() => handleRequestSort('nombre')}
+                  >
+                    Nombre
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'email'}
+                    direction={orderBy === 'email' ? order : 'asc'}
+                    onClick={() => handleRequestSort('email')}
+                  >
+                    Email
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'rol'}
+                    direction={orderBy === 'rol' ? order : 'asc'}
+                    onClick={() => handleRequestSort('rol')}
+                  >
+                    Rol
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>Acciones</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 ? (
+                sortedUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user) => (
+                  <TableRow key={user.id_usuario}>
+                    <TableCell>{user.nombre} {user.apellido}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={user.rol}
+                        color={getRoleColor(user.rol)}
+                        size="small"
+                        sx={{ minWidth: 110, maxWidth: 110, justifyContent: 'center', fontWeight: 600, textTransform: 'capitalize' }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="Ver detalles">
+                          <IconButton size="small" onClick={() => { setDetailsUser(user); setOpenDetailsDialog(true); }}>
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Editar">
+                          <IconButton size="small" onClick={() => handleOpenDialog(user)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton size="small" onClick={() => handleOpenDeleteDialog(user)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    No hay usuarios registrados
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} align="center">
-                  No hay usuarios registrados
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={sortedUsers.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-          labelRowsPerPage="Filas por página:"
-          labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
-          sx={{
-            background: '#fff',
-            borderTop: 'none',
-            borderRadius: '0 0 12px 12px',
-            boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
-            padding: 0,
-            '.MuiTablePagination-toolbar': { minHeight: 40, paddingLeft: 2, paddingRight: 2 },
-            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: 15 },
-            '.MuiTablePagination-actions': { marginRight: 1 }
-          }}
-        />
-      </TableContainer>
+              )}
+            </TableBody>
+          </Table>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={sortedUsers.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+            labelRowsPerPage="Filas por página:"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
+            sx={{
+              background: '#fff',
+              borderTop: 'none',
+              borderRadius: '0 0 12px 12px',
+              boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+              padding: 0,
+              '.MuiTablePagination-toolbar': { minHeight: 40, paddingLeft: 2, paddingRight: 2 },
+              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: 15 },
+              '.MuiTablePagination-actions': { marginRight: 1 }
+            }}
+          />
+        </TableContainer>
+      </div>
 
       {/* Modal para crear/editar usuario */}
       <Dialog 

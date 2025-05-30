@@ -295,18 +295,21 @@ const AdminPets = () => {
           Nueva Mascota
         </Button>
       </Box>
-      <Box sx={{ mb: 2 }}>
+
+      <Box sx={{ mb: 2, width: '100%' }}>
         <input
           className="client-search-bar"
           placeholder="Buscar por nombre, especie, raza o dueño..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222' }}
+          style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#222', width: '100%' }}
         />
       </Box>
+
       <TableContainer component={Paper} sx={{ 
         borderRadius: '12px',
-        boxShadow: '0 1px 6px rgba(60,60,60,0.07)'
+        boxShadow: '0 1px 6px rgba(60,60,60,0.07)',
+        width: '100%'
       }}>
         <Table className="client-table">
           <TableHead>
