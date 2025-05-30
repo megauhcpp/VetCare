@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Login.css';
 import vetcareLogo from '../vetcarelogonobg.png';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -67,15 +69,21 @@ const Login = () => {
                                     required
                                 />
                             </div>
-                            <div className="form-group">
+                            <div className="form-group" style={{ position: 'relative' }}>
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="Contraseña"
                                     required
                                 />
+                                <span
+                                    className="password-toggle"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                >
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </span>
                             </div>
                             <button type="submit" className="login-button">
                                 Iniciar Sesión

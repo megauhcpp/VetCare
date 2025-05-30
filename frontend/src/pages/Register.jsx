@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import '../styles/Register.css';
 import { CalendarCheck, PawPrint, Bell } from 'lucide-react';
 import vetcareLogo from '../vetcarelogonobg.png';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -17,6 +18,8 @@ const Register = () => {
     const [errors, setErrors] = useState({});
     const { register } = useAuth();
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -112,9 +115,9 @@ const Register = () => {
                                 />
                                 {errors.email && <span className="error-text">{errors.email}</span>}
                             </div>
-                            <div className="form-group">
+                            <div className="form-group" style={{ position: 'relative' }}>
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     id="password"
                                     name="password"
                                     value={formData.password}
@@ -123,11 +126,17 @@ const Register = () => {
                                     required
                                     minLength="8"
                                 />
+                                <span
+                                    className="password-toggle"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                >
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </span>
                                 {errors.password && <span className="error-text">{errors.password}</span>}
                             </div>
-                            <div className="form-group">
+                            <div className="form-group" style={{ position: 'relative' }}>
                                 <input
-                                    type="password"
+                                    type={showConfirm ? 'text' : 'password'}
                                     id="password_confirmation"
                                     name="password_confirmation"
                                     value={formData.password_confirmation}
@@ -136,6 +145,12 @@ const Register = () => {
                                     required
                                     minLength="8"
                                 />
+                                <span
+                                    className="password-toggle"
+                                    onClick={() => setShowConfirm((v) => !v)}
+                                >
+                                    {showConfirm ? <VisibilityOff /> : <Visibility />}
+                                </span>
                                 {errors.password_confirmation && <span className="error-text">{errors.password_confirmation}</span>}
                             </div>
                             <button type="submit" className="register-button">

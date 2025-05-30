@@ -153,6 +153,8 @@
   font-size: 1rem;
   transition: var(--transition);
   background-color: var(--light-color);
+  height: 48px;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
@@ -161,10 +163,25 @@
   box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
 }
 
+/* Icono de mostrar/ocultar contraseña */
+.form-group .password-toggle {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #888;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  z-index: 2;
+}
+
 /* Botón */
 .login-button {
-  width: 466px;
-  max-width: 100vw;
+  max-width: 432px;
+  width: 100%;
   display: block;
   box-sizing: border-box;
   margin: 1.5rem auto 0 auto;
