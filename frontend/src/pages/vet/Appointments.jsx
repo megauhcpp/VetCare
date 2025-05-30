@@ -64,6 +64,9 @@ const Appointments = () => {
   const [detailsAppointment, setDetailsAppointment] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const dateInputRef = React.useRef(null);
 
   useEffect(() => {
     // Fetch veterinarians when component mounts
@@ -109,15 +112,13 @@ const Appointments = () => {
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
-      const dateObj = new Date(appointment.fecha_hora);
-      const date = dateObj.toISOString().split('T')[0];
-      const hour = dateObj.getHours().toString().padStart(2, '0');
-      const minute = dateObj.getMinutes().toString().padStart(2, '0');
-      const time = `${hour}:${minute}`;
+      // Parsear fecha y hora como texto, no como Date
+      const [datePart, timePart] = appointment.fecha_hora.split('T');
+      const [hour, minute] = timePart.split(':');
       setFormData({
         petId: String(appointment.id_mascota || appointment.mascota?.id_mascota),
-        date,
-        time,
+        date: datePart,
+        time: `${hour}:${minute}`,
         type: appointment.tipo_consulta,
         motivo: appointment.motivo_consulta || '',
         id_veterinario: appointment.veterinario?.id_usuario || appointment.id_usuario
@@ -211,7 +212,22 @@ const Appointments = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al guardar la cita');
+        // Manejo de error específico para conflicto de cita
+        let errorMsg = data.message || (data.errors && Object.values(data.errors).flat().join(' ')) || 'Error al guardar la cita';
+        if (errorMsg.toLowerCase().includes('ya tiene una cita programada')) {
+          setSnackbar({
+            open: true,
+            message: 'No se ha podido crear porque en esa hora el veterinario tiene una cita asignada.',
+            severity: 'error'
+          });
+          return;
+        }
+        setSnackbar({
+          open: true,
+          message: errorMsg,
+          severity: 'error'
+        });
+        throw new Error(errorMsg);
       }
 
       setSnackbar({
@@ -385,13 +401,28 @@ const Appointments = () => {
   };
 
   const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return '';
+    const [datePart, timePart] = dateString.split('T');
+    if (!timePart) return datePart;
+    const [hour, minute] = timePart.split(':');
+    return `${datePart}, ${hour}:${minute}`;
+  };
+
+  const handleOpenDeleteDialog = (appointmentId) => {
+    setAppointmentToDelete(appointmentId);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setAppointmentToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!appointmentToDelete) return;
+    await handleDelete(appointmentToDelete);
+    setOpenDeleteDialog(false);
+    setAppointmentToDelete(null);
   };
 
   return (
@@ -545,7 +576,7 @@ const Appointments = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Eliminar">
-                      <IconButton onClick={() => handleDelete(appointment.id_cita)}>
+                      <IconButton onClick={() => handleOpenDeleteDialog(appointment.id_cita)}>
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
@@ -630,16 +661,25 @@ const Appointments = () => {
               </MenuItem>
             </TextField>
             <TextField
+              name="fecha"
               label="Fecha"
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              onChange={e => {
+                const date = e.target.value;
+                const time = formData.time ? formData.time.split(':')[1]?.slice(0,5) : '';
+                setFormData({ ...formData, date: date, time: date && time ? `${date}T${time}` : date ? `${date}T10:00` : '' });
+              }}
+              fullWidth
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInputRef}
               inputProps={{
-                min: new Date().toISOString().split('T')[0]
+                min: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
               required
-              sx={{ width: '100%' }}
+              sx={{ borderRadius: 2 }}
             />
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <TextField
@@ -792,6 +832,30 @@ const Appointments = () => {
           <Button onClick={() => setOpenDetailsDialog(false)} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
             Cerrar
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de confirmación para eliminar */}
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog} PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(244,67,54,0.13)',
+          p: 2,
+          minWidth: 350,
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, #fff 60%, #ffebee 100%)'
+        }
+      }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, pb: 0, pt: 2 }}>
+          <DeleteIcon sx={{ color: '#f44336', fontSize: 48, mb: 1 }} />
+          <Typography variant="h6" fontWeight={700} color="error.main">Confirmar Eliminación</Typography>
+        </Box>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>¿Estás seguro de que deseas eliminar esta cita?</Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
+          <Button onClick={handleCloseDeleteDialog} sx={{ bgcolor: '#f5f5f5', color: '#1769aa', borderRadius: 2 }}>Cancelar</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" sx={{ borderRadius: 2 }}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>

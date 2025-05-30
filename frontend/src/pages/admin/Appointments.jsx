@@ -100,25 +100,24 @@ const AdminAppointments = () => {
   };
 
   const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return '';
+    const [datePart, timePart] = dateString.split('T');
+    if (!timePart) return datePart;
+    const [hour, minute] = timePart.split(':');
+    return `${datePart}, ${hour}:${minute}`;
   };
 
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
-      const date = new Date(appointment.fecha_hora);
-      const hour = date.getHours().toString().padStart(2, '0');
-      const minute = date.getMinutes().toString().padStart(2, '0');
-      // No mapear 'control' a 'consulta_general', solo usar el valor tal cual
+      // Parsear fecha y hora como local
+      const [datePart, timePart] = appointment.fecha_hora.split('T');
+      const [year, month, day] = datePart.split('-');
+      const [hour, minute] = timePart.split(':');
+      const local = `${year}-${month}-${day}T${hour}:${minute}`;
       setFormData({
         id_mascota: appointment.id_mascota || appointment.mascota?.id_mascota || '',
         id_usuario: appointment.id_usuario || appointment.veterinario?.id_usuario || '',
-        fecha_hora: date.toISOString().slice(0, 16),
+        fecha_hora: local,
         tipo_consulta: appointment.tipo_consulta,
         motivo_consulta: appointment.motivo_consulta,
       });
@@ -693,18 +692,26 @@ const AdminAppointments = () => {
       </Dialog>
 
       {/* Modal de confirmación para eliminar */}
-      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Confirmar Eliminación</DialogTitle>
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog} PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(244,67,54,0.13)',
+          p: 2,
+          minWidth: 350,
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, #fff 60%, #ffebee 100%)'
+        }
+      }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, pb: 0, pt: 2 }}>
+          <DeleteIcon sx={{ color: '#f44336', fontSize: 48, mb: 1 }} />
+          <Typography variant="h6" fontWeight={700} color="error.main">Confirmar Eliminación</Typography>
+        </Box>
         <DialogContent>
-          <Typography>
-            ¿Estás seguro de que deseas eliminar la cita programada para {selectedAppointment?.mascota?.nombre}?
-          </Typography>
+          <Typography sx={{ mb: 2 }}>¿Estás seguro de que deseas eliminar la cita programada para {selectedAppointment?.mascota?.nombre}?</Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Cancelar</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
-            Eliminar
-          </Button>
+        <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
+          <Button onClick={handleCloseDeleteDialog} sx={{ bgcolor: '#f5f5f5', color: '#1769aa', borderRadius: 2 }}>Cancelar</Button>
+          <Button onClick={handleDelete} color="error" variant="contained" sx={{ borderRadius: 2 }}>Eliminar</Button>
         </DialogActions>
       </Dialog>
 

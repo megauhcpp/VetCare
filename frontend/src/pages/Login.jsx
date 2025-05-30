@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Login.css';
-import vetcareLogo from '../../vetcarelogonobg.png';
+import vetcareLogo from '../vetcarelogonobg.png';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -49,7 +49,7 @@ const Login = () => {
         <div className="login-page">
             <div className="login-container">
                 <div className="login-left">
-                    <img src={vetcareLogo} alt="VetCare Logo" style={{ width: 500, margin: '0 auto', display: 'block' }} />
+                    <img src={vetcareLogo} alt="VetCare Logo" style={{ height: 400, width: 'auto', margin: '0 auto', display: 'block' }} />
                 </div>
                 <div className="login-right">
                     <div className="login-form-container">

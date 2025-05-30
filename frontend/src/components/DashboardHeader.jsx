@@ -6,7 +6,7 @@ const DashboardHeader = ({ isAdmin, isVet }) => {
   const getTitle = () => {
     if (isAdmin) return 'Admin Dashboard';
     if (isVet) return 'Veterinario Dashboard';
-    return 'Client Dashboard';
+    return 'Cliente Dashboard';
   };
 
   const getProfilePath = () => {

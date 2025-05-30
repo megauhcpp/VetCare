@@ -9,6 +9,7 @@ use App\Models\Mascota;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CitaController extends Controller
 {
@@ -160,6 +161,18 @@ class CitaController extends Controller
             $estado = 'confirmada';
         }
 
+        // Validar que no exista otra cita para el mismo veterinario, fecha y hora (ignorando segundos y milisegundos)
+        $citaExistente = \App\Models\Cita::where('id_usuario', $request->id_usuario)
+            ->where(DB::raw('DATE_FORMAT(fecha_hora, "%Y-%m-%d %H:%i")'), date('Y-m-d H:i', strtotime($request->fecha_hora)))
+            ->where('estado', '!=', 'cancelada')
+            ->first();
+
+        if ($citaExistente) {
+            return response()->json([
+                'error' => 'El veterinario ya tiene una cita programada para esa fecha y hora'
+            ], 422);
+        }
+
         // Obtener el último ID de cita
         $ultimaCita = Cita::orderBy('id_cita', 'desc')->first();
         $nuevoId = $ultimaCita ? $ultimaCita->id_cita + 1 : 1;
@@ -225,7 +238,7 @@ class CitaController extends Controller
             $idVeterinario = $request->id_usuario ?? $cita->id_usuario;
 
             $citaExistente = Cita::where('id_usuario', $idVeterinario)
-                ->where('fecha_hora', $fechaHora)
+                ->where(DB::raw('DATE_FORMAT(fecha_hora, "%Y-%m-%d %H:%i")'), date('Y-m-d H:i', strtotime($fechaHora)))
                 ->where('estado', '!=', 'cancelada')
                 ->where('id_cita', '!=', $cita->id_cita)
                 ->first();

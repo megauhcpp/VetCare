@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { LogOut, User, Calendar, PawPrint, Stethoscope, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Sidebar.css';
+import vetcareLogo from '../vetcarelogonobg.png';
 
 const Sidebar = ({ isAdmin, isVet }) => {
   const location = useLocation();
@@ -37,15 +38,20 @@ const Sidebar = ({ isAdmin, isVet }) => {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header">
+      <div className="sidebar-header" style={{ borderBottom: 'none', paddingBottom: '0.5rem' }}>
         <div className="sidebar-logo">
-          <span className="logo-circle"></span>
-          <span className="logo-text">VETCARE</span>
+          <img src={vetcareLogo} alt="VetCare Logo" style={{ height: 130, width: 'auto', display: 'block', objectFit: 'contain', margin: '0 auto' }} />
         </div>
       </div>
-      <div className="sidebar-user">
+      <div className="sidebar-user" style={{ paddingTop: '0.5rem' }}>
         <div className="user-avatar">
-          <User size={32} />
+          {user?.nombre ? (
+            <span style={{ fontSize: 28, fontWeight: 400, color: '#b0b3b8' }}>
+              {user.nombre.charAt(0).toUpperCase()}
+            </span>
+          ) : (
+            <User size={32} />
+          )}
         </div>
         <div className="user-info">
           <span className="user-name">{user?.nombre || 'Usuario'}</span>

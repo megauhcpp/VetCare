@@ -64,6 +64,8 @@ const Treatments = () => {
   const [detailsTreatment, setDetailsTreatment] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [treatmentToDelete, setTreatmentToDelete] = useState(null);
 
   if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
@@ -308,6 +310,23 @@ const Treatments = () => {
     setOrderBy(property);
   };
 
+  const handleOpenDeleteDialog = (treatmentId) => {
+    setTreatmentToDelete(treatmentId);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setTreatmentToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!treatmentToDelete) return;
+    await handleDelete(treatmentToDelete);
+    setOpenDeleteDialog(false);
+    setTreatmentToDelete(null);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -431,7 +450,7 @@ const Treatments = () => {
                       <IconButton onClick={() => handleOpenDialog(treatment)}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton onClick={() => handleDelete(treatment.id_tratamiento)}>
+                      <IconButton onClick={() => handleOpenDeleteDialog(treatment.id_tratamiento)}>
                         <DeleteIcon />
                       </IconButton>
                     </Box>
@@ -642,6 +661,30 @@ const Treatments = () => {
           <Button onClick={() => setOpenDetailsDialog(false)} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
             Cerrar
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de confirmación para eliminar */}
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog} PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(244,67,54,0.13)',
+          p: 2,
+          minWidth: 350,
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, #fff 60%, #ffebee 100%)'
+        }
+      }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, pb: 0, pt: 2 }}>
+          <DeleteIcon sx={{ color: '#f44336', fontSize: 48, mb: 1 }} />
+          <Typography variant="h6" fontWeight={700} color="error.main">Confirmar Eliminación</Typography>
+        </Box>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>¿Estás seguro de que deseas eliminar este tratamiento?</Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
+          <Button onClick={handleCloseDeleteDialog} sx={{ bgcolor: '#f5f5f5', color: '#1769aa', borderRadius: 2 }}>Cancelar</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" sx={{ borderRadius: 2 }}>Eliminar</Button>
         </DialogActions>
       </Dialog>
 

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Register.css';
 import { CalendarCheck, PawPrint, Bell } from 'lucide-react';
-import vetcareLogo from '../../vetcarelogonobg.png';
+import vetcareLogo from '../vetcarelogonobg.png';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -68,7 +68,7 @@ const Register = () => {
         <div className="register-page">
             <div className="register-container">
                 <div className="register-left">
-                    <img src={vetcareLogo} alt="VetCare Logo" style={{ width: 500, margin: '0 auto', display: 'block' }} />
+                    <img src={vetcareLogo} alt="VetCare Logo" style={{ height: 400, width: 'auto', margin: '0 auto', display: 'block' }} />
                 </div>
                 <div className="register-right">
                     <div className="register-form-container">

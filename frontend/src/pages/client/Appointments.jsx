@@ -129,18 +129,31 @@ const Appointments = () => {
     refreshAppointments();
   }, [pets]);
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '';
+    const [datePart, timePart] = dateString.split('T');
+    if (!timePart) return datePart;
+    const [hour, minute] = timePart.split(':');
+    return `${datePart}, ${hour}:${minute}`;
+  };
+
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
+      // Parsear fecha y hora como texto, no como Date
+      const [datePart, timePart] = appointment.fecha_hora.split('T');
+      const [hour, minute] = timePart.split(':');
       setFormData({
         petId: appointment.mascota?.id_mascota || '',
-        date: appointment.fecha_hora.split('T')[0],
-        time: appointment.fecha_hora.split('T')[1].substring(0, 5),
+        date: datePart,
+        time: `${hour}:${minute}`,
         type: appointment.tipo_consulta,
         motivo: appointment.motivo || appointment.motivo_consulta || '',
         estado: appointment.estado,
         id_usuario: appointment.veterinario?.id_usuario || ''
       });
+      setSelectedHour(hour);
+      setSelectedMinute(minute);
     } else {
       setSelectedAppointment(null);
       setFormData({
@@ -152,6 +165,8 @@ const Appointments = () => {
         estado: 'pendiente',
         id_usuario: ''
       });
+      setSelectedHour('10');
+      setSelectedMinute('00');
     }
     setOpenDialog(true);
   };
@@ -284,6 +299,23 @@ const Appointments = () => {
     setOrderBy(property);
   };
 
+  const handleOpenDeleteDialog = (appointmentId) => {
+    setAppointmentToDelete(appointmentId);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setAppointmentToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!appointmentToDelete) return;
+    await handleDelete(appointmentToDelete);
+    setOpenDeleteDialog(false);
+    setAppointmentToDelete(null);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -336,7 +368,7 @@ const Appointments = () => {
               sortedAppointments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((appointment) => (
                 <TableRow key={appointment.id_cita}>
                   <TableCell>
-                    {new Date(appointment.fecha_hora).toLocaleString()}
+                    {formatDateTime(appointment.fecha_hora)}
                   </TableCell>
                   <TableCell>
                     {appointment.mascota?.nombre || pets.find(p => p.id_mascota === appointment.id_mascota)?.nombre}
@@ -376,7 +408,7 @@ const Appointments = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Eliminar">
-                      <IconButton size="small" onClick={() => handleDelete(appointment.id_cita)}>
+                      <IconButton size="small" onClick={() => handleOpenDeleteDialog(appointment.id_cita)}>
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
@@ -627,6 +659,30 @@ const Appointments = () => {
           <Button onClick={() => setOpenDetailsDialog(false)} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
             Cerrar
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de confirmación para eliminar */}
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog} PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(244,67,54,0.13)',
+          p: 2,
+          minWidth: 350,
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, #fff 60%, #ffebee 100%)'
+        }
+      }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, pb: 0, pt: 2 }}>
+          <DeleteIcon sx={{ color: '#f44336', fontSize: 48, mb: 1 }} />
+          <Typography variant="h6" fontWeight={700} color="error.main">Confirmar Eliminación</Typography>
+        </Box>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>¿Estás seguro de que deseas eliminar esta cita?</Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
+          <Button onClick={handleCloseDeleteDialog} sx={{ bgcolor: '#f5f5f5', color: '#1769aa', borderRadius: 2 }}>Cancelar</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" sx={{ borderRadius: 2 }}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>
