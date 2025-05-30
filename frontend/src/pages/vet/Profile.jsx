@@ -157,10 +157,13 @@ const Profile = () => {
                   width: 100,
                   height: 100,
                   margin: '0 auto 16px',
-                  bgcolor: '#e2e8f0',
-                  color: '#7b61ff',
+                  bgcolor: '#fff',
+                  color: '#222',
                   fontWeight: 700,
-                  fontSize: 40
+                  fontSize: '3rem',
+                  fontFamily: 'Roboto, Arial, sans-serif',
+                  border: '2px solid #e2e8f0',
+                  boxShadow: '0 2px 8px rgba(60,60,60,0.07)'
                 }}
               >
                 {getInitials()}

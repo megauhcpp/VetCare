@@ -46,7 +46,21 @@ const Sidebar = ({ isAdmin, isVet }) => {
       <div className="sidebar-user" style={{ paddingTop: '0.5rem' }}>
         <div className="user-avatar">
           {user?.nombre ? (
-            <span style={{ fontSize: 28, fontWeight: 400, color: '#b0b3b8' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: '#fff',
+              color: '#7b61ff',
+              fontWeight: 700,
+              fontSize: '2.1rem',
+              fontFamily: 'Roboto, Arial, sans-serif',
+              border: '2px solid #e2e8f0',
+              boxShadow: '0 2px 8px rgba(60,60,60,0.07)'
+            }}>
               {user.nombre.charAt(0).toUpperCase()}
             </span>
           ) : (

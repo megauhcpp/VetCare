@@ -531,10 +531,10 @@ const Appointments = () => {
                   <TableCell>
                     {appointment.motivo_consulta ? (
                       <Tooltip title={appointment.motivo_consulta}>
-                        <Typography noWrap sx={{ maxWidth: 200 }}>{appointment.motivo_consulta}</Typography>
+                        <Typography noWrap sx={{ maxWidth: 200, fontSize: 'inherit' }}>{appointment.motivo_consulta}</Typography>
                       </Tooltip>
                     ) : (
-                      <Typography color="text.secondary">Sin motivo</Typography>
+                      <Typography color="text.secondary" sx={{ fontSize: 'inherit' }}>Sin motivo</Typography>
                     )}
                   </TableCell>
                   <TableCell>
