@@ -43,22 +43,44 @@ class AdminController extends Controller
 
     public function updateUser(Request $request, $user)
     {
-        $usuario = Usuario::findOrFail($user);
+        try {
+            DB::beginTransaction();
+            
+            $usuario = Usuario::findOrFail($user);
 
-        $request->validate([
-            'nombre' => 'sometimes|required|string|max:255',
-            'apellido' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,' . $usuario->id_usuario . ',id_usuario',
-            'password' => 'sometimes|required|string|min:8',
-            'rol' => 'sometimes|required|string|in:cliente,veterinario,admin',
-        ]);
+            $request->validate([
+                'nombre' => 'sometimes|required|string|max:255',
+                'apellido' => 'sometimes|required|string|max:255',
+                'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,',
+                'password' => 'sometimes|required|string|min:8',
+                'rol' => 'sometimes|required|string|in:cliente,veterinario,admin',
+            ]);
 
-        if ($request->has('password')) {
-            $request->merge(['password' => Hash::make($request->password)]);
+            if ($request->has('password')) {
+                $request->merge(['password' => Hash::make($request->password)]);
+            }
+
+            $usuario->update($request->all());
+            
+            DB::commit();
+            
+            return response()->json([
+                'message' => 'Usuario actualizado correctamente',
+                'usuario' => $usuario
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error al actualizar usuario:', [
+                'error' => $e->getMessage(),
+                'user_id' => $user
+            ]);
+            
+            return response()->json([
+                'message' => 'Error al actualizar el usuario',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $usuario->update($request->all());
-        return response()->json($usuario);
     }
 
     public function deleteUser($user)

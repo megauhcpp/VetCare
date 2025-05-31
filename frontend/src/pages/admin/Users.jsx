@@ -126,42 +126,68 @@ const AdminUsers = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = selectedUser 
-        ? `https://vetcareclinica.com/api/usuarios/${selectedUser.id_usuario}`
-        : 'https://vetcareclinica.com/api/usuarios';
-      
-      // Incluir id_usuario en el cuerpo de la petición cuando se actualiza
-      const requestData = selectedUser 
-        ? { ...formData, id_usuario: selectedUser.id_usuario }
-        : formData;
-
-      const response = await fetch(url, {
-        method: selectedUser ? 'PUT' : 'POST',
+      const response = await fetch('https://vetcareclinica.com/api/admin/users', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(formData)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al guardar el usuario');
+        throw new Error(errorData.message || 'Error al crear el usuario');
       }
 
       setSnackbar({
         open: true,
-        message: `Usuario ${selectedUser ? 'actualizado' : 'creado'} exitosamente`,
+        message: 'Usuario creado exitosamente',
         severity: 'success'
       });
       await fetchUsers();
       handleCloseDialog();
     } catch (error) {
-      console.error('Error al guardar usuario:', error);
+      console.error('Error al crear usuario:', error);
       setSnackbar({
         open: true,
-        message: error.message || 'Error al guardar el usuario',
+        message: error.message || 'Error al crear el usuario',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`https://vetcareclinica.com/api/admin/users/${selectedUser.id_usuario}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al actualizar el usuario');
+      }
+
+      setSnackbar({
+        open: true,
+        message: 'Usuario actualizado exitosamente',
+        severity: 'success'
+      });
+      await fetchUsers();
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Error al actualizar usuario:', error);
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error al actualizar el usuario',
         severity: 'error'
       });
     }
@@ -169,7 +195,7 @@ const AdminUsers = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`https://vetcareclinica.com/api/usuarios/${selectedUser.id_usuario}`, {
+      const response = await fetch(`https://vetcareclinica.com/api/admin/users/${selectedUser.id_usuario}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
@@ -256,7 +282,7 @@ const AdminUsers = () => {
   // Función para refrescar la lista de usuarios
   const fetchUsers = async () => {
     try {
-      const response = await fetch('https://vetcareclinica.com/api/usuarios', {
+      const response = await fetch('https://vetcareclinica.com/api/admin/users', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Accept': 'application/json'
@@ -470,7 +496,11 @@ const AdminUsers = () => {
           <Button onClick={handleCloseDialog} className="client-create-btn" style={{ background: '#f5f5f5', color: '#1769aa' }}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} className="client-create-btn" variant="contained">
+          <Button 
+            onClick={selectedUser ? handleUpdate : handleSubmit} 
+            className="client-create-btn" 
+            variant="contained"
+          >
             {selectedUser ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

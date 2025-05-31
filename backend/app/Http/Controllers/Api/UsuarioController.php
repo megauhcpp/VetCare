@@ -58,7 +58,7 @@ class UsuarioController extends Controller
         $request->validate([
             'nombre' => 'sometimes|required|string|max:255',
             'apellido' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,' . $usuario->id_usuario . ',id_usuario',
+            'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,' . $usuario->id_usuario,
             'password' => 'sometimes|required|string|min:8',
             'rol' => 'sometimes|required|string|in:cliente,veterinario,admin',
         ]);
