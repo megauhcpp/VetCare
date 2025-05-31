@@ -247,7 +247,7 @@ const Profile = () => {
         </Grid>
         <Grid item xs={12} md={5}>
           <Card>
-            <CardContent sx={{ height: 252.52, overflow: 'auto' }}>
+            <CardContent sx={{ height: 292.52, minHeight: 292.52, overflow: 'auto' }}>
               <Typography variant="h6" gutterBottom>
                 Editar Perfil
               </Typography>

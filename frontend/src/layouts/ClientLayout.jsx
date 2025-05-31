@@ -13,7 +13,7 @@ const ClientLayout = () => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-
+  
   return (
     <div className="dashboard-layout" style={{ minHeight: '100vh', display: 'flex' }}>
       {/* Sidebar with responsive classes */}
