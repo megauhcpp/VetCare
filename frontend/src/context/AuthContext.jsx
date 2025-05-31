@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 // Configuración global de axios
-axios.defaults.baseURL = 'http://localhost:8000';
+axios.defaults.baseURL = 'https://vetcareclinica.com';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 axios.defaults.headers.common['Accept'] = 'application/json';
 axios.defaults.withCredentials = true; // Importante para CORS

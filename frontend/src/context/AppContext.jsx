@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'https://vetcareclinica.com/api';
 
 const AppContext = createContext();
 
