@@ -203,7 +203,7 @@ const AdminTreatments = () => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://vetcareclinica.com/api/tratamientos/${selectedTreatment.id_tratamiento}`, {
+      const response = await fetch(`https://vetcareclinica.com/api/tratamientos/${selectedTreatment.id_tratamiento}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -213,12 +213,24 @@ const AdminTreatments = () => {
 
       if (!response.ok) throw new Error('Error al eliminar el tratamiento');
 
+      // Actualizar la lista de tratamientos
+      const refreshResponse = await fetch('https://vetcareclinica.com/api/tratamientos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json();
+        setTreatments(Array.isArray(data) ? data : (data.data || []));
+      }
+
       setSnackbar({
         open: true,
         message: 'Tratamiento eliminado exitosamente',
         severity: 'success'
       });
-      await refreshTreatments();
       handleCloseDeleteDialog();
     } catch (error) {
       setSnackbar({
@@ -241,17 +253,7 @@ const AdminTreatments = () => {
         return;
       }
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://vetcareclinica.com';
-      const url = `${apiUrl}/api/tratamientos/${treatment.id_tratamiento}/estado`;
-
-      console.log('Updating treatment state:', {
-        url,
-        treatmentId: treatment.id_tratamiento,
-        newState,
-        token: token.substring(0, 10) + '...' // Solo mostramos parte del token por seguridad
-      });
-
-      const response = await fetch(url, {
+      const response = await fetch(`https://vetcareclinica.com/api/tratamientos/${treatment.id_tratamiento}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -261,11 +263,22 @@ const AdminTreatments = () => {
         body: JSON.stringify({ estado: newState })
       });
 
-      const data = await response.json();
-      console.log('Server response:', data);
-
       if (!response.ok) {
-        throw new Error(data.message || 'Error al cambiar el estado');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al cambiar el estado');
+      }
+
+      // Actualizar la lista de tratamientos
+      const refreshResponse = await fetch('https://vetcareclinica.com/api/tratamientos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json();
+        setTreatments(Array.isArray(data) ? data : (data.data || []));
       }
 
       setSnackbar({
@@ -274,14 +287,6 @@ const AdminTreatments = () => {
         severity: 'success'
       });
       setChangingStateId(null);
-      
-      // Actualizar la lista de tratamientos
-      const updatedTreatments = treatmentsData.map(t => 
-        t.id_tratamiento === treatment.id_tratamiento 
-          ? { ...t, estado: newState }
-          : t
-      );
-      setTreatments(updatedTreatments);
 
     } catch (error) {
       console.error('Error updating treatment state:', error);

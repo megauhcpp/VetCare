@@ -11,8 +11,10 @@ services:
     volumes:
       - ./:/var/www/html
       - ./.env:/var/www/html/.env
+      - ./ssl:/etc/nginx/ssl
     ports:
       - "8000:8000"
+      - "443:443"
     networks:
       - vetnet
     depends_on:

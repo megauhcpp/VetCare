@@ -108,7 +108,7 @@ const Appointments = () => {
     // Fetch veterinarians when component mounts
     const fetchVeterinarians = async () => {
       try {
-        const response = await fetch('http://vetcareclinica.com/api/veterinarios', {
+        const response = await fetch('https://vetcareclinica.com/api/veterinarios', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -184,8 +184,8 @@ const Appointments = () => {
       }
 
       const url = selectedAppointment 
-        ? `http://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`
-        : 'http://vetcareclinica.com/api/citas';
+        ? `https://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`
+        : 'https://vetcareclinica.com/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
@@ -206,8 +206,7 @@ const Appointments = () => {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(requestData),
-        credentials: 'include'
+        body: JSON.stringify(requestData)
       });
 
       if (response.ok) {
@@ -238,13 +237,12 @@ const Appointments = () => {
         return;
       }
 
-      const response = await fetch(`http://vetcareclinica.com/api/citas/${appointmentId}`, {
+      const response = await fetch(`https://vetcareclinica.com/api/citas/${appointmentId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
+        }
       });
 
       if (response.ok) {
@@ -278,7 +276,7 @@ const Appointments = () => {
   // Función para refrescar la lista de citas
   const refreshAppointments = async () => {
     try {
-      const response = await fetch('http://vetcareclinica.com/api/citas', {
+      const response = await fetch('https://vetcareclinica.com/api/citas', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -287,8 +285,17 @@ const Appointments = () => {
       if (response.ok) {
         const data = await response.json();
         setAppointments(Array.isArray(data) ? data : (data.data || []));
+      } else {
+        throw new Error('Error al obtener las citas');
       }
-    } catch (e) { /* opcional: manejar error */ }
+    } catch (error) {
+      console.error('Error al refrescar citas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al actualizar la lista de citas',
+        severity: 'error'
+      });
+    }
   };
 
   const handleRequestSort = (property) => {

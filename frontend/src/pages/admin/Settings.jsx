@@ -35,7 +35,7 @@ const Settings = () => {
     // Fetch settings from API
     const fetchSettings = async () => {
       try {
-        const response = await fetch('/api/settings');
+        const response = await fetch('https://vetcareclinica.com/api/settings');
         if (response.ok) {
           const data = await response.json();
           setSettings(data);
@@ -70,7 +70,7 @@ const Settings = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('/api/settings', {
+      const response = await fetch('https://vetcareclinica.com/api/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

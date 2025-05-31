@@ -111,7 +111,7 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 ### Variables de Entorno Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=https://vetcareclinica.com
 VITE_APP_NAME=VetCare
 ```
 

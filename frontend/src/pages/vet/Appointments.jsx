@@ -154,7 +154,7 @@ const Appointments = () => {
         throw new Error('No hay token de autenticación');
       }
 
-      const response = await fetch('/api/citas', {
+      const response = await fetch('https://vetcareclinica.com/api/citas', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -186,8 +186,8 @@ const Appointments = () => {
       }
 
       const url = selectedAppointment 
-        ? `/api/citas/${selectedAppointment.id_cita}`
-        : '/api/citas';
+        ? `https://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`
+        : 'https://vetcareclinica.com/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       

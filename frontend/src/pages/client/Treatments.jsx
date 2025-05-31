@@ -166,6 +166,56 @@ const Treatments = () => {
     setOrderBy(property);
   };
 
+  const fetchTreatments = async () => {
+    try {
+      const response = await fetch('https://vetcareclinica.com/api/tratamientos', {
+        headers: {
+          'Authorization': `Bearer ${user?.token}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTreatments(Array.isArray(data) ? data : (data.data || []));
+      }
+    } catch (error) {
+      console.error('Error fetching treatments:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('https://vetcareclinica.com/api/tratamientos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      // ... rest of the function
+    } catch (error) {
+      // ... error handling
+    }
+  };
+
+  const handleDelete = async (treatmentId) => {
+    try {
+      const response = await fetch(`https://vetcareclinica.com/api/tratamientos/${treatmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        }
+      });
+      // ... rest of the function
+    } catch (error) {
+      // ... error handling
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>

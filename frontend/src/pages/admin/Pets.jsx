@@ -64,7 +64,7 @@ const AdminPets = () => {
     const fetchClientes = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/clientes', {
+        const response = await fetch('https://vetcareclinica.com/api/clientes', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -123,7 +123,7 @@ const AdminPets = () => {
   // Función para refrescar la lista de mascotas
   const refreshPets = async () => {
     try {
-      const response = await fetch('/api/pets', {
+      const response = await fetch('https://vetcareclinica.com/api/pets', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Accept': 'application/json'
@@ -156,33 +156,60 @@ const AdminPets = () => {
         });
         return;
       }
+
       const url = selectedPet
-        ? `/api/admin/pets/${selectedPet.id_mascota}`
-        : '/api/admin/pets';
+        ? `https://vetcareclinica.com/api/mascotas/${selectedPet.id_mascota}`
+        : 'https://vetcareclinica.com/api/mascotas';
+
       const method = selectedPet ? 'PUT' : 'POST';
+
+      // Validar que id_usuario sea un número válido
+      const idUsuario = parseInt(formData.id_usuario);
+      if (isNaN(idUsuario)) {
+        setSnackbar({
+          open: true,
+          message: 'El ID del dueño no es válido',
+          severity: 'error'
+        });
+        return;
+      }
+
+      // Asegurarnos de que id_usuario esté presente en los datos
       const dataToSend = {
-        ...formData,
-        usuario_id: formData.id_usuario,
-        sexo: formData.sexo.charAt(0).toUpperCase() + formData.sexo.slice(1)
+        nombre: formData.nombre,
+        especie: formData.especie,
+        raza: formData.raza,
+        fecha_nacimiento: formData.fecha_nacimiento,
+        sexo: formData.sexo.charAt(0).toUpperCase() + formData.sexo.slice(1),
+        notas: formData.notas || '',
+        id_usuario: idUsuario
       };
-      delete dataToSend.id_usuario;
+
+      console.log('Enviando datos:', dataToSend);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(dataToSend)
       });
+
       const data = await response.json();
+      
       if (!response.ok) {
+        console.error('Error response:', data);
         throw new Error(data.message || 'Error al guardar la mascota');
       }
+
       setSnackbar({
         open: true,
         message: `Mascota ${selectedPet ? 'actualizada' : 'creada'} exitosamente`,
         severity: 'success'
       });
+
       await refreshPets();
       handleCloseDialog();
     } catch (error) {
@@ -197,7 +224,7 @@ const AdminPets = () => {
 
   const handleDelete = async (petId) => {
     try {
-      const response = await fetch(`/api/pets/${petId}`, {
+      const response = await fetch(`https://vetcareclinica.com/api/pets/${petId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -508,17 +535,15 @@ const AdminPets = () => {
               )}
             </TextField>
             <TextField
+              name="fecha_nacimiento"
               label="Fecha de Nacimiento"
               type="date"
               value={formData.fecha_nacimiento}
-              onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
+              onChange={e => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
-              inputRef={dateInputRef}
               inputProps={{
-                max: new Date().toISOString().split('T')[0],
-                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
-                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
+                max: new Date().toISOString().split('T')[0]
               }}
               required
               InputProps={{ sx: { borderRadius: 2 } }}
@@ -547,25 +572,20 @@ const AdminPets = () => {
             <TextField
               select
               label="Dueño"
-              name="id_usuario"
-              fullWidth
-              value={formData.id_usuario}
-              onChange={e => setFormData(prev => ({ ...prev, id_usuario: e.target.value }))}
+              value={formData.id_usuario || ''}
+              onChange={(e) => {
+                console.log('Dueño seleccionado:', e.target.value);
+                setFormData({ ...formData, id_usuario: e.target.value });
+              }}
               required
+              fullWidth
               sx={{ mb: 2 }}
-              InputProps={{ sx: { borderRadius: 2 } }}
             >
-              {clientes.length === 0 ? (
-                <MenuItem disabled value="">
-                  No hay clientes disponibles
+              {clientes.map((cliente) => (
+                <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
+                  {`${cliente.nombre} ${cliente.apellido} (${cliente.email})`}
                 </MenuItem>
-              ) : (
-                clientes.map((cliente) => (
-                  <MenuItem key={cliente.id_usuario} value={cliente.id_usuario}>
-                    {cliente.nombre} {cliente.apellido} ({cliente.email})
-                  </MenuItem>
-                ))
-              )}
+              ))}
             </TextField>
           </Box>
         </DialogContent>

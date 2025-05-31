@@ -58,7 +58,7 @@ class UsuarioController extends Controller
         $request->validate([
             'nombre' => 'sometimes|required|string|max:255',
             'apellido' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,' . $usuario->id_usuario,
+            'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,' . $usuario->id_usuario . ',id_usuario',
             'password' => 'sometimes|required|string|min:8',
             'rol' => 'sometimes|required|string|in:cliente,veterinario,admin',
         ]);
@@ -107,8 +107,27 @@ class UsuarioController extends Controller
     // Obtener todos los clientes
     public function getClientes()
     {
-        $clientes = Usuario::where('rol', 'cliente')->get();
-        return response()->json($clientes);
+        try {
+            $clientes = Usuario::where('rol', 'cliente')
+                ->select('id_usuario', 'nombre', 'apellido', 'email')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $clientes
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al obtener clientes:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al obtener los clientes',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Obtener las mascotas de un usuario

@@ -165,8 +165,8 @@ const AdminAppointments = () => {
   const handleSubmit = async () => {
     try {
       const url = selectedAppointment
-        ? `http://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`
-        : 'http://vetcareclinica.com/api/citas';
+        ? `https://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`
+        : 'https://vetcareclinica.com/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
@@ -194,12 +194,24 @@ const AdminAppointments = () => {
         throw new Error(errorData.message || 'Error al guardar la cita');
       }
 
+      // Actualizar la lista de citas inmediatamente
+      const refreshResponse = await fetch('https://vetcareclinica.com/api/citas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json();
+        setAppointments(Array.isArray(data) ? data : (data.data || []));
+      }
+
       setSnackbar({
         open: true,
         message: `Cita ${selectedAppointment ? 'actualizada' : 'creada'} exitosamente`,
         severity: 'success'
       });
-      await refreshAppointments();
       handleCloseDialog();
     } catch (error) {
       setSnackbar({
@@ -213,7 +225,7 @@ const AdminAppointments = () => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`, {
+      const response = await fetch(`https://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -223,12 +235,24 @@ const AdminAppointments = () => {
 
       if (!response.ok) throw new Error('Error al eliminar la cita');
 
+      // Actualizar la lista de citas inmediatamente
+      const refreshResponse = await fetch('https://vetcareclinica.com/api/citas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json();
+        setAppointments(Array.isArray(data) ? data : (data.data || []));
+      }
+
       setSnackbar({
         open: true,
         message: 'Cita eliminada exitosamente',
         severity: 'success'
       });
-      await refreshAppointments();
       handleCloseDeleteDialog();
     } catch (error) {
       setSnackbar({

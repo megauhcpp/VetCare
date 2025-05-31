@@ -7,12 +7,16 @@ use Illuminate\Http\Request;
 
 class Cors
 {
+    protected $allowedOrigins = [
+        'https://vetcareclinica.com',
+        'http://localhost:3000'
+    ];
+
     public function handle(Request $request, Closure $next)
     {
         $origin = $request->header('Origin');
-        $allowedOrigins = ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8000'];
 
-        if (in_array($origin, $allowedOrigins)) {
+        if (in_array($origin, $this->allowedOrigins)) {
             $response = $next($request);
             
             // Handle preflight requests

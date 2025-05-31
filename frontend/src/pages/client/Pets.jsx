@@ -121,8 +121,8 @@ const Pets = () => {
       }
 
       const url = selectedPet 
-        ? `http://vetcareclinica.com/api/mascotas/${selectedPet.id_mascota}`
-        : 'http://vetcareclinica.com/api/mascotas';
+        ? `https://vetcareclinica.com/api/mascotas/${selectedPet.id_mascota}`
+        : 'https://vetcareclinica.com/api/mascotas';
       
       const method = selectedPet ? 'PUT' : 'POST';
       
@@ -131,6 +131,8 @@ const Pets = () => {
         id_usuario: user.id_usuario
       };
       
+      console.log('Enviando datos:', requestData);
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -138,78 +140,31 @@ const Pets = () => {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(requestData),
-        credentials: 'include'
+        body: JSON.stringify(requestData)
       });
 
-      if (response.ok) {
-        const updatedPet = await response.json();
-        console.log('Pet created/updated:', updatedPet); // Debug log
-
-        if (selectedPet) {
-          setPets(pets.map(p => p.id_mascota === updatedPet.id_mascota ? updatedPet : p));
-        } else {
-          // Fetch de la mascota completa para asegurar estructura
-          const petId = updatedPet.id_mascota || updatedPet.data?.id_mascota;
-          if (petId) {
-            try {
-              const petResponse = await fetch(`http://localhost:8000/api/mascotas/${petId}`, {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Accept': 'application/json'
-                }
-              });
-              if (petResponse.ok) {
-                const fullPet = await petResponse.json();
-                setPets(prevPets => {
-                  const filtered = prevPets.filter(p => p.id_mascota !== fullPet.id_mascota);
-                  return [...filtered, fullPet];
-                });
-              } else {
-                // Si falla, usa el objeto provisional
-                const newPet = {
-                  ...updatedPet,
-                  usuario: {
-                    id_usuario: user.id_usuario,
-                    nombre: user.nombre,
-                    apellido: user.apellido
-                  }
-                };
-                setPets(prevPets => {
-                  const filtered = prevPets.filter(p => p.id_mascota !== newPet.id_mascota);
-                  return [...filtered, newPet];
-                });
-              }
-            } catch (e) {
-              // Si falla el fetch, usa el objeto provisional
-              const newPet = {
-                ...updatedPet,
-                usuario: {
-                  id_usuario: user.id_usuario,
-                  nombre: user.nombre,
-                  apellido: user.apellido
-                }
-              };
-              setPets(prevPets => {
-                const filtered = prevPets.filter(p => p.id_mascota !== newPet.id_mascota);
-                return [...filtered, newPet];
-              });
-            }
-          }
-        }
-
-        await refreshPets();
-        handleCloseDialog();
-        setError('');
-        setSnackbar({ open: true, message: 'Mascota guardada correctamente', severity: 'success' });
-      } else {
+      if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error response:', errorData); // Debug log
-        setError(errorData.message || 'Error al guardar la mascota');
+        throw new Error(errorData.message || 'Error al guardar la mascota');
       }
+
+      const updatedPet = await response.json();
+      console.log('Pet created/updated:', updatedPet);
+
+      if (selectedPet) {
+        setPets(pets.map(p => p.id_mascota === updatedPet.id_mascota ? updatedPet : p));
+      } else {
+        setPets(prevPets => [...prevPets, updatedPet]);
+      }
+
+      await refreshPets();
+      handleCloseDialog();
+      setError('');
+      setSnackbar({ open: true, message: 'Mascota guardada correctamente', severity: 'success' });
     } catch (error) {
       console.error('Error saving pet:', error);
-      setError('Error al guardar la mascota');
+      setError(error.message || 'Error al guardar la mascota');
+      setSnackbar({ open: true, message: error.message || 'Error al guardar la mascota', severity: 'error' });
     }
   };
 
@@ -220,13 +175,12 @@ const Pets = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:8000/api/mascotas/${petId}`, {
+      const response = await fetch(`https://vetcareclinica.com/api/mascotas/${petId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
+        }
       });
 
       if (response.ok) {
@@ -237,10 +191,12 @@ const Pets = () => {
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Error al eliminar la mascota');
+        setSnackbar({ open: true, message: errorData.message || 'Error al eliminar la mascota', severity: 'error' });
       }
     } catch (error) {
       console.error('Error deleting pet:', error);
       setError('Error al eliminar la mascota');
+      setSnackbar({ open: true, message: 'Error al eliminar la mascota', severity: 'error' });
     }
   };
 
@@ -257,7 +213,7 @@ const Pets = () => {
   // Función para refrescar la lista de mascotas
   const refreshPets = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/mascotas', {
+      const response = await fetch('https://vetcareclinica.com/api/mascotas', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -267,8 +223,17 @@ const Pets = () => {
         const data = await response.json();
         // Si la respuesta tiene 'data', úsala; si no, asume que es un array
         setPets(Array.isArray(data) ? data : (data.data || []));
+      } else {
+        throw new Error('Error al obtener las mascotas');
       }
-    } catch (e) { /* opcional: manejar error */ }
+    } catch (error) {
+      console.error('Error al refrescar mascotas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al actualizar la lista de mascotas',
+        severity: 'error'
+      });
+    }
   };
 
   const handleRequestSort = (property) => {

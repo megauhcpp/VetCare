@@ -17,7 +17,7 @@ import {
 import { Visibility, VisibilityOff, Lock as LockIcon } from '@mui/icons-material';
 
 const Profile = () => {
-  const { user, updateUser, changePassword } = useAuth();
+  const { user, updateUser, changePassword, token } = useAuth();
   const [formData, setFormData] = useState({
     nombre: user?.nombre || '',
     apellido: user?.apellido || '',
@@ -56,11 +56,25 @@ const Profile = () => {
       return;
     }
     try {
-      await updateUser(formData);
-      setSuccess('Perfil actualizado correctamente');
-      setError('');
-    } catch (err) {
-      setError(err.message);
+      const response = await fetch('https://vetcareclinica.com/api/usuarios/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      if (response.ok) {
+        await updateUser(formData);
+        setSuccess('Perfil actualizado correctamente');
+        setError('');
+      } else {
+        setError('Error al actualizar el perfil');
+        setSuccess('');
+      }
+    } catch (error) {
+      setError(error.message);
       setSuccess('');
     }
   };
@@ -82,24 +96,39 @@ const Profile = () => {
       return;
     }
     try {
-      await changePassword({
-        current: passwordData.current,
-        new: passwordData.new,
-        confirm: passwordData.confirm
+      const response = await fetch('https://vetcareclinica.com/api/usuarios/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(passwordData)
       });
-      setPasswordSuccess('Contraseña cambiada correctamente.');
-      setPasswordMsg('');
-      setPasswordData({
-        current: '',
-        new: '',
-        confirm: '',
-        showCurrent: false,
-        showNew: false,
-        showConfirm: false
-      });
-      setShowPasswordForm(false);
+      if (response.ok) {
+        await changePassword({
+          current: passwordData.current,
+          new: passwordData.new,
+          confirm: passwordData.confirm
+        });
+        setPasswordSuccess('Contraseña cambiada correctamente.');
+        setPasswordMsg('');
+        setPasswordData({
+          current: '',
+          new: '',
+          confirm: '',
+          showCurrent: false,
+          showNew: false,
+          showConfirm: false
+        });
+        setShowPasswordForm(false);
+      } else {
+        setPasswordMsg('Error al cambiar la contraseña');
+        setPasswordSuccess('');
+      }
     } catch (error) {
-      setPasswordMsg(error.response?.data?.error || 'Error al cambiar la contraseña');
+      setPasswordMsg(error.message);
+      setPasswordSuccess('');
     }
   };
 

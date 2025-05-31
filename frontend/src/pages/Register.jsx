@@ -38,6 +38,14 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const response = await fetch('https://vetcareclinica.com/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
             // Validaciones del lado del cliente
             if (formData.password.length < 8) {
                 setErrors({

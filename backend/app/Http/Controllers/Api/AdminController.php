@@ -130,11 +130,22 @@ class AdminController extends Controller
             'especie' => 'required|string|max:255',
             'raza' => 'required|string|max:255',
             'fecha_nacimiento' => 'required|date',
-            'usuario_id' => 'required|exists:usuarios,id_usuario',
+            'sexo' => 'required|string|max:10',
+            'notas' => 'nullable|string',
+            'id_usuario' => 'required|exists:usuarios,id_usuario'
         ]);
 
-        $pet = Mascota::create($request->all());
-        return response()->json($pet, 201);
+        $mascota = Mascota::create([
+            'nombre' => $request->nombre,
+            'especie' => $request->especie,
+            'raza' => $request->raza,
+            'fecha_nacimiento' => $request->fecha_nacimiento,
+            'sexo' => $request->sexo,
+            'notas' => $request->notas,
+            'id_usuario' => $request->id_usuario
+        ]);
+
+        return response()->json($mascota, 201);
     }
 
     public function updatePet(Request $request, $pet)
@@ -146,7 +157,9 @@ class AdminController extends Controller
             'especie' => 'sometimes|required|string|max:255',
             'raza' => 'sometimes|required|string|max:255',
             'fecha_nacimiento' => 'sometimes|required|date',
-            'usuario_id' => 'sometimes|required|exists:usuarios,id_usuario',
+            'sexo' => 'sometimes|required|string|max:10',
+            'notas' => 'nullable|string',
+            'id_usuario' => 'sometimes|required|exists:usuarios,id_usuario'
         ]);
 
         $mascota->update($request->all());

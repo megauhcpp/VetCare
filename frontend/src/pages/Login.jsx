@@ -28,6 +28,15 @@ const Login = () => {
         setError('');
 
         try {
+            const response = await fetch('https://vetcareclinica.com/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
             const user = await login({
                 email: formData.email,
                 password: formData.password

@@ -123,43 +123,26 @@ const AdminUsers = () => {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://vetcareclinica.com';
-      const url = selectedUser
-        ? `${apiUrl}/api/admin/users/${selectedUser.id_usuario}`
-        : `${apiUrl}/api/admin/users`;
+      const url = selectedUser 
+        ? `https://vetcareclinica.com/api/usuarios/${selectedUser.id_usuario}`
+        : 'https://vetcareclinica.com/api/usuarios';
       
-      const method = selectedUser ? 'PUT' : 'POST';
-      
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setSnackbar({
-          open: true,
-          message: 'No hay token de autenticación',
-          severity: 'error'
-        });
-        return;
-      }
-
-      // Si es una actualización y no se proporcionó contraseña, no la enviamos
-      const dataToSend = selectedUser && !formData.password
-        ? {
-            nombre: formData.nombre,
-            apellido: formData.apellido,
-            email: formData.email,
-            rol: formData.rol
-          }
+      // Incluir id_usuario en el cuerpo de la petición cuando se actualiza
+      const requestData = selectedUser 
+        ? { ...formData, id_usuario: selectedUser.id_usuario }
         : formData;
 
       const response = await fetch(url, {
-        method,
+        method: selectedUser ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(requestData)
       });
 
       if (!response.ok) {
@@ -172,7 +155,7 @@ const AdminUsers = () => {
         message: `Usuario ${selectedUser ? 'actualizado' : 'creado'} exitosamente`,
         severity: 'success'
       });
-      await refreshUsers();
+      await fetchUsers();
       handleCloseDialog();
     } catch (error) {
       console.error('Error al guardar usuario:', error);
@@ -186,12 +169,11 @@ const AdminUsers = () => {
 
   const handleDelete = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/users/${selectedUser.id_usuario}`, {
+      const response = await fetch(`https://vetcareclinica.com/api/usuarios/${selectedUser.id_usuario}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
 
@@ -205,7 +187,7 @@ const AdminUsers = () => {
         message: 'Usuario eliminado exitosamente',
         severity: 'success'
       });
-      await refreshUsers();
+      await fetchUsers();
       handleCloseDeleteDialog();
     } catch (error) {
       console.error('Error al eliminar usuario:', error);
@@ -272,9 +254,9 @@ const AdminUsers = () => {
   });
 
   // Función para refrescar la lista de usuarios
-  const refreshUsers = async () => {
+  const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch('https://vetcareclinica.com/api/usuarios', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Accept': 'application/json'
@@ -284,7 +266,9 @@ const AdminUsers = () => {
         const data = await response.json();
         setUsers(Array.isArray(data) ? data : (data.data || []));
       }
-    } catch (e) { /* opcional: manejar error */ }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   };
 
   return (
