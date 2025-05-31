@@ -125,7 +125,7 @@ const AdminUsers = () => {
 
   const handleSubmit = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://vetcareclinica.com';
       const url = selectedUser
         ? `${apiUrl}/api/admin/users/${selectedUser.id_usuario}`
         : `${apiUrl}/api/admin/users`;

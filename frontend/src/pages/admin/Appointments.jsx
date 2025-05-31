@@ -165,8 +165,8 @@ const AdminAppointments = () => {
   const handleSubmit = async () => {
     try {
       const url = selectedAppointment
-        ? `http://localhost:8000/api/citas/${selectedAppointment.id_cita}`
-        : 'http://localhost:8000/api/citas';
+        ? `http://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`
+        : 'http://vetcareclinica.com/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
@@ -213,7 +213,7 @@ const AdminAppointments = () => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/api/citas/${selectedAppointment.id_cita}`, {
+      const response = await fetch(`http://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -354,7 +354,7 @@ const AdminAppointments = () => {
   const refreshAppointments = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/citas', {
+      const response = await fetch('http://vetcareclinica.com/api/citas', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'

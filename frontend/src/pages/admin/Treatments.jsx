@@ -203,7 +203,7 @@ const AdminTreatments = () => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/api/tratamientos/${selectedTreatment.id_tratamiento}`, {
+      const response = await fetch(`http://vetcareclinica.com/api/tratamientos/${selectedTreatment.id_tratamiento}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -241,7 +241,7 @@ const AdminTreatments = () => {
         return;
       }
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://vetcareclinica.com';
       const url = `${apiUrl}/api/tratamientos/${treatment.id_tratamiento}/estado`;
 
       console.log('Updating treatment state:', {

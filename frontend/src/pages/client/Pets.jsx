@@ -121,8 +121,8 @@ const Pets = () => {
       }
 
       const url = selectedPet 
-        ? `http://localhost:8000/api/mascotas/${selectedPet.id_mascota}`
-        : 'http://localhost:8000/api/mascotas';
+        ? `http://vetcareclinica.com/api/mascotas/${selectedPet.id_mascota}`
+        : 'http://vetcareclinica.com/api/mascotas';
       
       const method = selectedPet ? 'PUT' : 'POST';
       

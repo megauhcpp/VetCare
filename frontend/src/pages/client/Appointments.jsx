@@ -108,7 +108,7 @@ const Appointments = () => {
     // Fetch veterinarians when component mounts
     const fetchVeterinarians = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/veterinarios', {
+        const response = await fetch('http://vetcareclinica.com/api/veterinarios', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -184,8 +184,8 @@ const Appointments = () => {
       }
 
       const url = selectedAppointment 
-        ? `http://localhost:8000/api/citas/${selectedAppointment.id_cita}`
-        : 'http://localhost:8000/api/citas';
+        ? `http://vetcareclinica.com/api/citas/${selectedAppointment.id_cita}`
+        : 'http://vetcareclinica.com/api/citas';
       
       const method = selectedAppointment ? 'PUT' : 'POST';
       
@@ -238,7 +238,7 @@ const Appointments = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:8000/api/citas/${appointmentId}`, {
+      const response = await fetch(`http://vetcareclinica.com/api/citas/${appointmentId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
@@ -278,7 +278,7 @@ const Appointments = () => {
   // Función para refrescar la lista de citas
   const refreshAppointments = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/citas', {
+      const response = await fetch('http://vetcareclinica.com/api/citas', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
