@@ -37,36 +37,29 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const response = await fetch('https://vetcareclinica.com/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-            // Validaciones del lado del cliente
-            if (formData.password.length < 8) {
-                setErrors({
-                    ...errors,
-                    password: 'La contraseña debe tener al menos 8 caracteres'
-                });
-                return;
-            }
-            if (formData.password !== formData.password_confirmation) {
-                setErrors({
-                    ...errors,
-                    password_confirmation: 'Las contraseñas no coinciden'
-                });
-                return;
-            }
+        
+        // Client-side validation first
+        const newErrors = {};
+        
+        if (formData.password.length < 8) {
+            newErrors.password = 'La contraseña debe tener al menos 8 caracteres';
+        }
+        
+        if (formData.password !== formData.password_confirmation) {
+            newErrors.password_confirmation = 'Las contraseñas no coinciden';
+        }
+        
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
 
+        try {
             await register(formData);
             navigate('/dashboard');
         } catch (err) {
-            if (err.errors) {
-                setErrors(err.errors);
+            if (err.response?.data?.errors) {
+                setErrors(err.response.data.errors);
             } else {
                 setErrors({
                     general: err.message || 'Error al registrar usuario'
