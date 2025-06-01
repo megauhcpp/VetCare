@@ -25,7 +25,13 @@ import ClientAppointments from './pages/client/Appointments';
 import ClientTreatments from './pages/client/Treatments';
 import ClientProfile from './pages/client/Profile';
 
-// Componente de ruta protegida
+/**
+ * Componente de ruta protegida que maneja la autenticación y autorización
+ * @param {Object} props - Propiedades del componente
+ * @param {React.ReactNode} props.children - Componentes hijos a renderizar
+ * @param {boolean} props.requireAdmin - Indica si se requiere rol de administrador
+ * @param {boolean} props.requireVet - Indica si se requiere rol de veterinario
+ */
 const ProtectedRoute = ({ children, requireAdmin = false, requireVet = false }) => {
   const { isAuthenticated, loading, user } = useAuth();
 
@@ -37,7 +43,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireVet = false }) 
     return <Navigate to="/login" />;
   }
 
-  // Redirigir según el rol del usuario
+  // Redirecciones basadas en el rol del usuario
   if (user?.rol === 'admin' && !requireAdmin) {
     return <Navigate to="/admin/dashboard" />;
   }
@@ -50,7 +56,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireVet = false }) 
     return <Navigate to="/dashboard" />;
   }
 
-  // Verificar permisos específicos
+  // Verificación de permisos específicos
   if (requireAdmin && user?.rol !== 'admin') {
     return <Navigate to="/login" />;
   }
@@ -62,7 +68,9 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireVet = false }) 
   return children;
 };
 
-// Componente para redirigir según el rol
+/**
+ * Componente que maneja la redirección inicial según el rol del usuario
+ */
 const RootRedirect = () => {
   const { user } = useAuth();
   
@@ -88,11 +96,11 @@ const App = () => {
       <AppProvider>
         <Router>
           <Routes>
-            {/* Public Routes */}
+            {/* Rutas públicas */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
-            {/* Admin Routes */}
+            {/* Rutas de administrador */}
             <Route path="/admin" element={
               <ProtectedRoute requireAdmin={true}>
                 <AdminLayout />
@@ -107,7 +115,7 @@ const App = () => {
               <Route path="profile" element={<AdminProfile />} />
             </Route>
 
-            {/* Vet Routes */}
+            {/* Rutas de veterinario */}
             <Route path="/vet" element={
               <ProtectedRoute requireVet={true}>
                 <VetLayout />
@@ -120,7 +128,7 @@ const App = () => {
               <Route path="profile" element={<VetProfile />} />
             </Route>
             
-            {/* Client Routes */}
+            {/* Rutas de cliente */}
             <Route path="/" element={
               <ProtectedRoute>
                 <ClientLayout />
@@ -133,7 +141,7 @@ const App = () => {
               <Route path="profile" element={<ClientProfile />} />
             </Route>
 
-            {/* Redirect root to appropriate dashboard */}
+            {/* Redirección de la ruta raíz */}
             <Route path="/" element={<RootRedirect />} />
           </Routes>
         </Router>

@@ -4,24 +4,32 @@ import Sidebar from '../components/Sidebar';
 import DashboardHeader from '../components/DashboardHeader';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * Layout principal para la sección de administrador
+ * Proporciona la estructura base con sidebar, header y área de contenido
+ */
 const AdminLayout = () => {
   const { user } = useAuth();
+  // Estado para controlar la visibilidad del sidebar en dispositivos móviles
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  /**
+   * Alterna la visibilidad del sidebar
+   */
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
     <div className="dashboard-layout" style={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
-      {/* Sidebar with responsive classes */}
+      {/* Contenedor del sidebar con clases responsivas */}
       <div 
         className={`sidebar-container ${isSidebarOpen ? 'sidebar-open' : ''}`}
       >
         <Sidebar isAdmin={true} onClose={toggleSidebar} />
       </div>
 
-      {/* Main Content */}
+      {/* Contenido principal del dashboard */}
       <div 
         className="dashboard-content" 
         style={{ 
@@ -32,7 +40,10 @@ const AdminLayout = () => {
           overflow: 'hidden'
         }}
       >
+        {/* Encabezado del dashboard */}
         <DashboardHeader isAdmin={true} onMenuClick={toggleSidebar} />
+        
+        {/* Área principal de contenido */}
         <main 
           className="dashboard-main" 
           style={{ 
@@ -46,7 +57,7 @@ const AdminLayout = () => {
         </main>
       </div>
 
-      {/* Overlay for mobile */}
+      {/* Overlay para dispositivos móviles cuando el sidebar está abierto */}
       {isSidebarOpen && (
         <div 
           className="sidebar-overlay"

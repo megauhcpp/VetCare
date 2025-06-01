@@ -8,10 +8,16 @@ import { useAuth } from '../../context/AuthContext';
 const statNumberStyle = { fontWeight: 800, color: '#111', fontSize: '2.8rem', lineHeight: 1.1, mb: 0.5, textAlign: 'center' };
 const statLabelStyle = { color: '#222', fontSize: '1.15rem', textAlign: 'center', mb: 0.5, fontWeight: 500 };
 
+/**
+ * Dashboard del veterinario
+ * Muestra un resumen de las citas, mascotas y tratamientos asignados al veterinario
+ */
 const VetDashboard = () => {
   const { appointments, pets, treatments } = useApp();
   const { user } = useAuth();
+  // Estado para controlar la carga de datos
   const [loading, setLoading] = useState(true);
+  // Estado para almacenar las estadísticas del veterinario
   const [stats, setStats] = useState({
     totalAppointments: 0,
     pendingAppointments: 0,
@@ -19,6 +25,7 @@ const VetDashboard = () => {
     activeTreatments: 0
   });
 
+  // Efecto para calcular las estadísticas cuando se cargan los datos
   useEffect(() => {
     if (appointments && pets && treatments) {
       // Filtrar citas solo del veterinario logueado
@@ -33,6 +40,7 @@ const VetDashboard = () => {
                     treatment.cita?.veterinario?.id_usuario === user?.id_usuario
       );
 
+      // Actualizar las estadísticas
       setStats({
         totalAppointments: vetAppointments.length,
         pendingAppointments: vetAppointments.filter(apt => apt.estado === 'pendiente').length,
@@ -43,7 +51,7 @@ const VetDashboard = () => {
     }
   }, [appointments, pets, treatments, user]);
 
-  // Memoizar statsCards para evitar recreaciones innecesarias
+  // Configuración de las tarjetas de estadísticas
   const statsCards = useMemo(() => [
     {
       icon: <Calendar size={38} color="#4CAF50" style={{ marginBottom: 8 }} />,
@@ -75,6 +83,7 @@ const VetDashboard = () => {
     },
   ], [stats]);
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -85,6 +94,7 @@ const VetDashboard = () => {
 
   return (
     <Box sx={{ p: { xs: 1, md: 3 } }}>
+      {/* Encabezado del dashboard */}
       <Typography variant="h4" sx={{ mb: 1, color: '#111', fontWeight: 700, fontSize: { xs: '2rem', md: '2.5rem' } }}>
         ¡Bienvenido/a, {user?.nombre || 'Veterinario'}!
       </Typography>
@@ -92,6 +102,7 @@ const VetDashboard = () => {
         Aquí tienes un resumen de tus citas y pacientes.
       </Typography>
 
+      {/* Grid de tarjetas de estadísticas */}
       <Grid container spacing={2} sx={{ maxWidth: 1600, margin: '0 auto' }}>
         {statsCards.map((stat, index) => (
           <Grid item xs={12} sm={6} md={3} key={index} sx={{ display: 'flex' }}>

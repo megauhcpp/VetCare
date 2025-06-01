@@ -9,10 +9,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Controlador de Citas
+ * 
+ * Este controlador maneja todas las operaciones relacionadas con las citas médicas del sistema,
+ * incluyendo su creación, actualización, eliminación y consulta.
+ * Las citas están asociadas a mascotas y veterinarios.
+ */
 class CitaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Muestra un listado de todas las citas de las mascotas del usuario autenticado.
+     * 
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
@@ -30,7 +39,9 @@ class CitaController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Muestra el formulario para crear una nueva cita.
+     * 
+     * @return \Illuminate\Http\Response
      */
     public function create()
     {
@@ -38,7 +49,11 @@ class CitaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena una nueva cita en la base de datos.
+     * Verifica que la mascota pertenezca al usuario y asigna un veterinario disponible.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -90,7 +105,10 @@ class CitaController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Muestra la información detallada de una cita específica.
+     * 
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
@@ -108,7 +126,10 @@ class CitaController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Muestra el formulario para editar una cita existente.
+     * 
+     * @param  string  $id
+     * @return \Illuminate\Http\Response
      */
     public function edit(string $id)
     {
@@ -116,7 +137,12 @@ class CitaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza la información de una cita en la base de datos.
+     * Verifica que la mascota pertenezca al usuario antes de actualizar.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -159,7 +185,10 @@ class CitaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina una cita de la base de datos.
+     * 
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {

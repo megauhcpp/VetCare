@@ -42,12 +42,21 @@ import {
 } from '@mui/icons-material';
 import '../client/client-table.css';
 
+/**
+ * Página de gestión de usuarios para el administrador
+ * Permite ver, crear, editar y eliminar usuarios del sistema
+ */
 const AdminUsers = () => {
   const { users, setUsers } = useApp();
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para controlar la apertura del diálogo de creación/edición
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para controlar la apertura del diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  // Estado para almacenar el usuario seleccionado
   const [selectedUser, setSelectedUser] = useState(null);
+  // Estado para los datos del formulario
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -55,11 +64,15 @@ const AdminUsers = () => {
     password: '',
     rol: 'cliente'
   });
+  // Estado para las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estados para la ordenación de la tabla
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
+  // Estado para el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsUser, setDetailsUser] = useState(null);
+  // Estados para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -69,6 +82,7 @@ const AdminUsers = () => {
     return Array.isArray(users) ? users : (users?.data || []);
   }, [users]);
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!Array.isArray(users)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -77,6 +91,10 @@ const AdminUsers = () => {
     );
   }
 
+  /**
+   * Abre el diálogo de creación/edición de usuario
+   * @param {Object} user - Usuario a editar (opcional)
+   */
   const handleOpenDialog = (user = null) => {
     if (user) {
       setSelectedUser(user);
@@ -100,21 +118,35 @@ const AdminUsers = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de creación/edición
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedUser(null);
   };
 
+  /**
+   * Abre el diálogo de confirmación de eliminación
+   * @param {Object} user - Usuario a eliminar
+   */
   const handleOpenDeleteDialog = (user) => {
     setSelectedUser(user);
     setOpenDeleteDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de confirmación de eliminación
+   */
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
     setSelectedUser(null);
   };
 
+  /**
+   * Maneja los cambios en los campos del formulario
+   * @param {Event} e - Evento del cambio en el input
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -123,6 +155,10 @@ const AdminUsers = () => {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario para crear un nuevo usuario
+   * @param {Event} e - Evento del submit del formulario
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -158,6 +194,10 @@ const AdminUsers = () => {
     }
   };
 
+  /**
+   * Maneja la actualización de un usuario existente
+   * @param {Event} e - Evento del submit del formulario
+   */
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -193,6 +233,9 @@ const AdminUsers = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de un usuario
+   */
   const handleDelete = async () => {
     try {
       const response = await fetch(`https://vetcareclinica.com/api/admin/users/${selectedUser.id_usuario}`, {
@@ -225,6 +268,11 @@ const AdminUsers = () => {
     }
   };
 
+  /**
+   * Obtiene el color correspondiente al rol del usuario
+   * @param {string} role - Rol del usuario
+   * @returns {string} Color del chip
+   */
   const getRoleColor = (role) => {
     switch (role) {
       case 'admin':
@@ -238,6 +286,7 @@ const AdminUsers = () => {
     }
   };
 
+  // Filtrar usuarios según el término de búsqueda
   const filteredUsers = usersData.filter(user => {
     const searchLower = searchTerm.toLowerCase();
     return (

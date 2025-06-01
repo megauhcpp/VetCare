@@ -1,12 +1,22 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
+// URL base para las peticiones a la API
 const API_URL = 'https://vetcareclinica.com/api';
 
+/**
+ * Contexto de la aplicación para manejar el estado global
+ */
 const AppContext = createContext();
 
+/**
+ * Proveedor del contexto de la aplicación
+ * @param {Object} props - Propiedades del componente
+ * @param {React.ReactNode} props.children - Componentes hijos
+ */
 const AppProvider = ({ children }) => {
   const { user, token } = useAuth();
+  // Estados para manejar los datos de la aplicación
   const [pets, setPets] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [treatments, setTreatments] = useState([]);
@@ -14,18 +24,18 @@ const AppProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch initial data based on user role
+  // Cargar datos iniciales según el rol del usuario
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!user || !token) {
-          console.log('No user or token available');
+          console.log('No hay usuario o token disponible');
           setLoading(false);
           return;
         }
 
-        console.log('Fetching data for user:', user);
-        console.log('Using token:', token);
+        console.log('Obteniendo datos para el usuario:', user);
+        console.log('Usando token:', token);
 
         const headers = {
           'Authorization': `Bearer ${token}`,
@@ -34,7 +44,7 @@ const AppProvider = ({ children }) => {
         };
 
         if (user.rol === 'admin') {
-          // Fetch all data for admin
+          // Obtener todos los datos para el administrador
           const [petsRes, appointmentsRes, treatmentsRes, usersRes] = await Promise.all([
             fetch(`${API_URL}/mascotas`, { headers }),
             fetch(`${API_URL}/citas`, { headers }),
@@ -42,25 +52,25 @@ const AppProvider = ({ children }) => {
             fetch(`${API_URL}/usuarios`, { headers })
           ]);
           
-          if (!petsRes.ok) throw new Error('Error fetching pets');
-          if (!appointmentsRes.ok) throw new Error('Error fetching appointments');
-          if (!treatmentsRes.ok) throw new Error('Error fetching treatments');
-          if (!usersRes.ok) throw new Error('Error fetching users');
+          if (!petsRes.ok) throw new Error('Error al obtener mascotas');
+          if (!appointmentsRes.ok) throw new Error('Error al obtener citas');
+          if (!treatmentsRes.ok) throw new Error('Error al obtener tratamientos');
+          if (!usersRes.ok) throw new Error('Error al obtener usuarios');
           
           const petsData = await petsRes.json();
           const appointmentsData = await appointmentsRes.json();
           const treatmentsData = await treatmentsRes.json();
           const usersData = await usersRes.json();
 
-          console.log('ADMIN DATA:', { petsData, appointmentsData, treatmentsData, usersData });
+          console.log('DATOS DEL ADMINISTRADOR:', { petsData, appointmentsData, treatmentsData, usersData });
 
           setPets(Array.isArray(petsData) ? petsData : (petsData.data || []));
           setAppointments(Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []));
           setTreatments(Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []));
           setUsers(Array.isArray(usersData) ? usersData : (usersData.data || []));
         } else if (user.rol === 'veterinario') {
-          console.log('Fetching data for veterinarian');
-          // Fetch all data for veterinarian
+          console.log('Obteniendo datos para el veterinario');
+          // Obtener todos los datos para el veterinario
           const [petsRes, appointmentsRes, treatmentsRes] = await Promise.all([
             fetch(`${API_URL}/mascotas`, { headers }),
             fetch(`${API_URL}/citas`, { headers }),
@@ -68,30 +78,30 @@ const AppProvider = ({ children }) => {
           ]);
           
           if (!petsRes.ok) {
-            console.error('Error response from pets:', await petsRes.text());
-            throw new Error('Error fetching pets');
+            console.error('Error en la respuesta de mascotas:', await petsRes.text());
+            throw new Error('Error al obtener mascotas');
           }
           if (!appointmentsRes.ok) {
-            console.error('Error response from appointments:', await appointmentsRes.text());
-            throw new Error('Error fetching appointments');
+            console.error('Error en la respuesta de citas:', await appointmentsRes.text());
+            throw new Error('Error al obtener citas');
           }
           if (!treatmentsRes.ok) {
-            console.error('Error response from treatments:', await treatmentsRes.text());
-            throw new Error('Error fetching treatments');
+            console.error('Error en la respuesta de tratamientos:', await treatmentsRes.text());
+            throw new Error('Error al obtener tratamientos');
           }
           
           const petsData = await petsRes.json();
           const appointmentsData = await appointmentsRes.json();
           const treatmentsData = await treatmentsRes.json();
 
-          console.log('VETERINARIO DATA:', { petsData, appointmentsData, treatmentsData });
+          console.log('DATOS DEL VETERINARIO:', { petsData, appointmentsData, treatmentsData });
 
-          // Veterinarians can see all pets, appointments, and treatments
+          // Los veterinarios pueden ver todas las mascotas, citas y tratamientos
           const petsArray = Array.isArray(petsData) ? petsData : (petsData.data || []);
           const appointmentsArray = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
           const treatmentsArray = Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []);
 
-          console.log('VETERINARIO PROCESSED DATA:', {
+          console.log('DATOS PROCESADOS DEL VETERINARIO:', {
             pets: petsArray,
             appointments: appointmentsArray,
             treatments: treatmentsArray
@@ -101,8 +111,8 @@ const AppProvider = ({ children }) => {
           setAppointments(appointmentsArray);
           setTreatments(treatmentsArray);
         } else {
-          // Fetch only user-specific data for clients
-          console.log('Fetching data for client');
+          // Obtener solo datos específicos del usuario para clientes
+          console.log('Obteniendo datos para el cliente');
           const [petsRes, appointmentsRes, treatmentsRes] = await Promise.all([
             fetch(`${API_URL}/mascotas`, { headers }),
             fetch(`${API_URL}/citas`, { headers }),
@@ -110,74 +120,74 @@ const AppProvider = ({ children }) => {
           ]);
           
           if (!petsRes.ok) {
-            console.error('Error response from pets:', await petsRes.text());
-            throw new Error('Error fetching pets');
+            console.error('Error en la respuesta de mascotas:', await petsRes.text());
+            throw new Error('Error al obtener mascotas');
           }
           if (!appointmentsRes.ok) {
-            console.error('Error response from appointments:', await appointmentsRes.text());
-            throw new Error('Error fetching appointments');
+            console.error('Error en la respuesta de citas:', await appointmentsRes.text());
+            throw new Error('Error al obtener citas');
           }
           if (!treatmentsRes.ok) {
-            console.error('Error response from treatments:', await treatmentsRes.text());
-            throw new Error('Error fetching treatments');
+            console.error('Error en la respuesta de tratamientos:', await treatmentsRes.text());
+            throw new Error('Error al obtener tratamientos');
           }
           
           const petsData = await petsRes.json();
           const appointmentsData = await appointmentsRes.json();
           const treatmentsData = await treatmentsRes.json();
 
-          console.log('CLIENTE DATA RAW:', { petsData, appointmentsData, treatmentsData });
+          console.log('DATOS CRUDOS DEL CLIENTE:', { petsData, appointmentsData, treatmentsData });
 
-          // Process pets data
+          // Procesar datos de mascotas
           const petsArray = Array.isArray(petsData) ? petsData : (petsData.data || []);
-          console.log('CLIENTE petsArray:', petsArray);
-          console.log('CLIENTE user.id_usuario:', user.id_usuario);
+          console.log('Mascotas del cliente:', petsArray);
+          console.log('ID del usuario:', user.id_usuario);
           
           const userPets = petsArray.filter(pet => {
-            console.log('Checking pet:', pet);
-            console.log('Pet id_usuario:', pet.usuario?.id_usuario);
-            console.log('User id_usuario:', user.id_usuario);
-            console.log('Are they equal?', pet.usuario?.id_usuario === user.id_usuario);
+            console.log('Verificando mascota:', pet);
+            console.log('ID de usuario de la mascota:', pet.usuario?.id_usuario);
+            console.log('ID del usuario:', user.id_usuario);
+            console.log('¿Son iguales?', pet.usuario?.id_usuario === user.id_usuario);
             return pet.usuario?.id_usuario === user.id_usuario;
           });
-          console.log('CLIENTE userPets:', userPets);
+          console.log('Mascotas del usuario:', userPets);
           setPets(userPets);
 
-          // Process appointments data
+          // Procesar datos de citas
           const appointmentsArray = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
-          console.log('CLIENTE appointmentsArray:', appointmentsArray);
+          console.log('Citas del cliente:', appointmentsArray);
           
           const userAppointments = appointmentsArray.filter(appointment => {
-            console.log('Checking appointment:', appointment);
-            console.log('Appointment id_mascota:', appointment.mascota?.id_mascota);
-            console.log('User pets:', userPets.map(pet => pet.id_mascota));
+            console.log('Verificando cita:', appointment);
+            console.log('ID de mascota de la cita:', appointment.mascota?.id_mascota);
+            console.log('Mascotas del usuario:', userPets.map(pet => pet.id_mascota));
             return userPets.some(pet => pet.id_mascota === appointment.mascota?.id_mascota);
           });
-          console.log('CLIENTE userAppointments:', userAppointments);
+          console.log('Citas del usuario:', userAppointments);
           setAppointments(userAppointments);
 
-          // Process treatments data
+          // Procesar datos de tratamientos
           const treatmentsArray = Array.isArray(treatmentsData) ? treatmentsData : (treatmentsData.data || []);
-          console.log('CLIENTE treatmentsArray:', treatmentsArray);
+          console.log('Tratamientos del cliente:', treatmentsArray);
           
           const userTreatments = treatmentsArray.filter(treatment => {
-            console.log('Checking treatment:', treatment);
-            console.log('Treatment id_cita:', treatment.cita?.id_cita);
-            console.log('User appointments:', userAppointments.map(app => app.id_cita));
+            console.log('Verificando tratamiento:', treatment);
+            console.log('ID de cita del tratamiento:', treatment.cita?.id_cita);
+            console.log('Citas del usuario:', userAppointments.map(app => app.id_cita));
             return userAppointments.some(appointment => appointment.id_cita === treatment.cita?.id_cita);
           });
-          console.log('CLIENTE userTreatments:', userTreatments);
+          console.log('Tratamientos del usuario:', userTreatments);
           setTreatments(userTreatments);
 
-          // Log final state
-          console.log('CLIENTE FINAL STATE:', {
+          // Registrar estado final
+          console.log('ESTADO FINAL DEL CLIENTE:', {
             pets: userPets,
             appointments: userAppointments,
             treatments: userTreatments
           });
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error al obtener datos:', error);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -187,6 +197,7 @@ const AppProvider = ({ children }) => {
     fetchData();
   }, [user, token]);
 
+  // Valor del contexto que se proporciona a los componentes hijos
   const value = {
     pets,
     setPets,
@@ -204,10 +215,15 @@ const AppProvider = ({ children }) => {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
+/**
+ * Hook personalizado para acceder al contexto de la aplicación
+ * @returns {Object} Contexto de la aplicación
+ * @throws {Error} Si se usa fuera del AppProvider
+ */
 const useApp = () => {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
+    throw new Error('useApp debe ser usado dentro de un AppProvider');
   }
   return context;
 };

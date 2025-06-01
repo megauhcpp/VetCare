@@ -38,11 +38,18 @@ import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import '../client/client-table.css';
 
+/**
+ * Página de gestión de tratamientos para veterinarios
+ * Permite ver, crear, editar y gestionar el estado de los tratamientos asignados al veterinario
+ */
 const Treatments = () => {
   const { treatments, pets, setTreatments, appointments } = useApp();
   const { user } = useAuth();
+  // Estado para controlar la apertura del diálogo de creación/edición
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para almacenar el tratamiento seleccionado para edición
   const [selectedTreatment, setSelectedTreatment] = useState(null);
+  // Estado para almacenar los datos del formulario
   const [formData, setFormData] = useState({
     id_cita: '',
     nombre: '',
@@ -52,21 +59,31 @@ const Treatments = () => {
     fecha_fin: '',
     estado: 'activo'
   });
+  // Estado para almacenar una cita extra si no se encuentra en la lista de citas
   const [extraCita, setExtraCita] = useState(null);
+  // Estado para controlar las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para controlar el cambio de estado de un tratamiento
   const [changingStateId, setChangingStateId] = useState(null);
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para el ordenamiento de la tabla
   const [order, setOrder] = useState('desc');
-  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno', 'veterinario'
+  const [orderBy, setOrderBy] = useState('fecha');
+  // Referencias para los inputs de fecha
   const dateInicioRef = useRef(null);
   const dateFinRef = useRef(null);
+  // Estado para controlar el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsTreatment, setDetailsTreatment] = useState(null);
+  // Estado para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  // Estado para controlar el diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [treatmentToDelete, setTreatmentToDelete] = useState(null);
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -75,6 +92,10 @@ const Treatments = () => {
     );
   }
 
+  /**
+   * Abre el diálogo para crear o editar un tratamiento
+   * @param {Object} treatment - El tratamiento a editar (opcional)
+   */
   const handleOpenDialog = (treatment = null) => {
     if (treatment) {
       let cita = appointments.find(c => String(c.id_cita) === String(treatment.id_cita));
@@ -115,11 +136,17 @@ const Treatments = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de creación/edición
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedTreatment(null);
   };
 
+  /**
+   * Maneja el envío del formulario para crear o actualizar un tratamiento
+   */
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -170,6 +197,10 @@ const Treatments = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de un tratamiento
+   * @param {number} treatmentId - ID del tratamiento a eliminar
+   */
   const handleDelete = async (treatmentId) => {
     try {
       const token = localStorage.getItem('token');
@@ -199,6 +230,11 @@ const Treatments = () => {
     }
   };
 
+  /**
+   * Maneja el cambio de estado de un tratamiento
+   * @param {Object} treatment - El tratamiento a actualizar
+   * @param {string} newState - El nuevo estado del tratamiento
+   */
   const handleChangeState = async (treatment, newState) => {
     try {
       const token = localStorage.getItem('token');
@@ -243,6 +279,11 @@ const Treatments = () => {
     }
   };
 
+  /**
+   * Obtiene el color correspondiente al estado del tratamiento
+   * @param {string} status - El estado del tratamiento
+   * @returns {string} El color correspondiente al estado
+   */
   const getStatusColor = (status) => {
     switch (status) {
       case 'completado':

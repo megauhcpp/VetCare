@@ -1,3 +1,8 @@
+/**
+ * Página de dashboard del cliente
+ * Muestra un resumen de las mascotas, citas y tratamientos del usuario
+ * Incluye un calendario para visualizar las citas programadas
+ */
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -22,16 +27,20 @@ import {
   LocalHospital as TreatmentIcon
 } from '@mui/icons-material';
 
+// Array con las abreviaturas de los días de la semana
 const diasSemana = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
 
 const ClientDashboard = () => {
   const { pets, appointments, treatments } = useApp();
   const { user } = useAuth();
   const hoy = new Date();
+  // Estado para controlar la fecha actual del calendario
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Mover hooks antes del return temprano
+  // Memoización de los datos de tratamientos para optimizar el rendimiento
   const treatmentsData = useMemo(() => treatments?.data || [], [treatments]);
+  
+  // Memoización de las próximas citas, filtradas y ordenadas por fecha
   const upcomingAppointments = useMemo(() =>
     Array.isArray(appointments)
       ? appointments
@@ -40,12 +49,15 @@ const ClientDashboard = () => {
         .slice(0, 2)
       : []
   , [appointments]);
+  
+  // Memoización de los tratamientos activos
   const activeTreatments = useMemo(() =>
     Array.isArray(treatmentsData)
       ? treatmentsData.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso').slice(0, 2)
       : []
   , [treatmentsData]);
 
+  // Mostrar indicador de carga si los datos no están disponibles
   if (!Array.isArray(pets) || !Array.isArray(appointments) || !Array.isArray(treatments)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -54,7 +66,7 @@ const ClientDashboard = () => {
     );
   }
 
-  // Calendario
+  // Lógica para generar el calendario
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
@@ -74,6 +86,7 @@ const ClientDashboard = () => {
   while (week.length < 7) week.push(null);
   weeks.push(week);
 
+  // Configuración de las tarjetas de estadísticas
   const stats = [
     {
       title: 'Mis Mascotas',
@@ -119,7 +132,7 @@ const ClientDashboard = () => {
         Aquí tienes un resumen de la salud de tus mascotas y tus próximas citas.
       </Typography>
 
-      {/* Bloques resumen en display flex */}
+      {/* Tarjetas de estadísticas */}
       <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
         {stats.map((stat, index) => (
           <Box
@@ -159,8 +172,9 @@ const ClientDashboard = () => {
         ))}
       </Box>
 
-      {/* Bloques de visitas programadas y calendario */}
+      {/* Sección de citas programadas y calendario */}
       <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
+        {/* Lista de próximas citas */}
         <Card sx={{ flex: 2, minWidth: 320, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>Tus visitas programadas</Typography>
@@ -192,6 +206,8 @@ const ClientDashboard = () => {
             )}
           </List>
         </Card>
+
+        {/* Calendario de citas */}
         <Card sx={{ flex: 1, minWidth: 280, border: '1px solid #e5e7eb', boxShadow: 'none', background: '#fff', p: 2 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }} gutterBottom>
             Calendario

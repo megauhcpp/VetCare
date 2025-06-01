@@ -41,12 +41,20 @@ import Divider from '@mui/material/Divider';
 import { especies, categoriasEspecies, sexos } from '../../data/petSpecies';
 import './client-table.css';
 
+/**
+ * Página de gestión de mascotas del cliente
+ * Permite ver, agregar, editar y eliminar mascotas del usuario
+ */
 const Pets = () => {
   const { pets, setPets, addPet, updatePet, deletePet } = useApp();
   const { token, user } = useAuth();
+  // Estado para controlar la apertura del diálogo de mascota
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para almacenar la mascota seleccionada para edición
   const [selectedPet, setSelectedPet] = useState(null);
+  // Estado para almacenar mensajes de error
   const [error, setError] = useState('');
+  // Estado para almacenar los datos del formulario
   const [formData, setFormData] = useState({
     nombre: '',
     especie: '',
@@ -55,18 +63,26 @@ const Pets = () => {
     sexo: '',
     notas: ''
   });
+  // Estado para controlar las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para el ordenamiento de la tabla
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
+  // Referencia para el input de fecha
   const dateInputRef = useRef(null);
+  // Estado para controlar el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsPet, setDetailsPet] = useState(null);
+  // Estado para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  // Estado para controlar el diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [petToDelete, setPetToDelete] = useState(null);
 
+  // Mostrar indicador de carga si los datos no están disponibles
   if (!Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -78,6 +94,10 @@ const Pets = () => {
   // Filtrar mascotas del usuario actual
   const userPets = pets.filter(pet => pet.usuario?.id_usuario === user?.id_usuario);
 
+  /**
+   * Abre el diálogo para agregar o editar una mascota
+   * @param {Object} pet - Mascota a editar (opcional)
+   */
   const handleOpenDialog = (pet = null) => {
     if (pet) {
       setSelectedPet(pet);
@@ -103,11 +123,18 @@ const Pets = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de mascota
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedPet(null);
   };
 
+  /**
+   * Maneja el envío del formulario de mascota
+   * Realiza una petición POST o PUT al API según si es una nueva mascota o una edición
+   */
   const handleSubmit = async () => {
     try {
       if (!token) {
@@ -168,6 +195,10 @@ const Pets = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de una mascota
+   * @param {number} petId - ID de la mascota a eliminar
+   */
   const handleDelete = async (petId) => {
     try {
       if (!token) {
@@ -200,7 +231,10 @@ const Pets = () => {
     }
   };
 
-  // Manejar el cambio de especie
+  /**
+   * Maneja el cambio de especie en el formulario
+   * @param {Object} e - Evento del cambio
+   */
   const handleEspecieChange = (e) => {
     const nuevaEspecie = e.target.value;
     setFormData({
@@ -210,7 +244,9 @@ const Pets = () => {
     });
   };
 
-  // Función para refrescar la lista de mascotas
+  /**
+   * Refresca la lista de mascotas desde el API
+   */
   const refreshPets = async () => {
     try {
       const response = await fetch('https://vetcareclinica.com/api/mascotas', {
@@ -236,12 +272,17 @@ const Pets = () => {
     }
   };
 
+  /**
+   * Maneja el ordenamiento de la tabla
+   * @param {string} property - Propiedad por la cual ordenar
+   */
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
+  // Filtrar y ordenar las mascotas según el término de búsqueda y el ordenamiento
   const sortedPets = [...userPets.filter(pet => {
     const searchLower = searchTerm.toLowerCase();
     return (

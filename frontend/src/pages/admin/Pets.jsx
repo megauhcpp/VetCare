@@ -33,13 +33,22 @@ import { useApp } from '../../context/AppContext';
 import { especies, categoriasEspecies } from '../../data/petSpecies';
 import '../client/client-table.css';
 
+/**
+ * Página de gestión de mascotas para el administrador
+ * Permite ver, crear, editar y eliminar mascotas del sistema
+ */
 const AdminPets = () => {
   const { pets, setPets, users } = useApp();
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estados para la ordenación de la tabla
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('nombre');
+  // Estado para controlar la apertura del diálogo de creación/edición
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para almacenar la mascota seleccionada
   const [selectedPet, setSelectedPet] = useState(null);
+  // Estado para los datos del formulario
   const [formData, setFormData] = useState({
     nombre: '',
     especie: '',
@@ -49,18 +58,24 @@ const AdminPets = () => {
     notas: '',
     id_usuario: ''
   });
+  // Estado para las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para la lista de clientes
   const [clientes, setClientes] = useState([]);
+  // Referencia para el input de fecha
   const dateInputRef = useRef(null);
+  // Estado para el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsPet, setDetailsPet] = useState(null);
+  // Estados para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  // Estado para el diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [petToDelete, setPetToDelete] = useState(null);
 
+  // Cargar la lista de clientes al montar el componente
   useEffect(() => {
-    // Fetch clientes (usuarios con rol cliente)
     const fetchClientes = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -80,6 +95,7 @@ const AdminPets = () => {
     fetchClientes();
   }, []);
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -88,6 +104,10 @@ const AdminPets = () => {
     );
   }
 
+  /**
+   * Abre el diálogo de creación/edición de mascota
+   * @param {Object} pet - Mascota a editar (opcional)
+   */
   const handleOpenDialog = (pet = null) => {
     if (pet) {
       setSelectedPet(pet);
@@ -115,12 +135,17 @@ const AdminPets = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de creación/edición
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedPet(null);
   };
 
-  // Función para refrescar la lista de mascotas
+  /**
+   * Actualiza la lista de mascotas desde el servidor
+   */
   const refreshPets = async () => {
     try {
       const response = await fetch('https://vetcareclinica.com/api/pets', {
@@ -146,6 +171,9 @@ const AdminPets = () => {
     }
   };
 
+  /**
+   * Maneja el envío del formulario para crear/actualizar una mascota
+   */
   const handleSubmit = async () => {
     try {
       if (!formData.id_usuario) {
@@ -174,7 +202,7 @@ const AdminPets = () => {
         return;
       }
 
-      // Asegurarnos de que id_usuario esté presente en los datos
+      // Preparar los datos para enviar
       const dataToSend = {
         nombre: formData.nombre,
         especie: formData.especie,
@@ -222,6 +250,10 @@ const AdminPets = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de una mascota
+   * @param {number} petId - ID de la mascota a eliminar
+   */
   const handleDelete = async (petId) => {
     try {
       const response = await fetch(`https://vetcareclinica.com/api/pets/${petId}`, {

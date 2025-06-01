@@ -6,7 +6,12 @@ import { CalendarCheck, PawPrint, Bell } from 'lucide-react';
 import vetcareLogo from '../vetcarelogonobg.png';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
+/**
+ * Página de registro de usuarios
+ * Permite a los usuarios crear una nueva cuenta en el sistema
+ */
 const Register = () => {
+    // Estado para los datos del formulario
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
@@ -18,9 +23,14 @@ const Register = () => {
     const [errors, setErrors] = useState({});
     const { register } = useAuth();
     const navigate = useNavigate();
+    // Estados para controlar la visibilidad de las contraseñas
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
+    /**
+     * Maneja los cambios en los campos del formulario
+     * @param {Event} e - Evento del cambio en el input
+     */
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -35,10 +45,14 @@ const Register = () => {
         }
     };
 
+    /**
+     * Maneja el envío del formulario de registro
+     * @param {Event} e - Evento del submit del formulario
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Client-side validation first
+        // Validación del lado del cliente
         const newErrors = {};
         
         if (formData.password.length < 8) {
@@ -71,15 +85,21 @@ const Register = () => {
     return (
         <div className="register-page">
             <div className="register-container">
+                {/* Sección izquierda con el logo */}
                 <div className="register-left">
                     <img src={vetcareLogo} alt="VetCare Logo" style={{ height: 400, width: 'auto', margin: '0 auto', display: 'block' }} />
                 </div>
+                
+                {/* Sección derecha con el formulario */}
                 <div className="register-right">
                     <div className="register-form-container">
                         <h2>Registro</h2>
                         <p className="register-subtitle">Crea tu cuenta para comenzar</p>
                         {errors.general && <div className="error-message">{errors.general}</div>}
+                        
+                        {/* Formulario de registro */}
                         <form onSubmit={handleSubmit} className="register-form">
+                            {/* Campo de nombre */}
                             <div className="form-group">
                                 <input
                                     type="text"
@@ -92,6 +112,8 @@ const Register = () => {
                                 />
                                 {errors.nombre && <span className="error-text">{errors.nombre}</span>}
                             </div>
+                            
+                            {/* Campo de apellido */}
                             <div className="form-group">
                                 <input
                                     type="text"
@@ -104,6 +126,8 @@ const Register = () => {
                                 />
                                 {errors.apellido && <span className="error-text">{errors.apellido}</span>}
                             </div>
+                            
+                            {/* Campo de correo electrónico */}
                             <div className="form-group">
                                 <input
                                     type="email"
@@ -116,6 +140,8 @@ const Register = () => {
                                 />
                                 {errors.email && <span className="error-text">{errors.email}</span>}
                             </div>
+                            
+                            {/* Campo de contraseña con toggle de visibilidad */}
                             <div className="form-group" style={{ position: 'relative' }}>
                                 <input
                                     type={showPassword ? 'text' : 'password'}
@@ -135,6 +161,8 @@ const Register = () => {
                                 </span>
                                 {errors.password && <span className="error-text">{errors.password}</span>}
                             </div>
+                            
+                            {/* Campo de confirmación de contraseña con toggle de visibilidad */}
                             <div className="form-group" style={{ position: 'relative' }}>
                                 <input
                                     type={showConfirm ? 'text' : 'password'}
@@ -154,10 +182,14 @@ const Register = () => {
                                 </span>
                                 {errors.password_confirmation && <span className="error-text">{errors.password_confirmation}</span>}
                             </div>
+                            
+                            {/* Botón de registro */}
                             <button type="submit" className="register-button">
                                 Registrarse
                             </button>
                         </form>
+                        
+                        {/* Enlace para inicio de sesión */}
                         <p className="login-link">
                             ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
                         </p>

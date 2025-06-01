@@ -8,15 +8,28 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Controlador de Mascotas
+ * 
+ * Este controlador maneja todas las operaciones relacionadas con las mascotas del sistema,
+ * incluyendo su creación, actualización, eliminación y consulta.
+ * Todas las operaciones requieren autenticación mediante Sanctum.
+ */
 class MascotaController extends Controller
 {
+    /**
+     * Constructor del controlador
+     * Aplica el middleware de autenticación a todas las rutas
+     */
     public function __construct()
     {
         $this->middleware('auth:sanctum');
     }
 
     /**
-     * Display a listing of the resource.
+     * Muestra un listado de todas las mascotas del usuario autenticado.
+     * 
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
@@ -36,7 +49,9 @@ class MascotaController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Muestra el formulario para crear una nueva mascota.
+     * 
+     * @return \Illuminate\Http\Response
      */
     public function create()
     {
@@ -44,7 +59,10 @@ class MascotaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena una nueva mascota en la base de datos.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -87,7 +105,10 @@ class MascotaController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Muestra la información detallada de una mascota específica.
+     * 
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
@@ -114,7 +135,10 @@ class MascotaController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Muestra el formulario para editar una mascota existente.
+     * 
+     * @param  string  $id
+     * @return \Illuminate\Http\Response
      */
     public function edit(string $id)
     {
@@ -122,7 +146,11 @@ class MascotaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza la información de una mascota en la base de datos.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -167,7 +195,10 @@ class MascotaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina una mascota de la base de datos.
+     * 
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {

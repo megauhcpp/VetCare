@@ -41,12 +41,20 @@ import PetsIcon from '@mui/icons-material/Pets';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 
+/**
+ * Página de gestión de citas del cliente
+ * Permite ver, agendar, editar y cancelar citas para las mascotas del usuario
+ */
 const Appointments = () => {
   const { appointments, pets, setAppointments, addAppointment, updateAppointment, deleteAppointment, token } = useApp();
   const { user } = useAuth();
+  // Estado para controlar la apertura del diálogo de cita
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para almacenar la cita seleccionada para edición
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Estado para almacenar la lista de veterinarios
   const [veterinarians, setVeterinarians] = useState([]);
+  // Estado para almacenar los datos del formulario
   const [formData, setFormData] = useState({
     petId: '',
     date: '',
@@ -56,20 +64,29 @@ const Appointments = () => {
     estado: 'pendiente',
     id_usuario: ''
   });
+  // Estado para controlar las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para controlar la hora y minutos seleccionados
   const [selectedHour, setSelectedHour] = useState('10');
   const [selectedMinute, setSelectedMinute] = useState('00');
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para el ordenamiento de la tabla
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('fecha_hora');
+  // Estado para controlar el diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  // Referencia para el input de fecha
   const dateInputRef = useRef(null);
+  // Estado para controlar el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsAppointment, setDetailsAppointment] = useState(null);
+  // Estado para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // Mostrar indicador de carga si los datos no están disponibles
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -93,6 +110,7 @@ const Appointments = () => {
     );
   });
 
+  // Ordenar las citas según la fecha y hora
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
     if (orderBy === 'fecha_hora') {
       if (order === 'asc') {
@@ -104,8 +122,10 @@ const Appointments = () => {
     return 0;
   });
 
+  /**
+   * Efecto para cargar la lista de veterinarios al montar el componente
+   */
   useEffect(() => {
-    // Fetch veterinarians when component mounts
     const fetchVeterinarians = async () => {
       try {
         const response = await fetch('https://vetcareclinica.com/api/veterinarios', {
@@ -124,11 +144,18 @@ const Appointments = () => {
     fetchVeterinarians();
   }, [token]);
 
-  // Añadir useEffect para refrescar citas cuando cambien las mascotas
+  /**
+   * Efecto para refrescar las citas cuando cambien las mascotas
+   */
   useEffect(() => {
     refreshAppointments();
   }, [pets]);
 
+  /**
+   * Formatea la fecha y hora para mostrarla en la interfaz
+   * @param {string} dateString - Fecha y hora en formato ISO
+   * @returns {string} Fecha y hora formateada
+   */
   const formatDateTime = (dateString) => {
     if (!dateString) return '';
     const [datePart, timePart] = dateString.split('T');
@@ -137,6 +164,10 @@ const Appointments = () => {
     return `${datePart}, ${hour}:${minute}`;
   };
 
+  /**
+   * Abre el diálogo para agregar o editar una cita
+   * @param {Object} appointment - Cita a editar (opcional)
+   */
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
@@ -171,11 +202,18 @@ const Appointments = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de cita
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedAppointment(null);
   };
 
+  /**
+   * Maneja el envío del formulario de cita
+   * Realiza una petición POST o PUT al API según si es una nueva cita o una edición
+   */
   const handleSubmit = async () => {
     try {
       if (!token) {
@@ -230,6 +268,10 @@ const Appointments = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de una cita
+   * @param {number} appointmentId - ID de la cita a eliminar
+   */
   const handleDelete = async (appointmentId) => {
     try {
       if (!token) {

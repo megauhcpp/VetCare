@@ -45,12 +45,21 @@ import {
 } from '@mui/icons-material';
 import '../client/client-table.css';
 
+/**
+ * Página de gestión de citas para el administrador
+ * Permite ver, crear, editar y eliminar citas del sistema
+ */
 const AdminAppointments = () => {
   const { appointments, pets, users, setAppointments } = useApp();
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para controlar la apertura del diálogo de creación/edición
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para controlar la apertura del diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  // Estado para almacenar la cita seleccionada
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Estado para los datos del formulario
   const [formData, setFormData] = useState({
     id_mascota: '',
     id_usuario: '',
@@ -58,15 +67,22 @@ const AdminAppointments = () => {
     tipo_consulta: '',
     motivo_consulta: '',
   });
+  // Estado para las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para controlar el cambio de estado de una cita
   const [changingStateId, setChangingStateId] = useState(null);
+  // Estados para la selección de hora y minutos
   const [selectedHour, setSelectedHour] = useState('10');
   const [selectedMinute, setSelectedMinute] = useState('00');
+  // Estados para la ordenación de la tabla
   const [order, setOrder] = useState('desc');
   const [orderBy, setOrderBy] = useState('fecha');
+  // Referencia para el input de fecha
   const dateInputRef = useRef(null);
+  // Estado para el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsAppointment, setDetailsAppointment] = useState(null);
+  // Estados para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -76,6 +92,7 @@ const AdminAppointments = () => {
     return Array.isArray(appointments) ? appointments : (appointments?.data || []);
   }, [appointments]);
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!appointmentsData) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -84,6 +101,11 @@ const AdminAppointments = () => {
     );
   }
 
+  /**
+   * Obtiene el color correspondiente al estado de la cita
+   * @param {string} status - Estado de la cita
+   * @returns {string} Color del chip
+   */
   const getStatusColor = (status) => {
     switch (status) {
       case 'pendiente':
@@ -99,6 +121,11 @@ const AdminAppointments = () => {
     }
   };
 
+  /**
+   * Formatea la fecha y hora para mostrarla en la interfaz
+   * @param {string} dateString - Fecha y hora en formato ISO
+   * @returns {string} Fecha y hora formateada
+   */
   const formatDateTime = (dateString) => {
     if (!dateString) return '';
     const [datePart, timePart] = dateString.split('T');
@@ -107,6 +134,10 @@ const AdminAppointments = () => {
     return `${datePart}, ${hour}:${minute}`;
   };
 
+  /**
+   * Abre el diálogo de creación/edición de cita
+   * @param {Object} appointment - Cita a editar (opcional)
+   */
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       // Parsear fecha y hora como local
@@ -139,21 +170,35 @@ const AdminAppointments = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de creación/edición
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedAppointment(null);
   };
 
+  /**
+   * Abre el diálogo de confirmación de eliminación
+   * @param {Object} appointment - Cita a eliminar
+   */
   const handleOpenDeleteDialog = (appointment) => {
     setSelectedAppointment(appointment);
     setOpenDeleteDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de confirmación de eliminación
+   */
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
     setSelectedAppointment(null);
   };
 
+  /**
+   * Maneja los cambios en los campos del formulario
+   * @param {Event} e - Evento del cambio en el input
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -162,6 +207,9 @@ const AdminAppointments = () => {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario para crear/actualizar una cita
+   */
   const handleSubmit = async () => {
     try {
       const url = selectedAppointment
@@ -222,6 +270,9 @@ const AdminAppointments = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de una cita
+   */
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');

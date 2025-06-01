@@ -11,7 +11,12 @@ import {
   FormControlLabel
 } from '@mui/material';
 
+/**
+ * Página de configuración del sistema para el administrador
+ * Permite gestionar la información de la clínica, horarios, duración de citas y notificaciones
+ */
 const Settings = () => {
+  // Estado para almacenar la configuración del sistema
   const [settings, setSettings] = useState({
     clinicName: '',
     address: '',
@@ -31,8 +36,9 @@ const Settings = () => {
     enableSMSNotifications: false
   });
 
+  // Cargar la configuración al montar el componente
   useEffect(() => {
-    // Fetch settings from API
+    // Obtener la configuración desde la API
     const fetchSettings = async () => {
       try {
         const response = await fetch('https://vetcareclinica.com/api/settings');
@@ -48,6 +54,11 @@ const Settings = () => {
     fetchSettings();
   }, []);
 
+  /**
+   * Maneja los cambios en los campos de texto
+   * @param {string} field - Campo a modificar
+   * @param {string} value - Nuevo valor
+   */
   const handleChange = (field, value) => {
     setSettings(prev => ({
       ...prev,
@@ -55,6 +66,12 @@ const Settings = () => {
     }));
   };
 
+  /**
+   * Maneja los cambios en los horarios de trabajo
+   * @param {string} day - Día de la semana
+   * @param {string} field - Campo a modificar (start/end)
+   * @param {string} value - Nuevo valor
+   */
   const handleWorkingHoursChange = (day, field, value) => {
     setSettings(prev => ({
       ...prev,
@@ -68,6 +85,9 @@ const Settings = () => {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario para guardar la configuración
+   */
   const handleSubmit = async () => {
     try {
       const response = await fetch('https://vetcareclinica.com/api/settings', {
@@ -79,7 +99,7 @@ const Settings = () => {
       });
 
       if (response.ok) {
-        // Show success message
+        // Mostrar mensaje de éxito
         alert('Settings saved successfully!');
       }
     } catch (error) {
@@ -93,6 +113,7 @@ const Settings = () => {
         Clinic Settings
       </Typography>
 
+      {/* Sección de información de la clínica */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Clinic Information
@@ -134,6 +155,7 @@ const Settings = () => {
         </Grid>
       </Paper>
 
+      {/* Sección de horarios de trabajo */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Working Hours
@@ -171,6 +193,7 @@ const Settings = () => {
         ))}
       </Paper>
 
+      {/* Sección de configuración de citas */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Appointment Settings
@@ -188,6 +211,7 @@ const Settings = () => {
         </Grid>
       </Paper>
 
+      {/* Sección de configuración de notificaciones */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Notification Settings
@@ -218,6 +242,7 @@ const Settings = () => {
         </Grid>
       </Paper>
 
+      {/* Botón para guardar la configuración */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="contained"

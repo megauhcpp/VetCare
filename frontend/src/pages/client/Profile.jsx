@@ -16,16 +16,24 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Lock as LockIcon } from '@mui/icons-material';
 
+/**
+ * Página de perfil del cliente
+ * Permite ver y editar la información personal y cambiar la contraseña
+ */
 const Profile = () => {
   const { user, updateUser, changePassword, token } = useAuth();
+  // Estado para almacenar los datos del formulario de perfil
   const [formData, setFormData] = useState({
     nombre: user?.nombre || '',
     apellido: user?.apellido || '',
     email: user?.email || ''
   });
+  // Estado para controlar los mensajes de error y éxito
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  // Estado para controlar la visibilidad del formulario de cambio de contraseña
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  // Estado para almacenar los datos del formulario de cambio de contraseña
   const [passwordData, setPasswordData] = useState({
     current: '',
     new: '',
@@ -34,9 +42,14 @@ const Profile = () => {
     showNew: false,
     showConfirm: false
   });
+  // Estado para controlar los mensajes de error y éxito del cambio de contraseña
   const [passwordMsg, setPasswordMsg] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
 
+  /**
+   * Maneja los cambios en los campos del formulario de perfil
+   * @param {Object} e - Evento del cambio
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -45,8 +58,18 @@ const Profile = () => {
     }));
   };
 
+  /**
+   * Valida el formato del correo electrónico
+   * @param {string} email - Correo electrónico a validar
+   * @returns {boolean} true si el correo es válido, false en caso contrario
+   */
   const validateEmail = (email) => /.+@.+\..+/.test(email);
 
+  /**
+   * Maneja el envío del formulario de perfil
+   * Realiza una petición PUT al API para actualizar los datos del perfil
+   * @param {Object} e - Evento del envío
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -79,6 +102,11 @@ const Profile = () => {
     }
   };
 
+  /**
+   * Maneja el cambio de contraseña
+   * Realiza una petición POST al API para cambiar la contraseña
+   * @param {Object} e - Evento del envío
+   */
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setPasswordMsg('');
@@ -132,12 +160,17 @@ const Profile = () => {
     }
   };
 
+  /**
+   * Obtiene las iniciales del nombre y apellido del usuario
+   * @returns {string} Las iniciales del usuario
+   */
   const getInitials = () => {
     const n = formData.nombre?.trim() || '';
     const a = formData.apellido?.trim() || '';
     return (n[0] || '').toUpperCase() + (a[0] || '').toUpperCase();
   };
 
+  // Efecto para limpiar los mensajes de error y éxito después de 3 segundos
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -148,6 +181,7 @@ const Profile = () => {
     }
   }, [error, success]);
 
+  // Efecto para limpiar los mensajes de error y éxito del cambio de contraseña después de 3 segundos
   useEffect(() => {
     if (passwordMsg || passwordSuccess) {
       const timer = setTimeout(() => {

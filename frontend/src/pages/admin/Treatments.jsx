@@ -45,14 +45,24 @@ import {
 } from '@mui/icons-material';
 import '../client/client-table.css';
 
+/**
+ * Página de gestión de tratamientos para el administrador
+ * Permite ver, crear, editar y eliminar tratamientos del sistema
+ */
 const AdminTreatments = () => {
   const { treatments, pets, appointments, setTreatments } = useApp();
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estados para la ordenación de la tabla
   const [order, setOrder] = useState('desc');
   const [orderBy, setOrderBy] = useState('fecha');
+  // Estado para controlar la apertura del diálogo de creación/edición
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para controlar la apertura del diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  // Estado para almacenar el tratamiento seleccionado
   const [selectedTreatment, setSelectedTreatment] = useState(null);
+  // Estado para los datos del formulario
   const [formData, setFormData] = useState({
     id_cita: '',
     nombre: '',
@@ -61,13 +71,18 @@ const AdminTreatments = () => {
     fecha_inicio: '',
     fecha_fin: ''
   });
+  // Estado para las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para controlar el cambio de estado de un tratamiento
   const [changingStateId, setChangingStateId] = useState(null);
+  // Estado para el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsTreatment, setDetailsTreatment] = useState(null);
+  // Estados para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // Referencias para los inputs de fecha
   const dateInicioRef = useRef(null);
   const dateFinRef = useRef(null);
 
@@ -77,6 +92,7 @@ const AdminTreatments = () => {
     return Array.isArray(treatments) ? treatments : (treatments?.data || []);
   }, [treatments]);
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!treatmentsData) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -85,6 +101,11 @@ const AdminTreatments = () => {
     );
   }
 
+  /**
+   * Obtiene el color correspondiente al estado del tratamiento
+   * @param {string} status - Estado del tratamiento
+   * @returns {string} Color del chip
+   */
   const getStatusColor = (status) => {
     switch (status) {
       case 'completado':
@@ -98,6 +119,11 @@ const AdminTreatments = () => {
     }
   };
 
+  /**
+   * Formatea la fecha para mostrarla en la interfaz
+   * @param {string} dateString - Fecha en formato ISO
+   * @returns {string} Fecha formateada
+   */
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -106,6 +132,10 @@ const AdminTreatments = () => {
     });
   };
 
+  /**
+   * Abre el diálogo de creación/edición de tratamiento
+   * @param {Object} treatment - Tratamiento a editar (opcional)
+   */
   const handleOpenDialog = (treatment = null) => {
     if (treatment) {
       setFormData({
@@ -131,21 +161,35 @@ const AdminTreatments = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de creación/edición
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedTreatment(null);
   };
 
+  /**
+   * Abre el diálogo de confirmación de eliminación
+   * @param {Object} treatment - Tratamiento a eliminar
+   */
   const handleOpenDeleteDialog = (treatment) => {
     setSelectedTreatment(treatment);
     setOpenDeleteDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de confirmación de eliminación
+   */
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
     setSelectedTreatment(null);
   };
 
+  /**
+   * Maneja los cambios en los campos del formulario
+   * @param {Event} e - Evento del cambio en el input
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -154,6 +198,9 @@ const AdminTreatments = () => {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario para crear/actualizar un tratamiento
+   */
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -200,6 +247,9 @@ const AdminTreatments = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de un tratamiento
+   */
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -241,6 +291,11 @@ const AdminTreatments = () => {
     }
   };
 
+  /**
+   * Maneja el cambio de estado de un tratamiento
+   * @param {Object} treatment - Tratamiento a modificar
+   * @param {string} newState - Nuevo estado del tratamiento
+   */
   const handleChangeState = async (treatment, newState) => {
     try {
       const token = localStorage.getItem('token');

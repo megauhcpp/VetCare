@@ -3,8 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { Calendar, Clock, Plus, PawPrint, Stethoscope } from 'lucide-react';
 import '../styles/Dashboard.css';
 
+/**
+ * Dashboard principal de la aplicación
+ * Muestra un resumen de mascotas, citas, tratamientos y un calendario
+ */
 const Dashboard = () => {
     const { user } = useAuth();
+    // Estado para controlar la fecha actual del calendario
     const [currentDate, setCurrentDate] = useState(new Date());
 
     // Datos de ejemplo (en una aplicación real, estos vendrían de la API)
@@ -23,6 +28,10 @@ const Dashboard = () => {
         { id: 2, mascota: 'Luna', tratamiento: 'Antiparasitario', duracion: '1 mes' }
     ];
 
+    /**
+     * Genera la matriz del calendario para el mes actual
+     * @returns {Array} Matriz de semanas con días del mes
+     */
     const generarCalendario = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -57,6 +66,10 @@ const Dashboard = () => {
         return weeks;
     };
 
+    /**
+     * Cambia el mes mostrado en el calendario
+     * @param {number} incremento - Número de meses a avanzar o retroceder
+     */
     const cambiarMes = (incremento) => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + incremento, 1));
     };

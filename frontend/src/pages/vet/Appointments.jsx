@@ -39,12 +39,20 @@ import PetsIcon from '@mui/icons-material/Pets';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 
+/**
+ * Página de gestión de citas para veterinarios
+ * Permite ver, crear, editar y gestionar el estado de las citas asignadas al veterinario
+ */
 const Appointments = () => {
   const { appointments, pets, setAppointments } = useApp();
   const { user } = useAuth();
+  // Estado para controlar la apertura del diálogo de creación/edición
   const [openDialog, setOpenDialog] = useState(false);
+  // Estado para almacenar la cita seleccionada para edición
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // Estado para almacenar la lista de veterinarios
   const [veterinarians, setVeterinarians] = useState([]);
+  // Estado para almacenar los datos del formulario
   const [formData, setFormData] = useState({
     petId: '',
     date: '',
@@ -53,23 +61,32 @@ const Appointments = () => {
     motivo: '',
     id_veterinario: ''
   });
+  // Estado para controlar las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para controlar el cambio de estado de una cita
   const [changingStateId, setChangingStateId] = useState(null);
+  // Estado para controlar la hora seleccionada
   const [selectedHour, setSelectedHour] = useState('10');
   const [selectedMinute, setSelectedMinute] = useState('00');
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para el ordenamiento de la tabla
   const [order, setOrder] = useState('desc');
-  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno'
+  const [orderBy, setOrderBy] = useState('fecha');
+  // Estado para controlar el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsAppointment, setDetailsAppointment] = useState(null);
+  // Estado para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  // Estado para controlar el diálogo de eliminación
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  // Referencia para el input de fecha
   const dateInputRef = React.useRef(null);
 
+  // Efecto para cargar la lista de veterinarios al montar el componente
   useEffect(() => {
-    // Fetch veterinarians when component mounts
     const fetchVeterinarians = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -89,18 +106,19 @@ const Appointments = () => {
     fetchVeterinarians();
   }, []);
 
-  // Filtrar citas solo del veterinario logueado (soporta ambas estructuras)
+  // Filtrar citas solo del veterinario logueado
   const vetAppointments = appointments.filter(
     (appointment) =>
       appointment.id_usuario === user?.id_usuario ||
       appointment.veterinario?.id_usuario === user?.id_usuario
   );
 
-  // Añadir useEffect para refrescar citas cuando cambien las mascotas
+  // Efecto para refrescar las citas cuando cambien las mascotas
   useEffect(() => {
     refreshAppointments();
   }, [pets]);
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!Array.isArray(appointments) || !Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -109,6 +127,10 @@ const Appointments = () => {
     );
   }
 
+  /**
+   * Abre el diálogo para crear o editar una cita
+   * @param {Object} appointment - La cita a editar (opcional)
+   */
   const handleOpenDialog = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
@@ -141,12 +163,17 @@ const Appointments = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Cierra el diálogo de creación/edición
+   */
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedAppointment(null);
   };
 
-  // Función para refrescar la lista de citas
+  /**
+   * Actualiza la lista de citas desde el servidor
+   */
   const refreshAppointments = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -178,6 +205,9 @@ const Appointments = () => {
     }
   };
 
+  /**
+   * Maneja el envío del formulario para crear o actualizar una cita
+   */
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem('token');

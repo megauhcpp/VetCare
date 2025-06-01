@@ -47,31 +47,49 @@ import {
 } from '@mui/icons-material';
 import './client-table.css';
 
+/**
+ * Página de tratamientos del cliente
+ * Permite ver los tratamientos de las mascotas del usuario
+ */
 const Treatments = () => {
   const { treatments, pets } = useApp();
   const { user } = useAuth();
+  // Estado para controlar las notificaciones
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para el ordenamiento de la tabla
   const [order, setOrder] = useState('desc');
-  const [orderBy, setOrderBy] = useState('fecha'); // 'fecha', 'estado', 'dueno', 'veterinario'
+  const [orderBy, setOrderBy] = useState('fecha');
+  // Estado para controlar el diálogo de detalles
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsTreatment, setDetailsTreatment] = useState(null);
+  // Estado para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // Mover hooks antes del return temprano
+  /**
+   * Memoización de los datos de tratamientos
+   * Asegura que los tratamientos sean un array
+   */
   const treatmentsData = useMemo(() => {
     console.log('Raw treatments:', treatments);
     return Array.isArray(treatments) ? treatments : (treatments?.data || []);
   }, [treatments]);
   
-  // Filtrar mascotas del usuario actual
+  /**
+   * Memoización de las mascotas del usuario
+   * Filtra las mascotas que pertenecen al usuario actual
+   */
   const userPets = useMemo(() => {
     console.log('Raw pets:', pets);
     return pets.filter(pet => pet.usuario?.id_usuario === user?.id_usuario);
   }, [pets, user]);
 
-  // Organizar tratamientos por mascota
+  /**
+   * Memoización de los tratamientos organizados por mascota
+   * Agrupa los tratamientos según la mascota a la que pertenecen
+   */
   const treatmentsByPet = useMemo(() => {
     console.log('Treatments data:', treatmentsData);
     console.log('User pets:', userPets);
@@ -87,6 +105,7 @@ const Treatments = () => {
     return organized;
   }, [userPets, treatmentsData]);
 
+  // Mostrar indicador de carga si los datos no están disponibles
   if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -95,6 +114,11 @@ const Treatments = () => {
     );
   }
 
+  /**
+   * Obtiene el color correspondiente al estado del tratamiento
+   * @param {string} status - Estado del tratamiento
+   * @returns {string} Color del estado
+   */
   const getStatusColor = (status) => {
     switch (status) {
       case 'completado':
@@ -108,6 +132,11 @@ const Treatments = () => {
     }
   };
 
+  /**
+   * Formatea la fecha para mostrarla en la interfaz
+   * @param {string} dateString - Fecha en formato ISO
+   * @returns {string} Fecha formateada
+   */
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -116,6 +145,7 @@ const Treatments = () => {
     });
   };
 
+  // Obtener todos los tratamientos y filtrarlos según el término de búsqueda
   const allTreatments = Object.values(treatmentsByPet).flatMap(obj => obj.treatments);
   const filteredTreatments = allTreatments.filter(treatment => {
     const searchLower = searchTerm.toLowerCase();
@@ -127,6 +157,8 @@ const Treatments = () => {
       treatment.estado?.toLowerCase().includes(searchLower)
     );
   });
+
+  // Ordenar los tratamientos según el criterio seleccionado
   const sortedTreatments = [...filteredTreatments].sort((a, b) => {
     if (orderBy === 'fecha') {
       if (order === 'asc') {
@@ -160,12 +192,19 @@ const Treatments = () => {
     return 0;
   });
 
+  /**
+   * Maneja el ordenamiento de la tabla
+   * @param {string} property - Propiedad por la cual ordenar
+   */
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
+  /**
+   * Obtiene los tratamientos desde el API
+   */
   const fetchTreatments = async () => {
     try {
       const response = await fetch('https://vetcareclinica.com/api/tratamientos', {
@@ -183,6 +222,11 @@ const Treatments = () => {
     }
   };
 
+  /**
+   * Maneja el envío del formulario de tratamiento
+   * Realiza una petición POST al API para crear un nuevo tratamiento
+   * @param {Object} e - Evento del envío
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -201,6 +245,10 @@ const Treatments = () => {
     }
   };
 
+  /**
+   * Maneja la eliminación de un tratamiento
+   * @param {number} treatmentId - ID del tratamiento a eliminar
+   */
   const handleDelete = async (treatmentId) => {
     try {
       const response = await fetch(`https://vetcareclinica.com/api/tratamientos/${treatmentId}`, {

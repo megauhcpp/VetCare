@@ -8,10 +8,15 @@ import {
   CircularProgress
 } from '@mui/material';
 
+/**
+ * Dashboard del administrador
+ * Muestra un resumen general del sistema con estadísticas de usuarios, mascotas, citas y tratamientos
+ */
 const AdminDashboard = () => {
   const { pets, appointments, treatments, users } = useApp();
   const { user } = useAuth();
 
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!Array.isArray(pets) || !Array.isArray(appointments) || !Array.isArray(treatments) || !Array.isArray(users)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -20,6 +25,7 @@ const AdminDashboard = () => {
     );
   }
 
+  // Configuración de las tarjetas de estadísticas
   const stats = [
     {
       title: 'Usuarios',
@@ -53,6 +59,7 @@ const AdminDashboard = () => {
 
   return (
     <Box sx={{ p: 3, background: '#f8f9fb', minHeight: '100vh' }}>
+      {/* Encabezado del dashboard */}
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#111' }}>
         Bienvenido, {user?.nombre || 'Administrador'}
       </Typography>
@@ -60,7 +67,7 @@ const AdminDashboard = () => {
         Aquí tienes un resumen general del sistema.
       </Typography>
 
-      {/* Stats Cards */}
+      {/* Tarjetas de estadísticas */}
       <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', mb: 4 }}>
         <Box
           sx={{

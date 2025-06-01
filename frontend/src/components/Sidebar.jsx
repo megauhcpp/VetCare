@@ -5,10 +5,18 @@ import { useAuth } from '../context/AuthContext';
 import '../styles/Sidebar.css';
 import vetcareLogo from '../vetcarelogonobg.png';
 
+/**
+ * Componente Sidebar que proporciona la navegación principal de la aplicación
+ * @param {Object} props - Propiedades del componente
+ * @param {boolean} props.isAdmin - Indica si el usuario es administrador
+ * @param {boolean} props.isVet - Indica si el usuario es veterinario
+ * @param {Function} props.onClose - Función para cerrar el sidebar en dispositivos móviles
+ */
 const Sidebar = ({ isAdmin, isVet, onClose }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
+  // Elementos de navegación para administradores
   const adminNavItems = [
     { label: 'Dashboard', icon: <Calendar />, to: '/admin/dashboard' },
     { label: 'Mascotas', icon: <PawPrint />, to: '/admin/pets' },
@@ -18,6 +26,7 @@ const Sidebar = ({ isAdmin, isVet, onClose }) => {
     { label: 'Perfil', icon: <User />, to: '/admin/profile' },
   ];
 
+  // Elementos de navegación para veterinarios
   const vetNavItems = [
     { label: 'Dashboard', icon: <Calendar />, to: '/vet/dashboard' },
     { label: 'Mascotas', icon: <PawPrint />, to: '/vet/pets' },
@@ -26,6 +35,7 @@ const Sidebar = ({ isAdmin, isVet, onClose }) => {
     { label: 'Perfil', icon: <User />, to: '/vet/profile' },
   ];
 
+  // Elementos de navegación para clientes
   const clientNavItems = [
     { label: 'Dashboard', icon: <Calendar />, to: '/dashboard' },
     { label: 'Mis Mascotas', icon: <PawPrint />, to: '/pets' },
@@ -34,8 +44,10 @@ const Sidebar = ({ isAdmin, isVet, onClose }) => {
     { label: 'Perfil', icon: <User />, to: '/profile' },
   ];
 
+  // Selección de elementos de navegación según el rol del usuario
   const navItems = isAdmin ? adminNavItems : isVet ? vetNavItems : clientNavItems;
 
+  // Manejador para cerrar el sidebar en dispositivos móviles
   const handleNavClick = () => {
     if (onClose) {
       onClose();
@@ -44,6 +56,7 @@ const Sidebar = ({ isAdmin, isVet, onClose }) => {
 
   return (
     <aside className="sidebar">
+      {/* Botón para cerrar el sidebar en dispositivos móviles */}
       <button 
         className="mobile-close-btn"
         onClick={onClose}
@@ -52,12 +65,14 @@ const Sidebar = ({ isAdmin, isVet, onClose }) => {
         <X size={24} />
       </button>
 
+      {/* Encabezado del sidebar con el logo */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <img src={vetcareLogo} alt="VetCare Logo" />
         </div>
       </div>
 
+      {/* Información del usuario */}
       <div className="sidebar-user">
         <div className="user-avatar">
           {user?.nombre ? (
@@ -76,6 +91,7 @@ const Sidebar = ({ isAdmin, isVet, onClose }) => {
         </div>
       </div>
 
+      {/* Menú de navegación */}
       <nav className="sidebar-nav">
         {navItems.map(item => (
           <Link
@@ -90,6 +106,7 @@ const Sidebar = ({ isAdmin, isVet, onClose }) => {
         ))}
       </nav>
 
+      {/* Pie del sidebar con botón de cierre de sesión */}
       <div className="sidebar-footer">
         <button className="sidebar-logout" onClick={logout}>
           <LogOut size={18} /> Cerrar sesión
