@@ -200,6 +200,12 @@ const AdminUsers = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      // Crear una copia de formData sin el campo password si está vacío
+      const dataToSend = { ...formData };
+      if (!dataToSend.password) {
+        delete dataToSend.password;
+      }
+
       const response = await fetch(`https://vetcareclinica.com/api/admin/users/${selectedUser.id_usuario}`, {
         method: 'PUT',
         headers: {
@@ -207,7 +213,7 @@ const AdminUsers = () => {
           'Accept': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSend)
       });
 
       if (!response.ok) {
