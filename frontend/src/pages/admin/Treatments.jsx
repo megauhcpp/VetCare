@@ -88,7 +88,6 @@ const AdminTreatments = () => {
 
   // Extraer los tratamientos del objeto de respuesta
   const treatmentsData = useMemo(() => {
-    console.log('Raw treatments:', treatments);
     return Array.isArray(treatments) ? treatments : (treatments?.data || []);
   }, [treatments]);
 
@@ -273,7 +272,8 @@ const AdminTreatments = () => {
       
       if (refreshResponse.ok) {
         const data = await refreshResponse.json();
-        setTreatments(Array.isArray(data) ? data : (data.data || []));
+        const treatmentsArray = Array.isArray(data) ? data : (data.data || []);
+        setTreatments(treatmentsArray);
       }
 
       setSnackbar({
@@ -333,7 +333,8 @@ const AdminTreatments = () => {
       
       if (refreshResponse.ok) {
         const data = await refreshResponse.json();
-        setTreatments(Array.isArray(data) ? data : (data.data || []));
+        const treatmentsArray = Array.isArray(data) ? data : (data.data || []);
+        setTreatments(treatmentsArray);
       }
 
       setSnackbar({
@@ -415,7 +416,10 @@ const AdminTreatments = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setTreatments(Array.isArray(data) ? data : (data.data || []));
+        const treatmentsArray = Array.isArray(data) ? data : (data.data || []);
+        setTreatments(treatmentsArray);
+      } else {
+        throw new Error('Error al obtener los tratamientos');
       }
     } catch (e) { /* opcional: manejar error */ }
   };

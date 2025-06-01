@@ -162,7 +162,6 @@ const AdminPets = () => {
         throw new Error('Error al obtener las mascotas');
       }
     } catch (error) {
-      console.error('Error al refrescar mascotas:', error);
       setSnackbar({
         open: true,
         message: 'Error al actualizar la lista de mascotas',
@@ -213,8 +212,6 @@ const AdminPets = () => {
         id_usuario: idUsuario
       };
 
-      console.log('Enviando datos:', dataToSend);
-
       const response = await fetch(url, {
         method,
         headers: {
@@ -228,7 +225,6 @@ const AdminPets = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        console.error('Error response:', data);
         throw new Error(data.message || 'Error al guardar la mascota');
       }
 
@@ -241,7 +237,6 @@ const AdminPets = () => {
       await refreshPets();
       handleCloseDialog();
     } catch (error) {
-      console.error('Error:', error);
       setSnackbar({
         open: true,
         message: error.message,
@@ -609,7 +604,6 @@ const AdminPets = () => {
               label="Dueño"
               value={formData.id_usuario || ''}
               onChange={(e) => {
-                console.log('Dueño seleccionado:', e.target.value);
                 setFormData({ ...formData, id_usuario: e.target.value });
               }}
               required

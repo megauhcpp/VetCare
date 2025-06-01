@@ -79,25 +79,22 @@ export const AuthProvider = ({ children }) => {
      */
     const login = async (credentials) => {
         try {
-            console.log('Enviando credenciales:', credentials);
-            
             const response = await axios.post('/api/login', credentials);
-            console.log('Respuesta del servidor:', response.data);
 
             if (response.data && response.data.token) {
                 const { token, usuario } = response.data;
                 localStorage.setItem('token', token);
                 localStorage.setItem('userId', usuario.id_usuario);
                 setToken(token);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 setUser(usuario);
                 setIsAuthenticated(true);
-                return usuario;
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                return true;
             }
-            throw new Error('Respuesta inválida del servidor');
+            return false;
         } catch (error) {
-            console.error('Error completo:', error);
-            throw new Error(error.response?.data?.message || 'Error al iniciar sesión');
+            console.error('Error en login:', error);
+            throw error;
         }
     };
 

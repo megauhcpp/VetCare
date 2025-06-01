@@ -52,60 +52,104 @@ import './client-table.css';
  * Permite ver los tratamientos de las mascotas del usuario
  */
 const Treatments = () => {
-  const { treatments, pets } = useApp();
+  const { treatments, pets, setTreatments, setPets } = useApp();
   const { user } = useAuth();
-  // Estado para controlar las notificaciones
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
-  // Estado para el ordenamiento de la tabla
   const [order, setOrder] = useState('desc');
   const [orderBy, setOrderBy] = useState('fecha');
-  // Estado para controlar el diálogo de detalles
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedTreatment, setSelectedTreatment] = useState(null);
+  const [formData, setFormData] = useState({
+    id_cita: '',
+    nombre: '',
+    precio: '',
+    descripcion: '',
+    fecha_inicio: '',
+    fecha_fin: '',
+    estado: 'activo'
+  });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [changingStateId, setChangingStateId] = useState(null);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [detailsTreatment, setDetailsTreatment] = useState(null);
-  // Estado para la paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [treatmentToDelete, setTreatmentToDelete] = useState(null);
+
+  // Add useEffect to fetch both treatments and pets on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      await Promise.all([
+        fetchTreatments(),
+        fetchPets()
+      ]);
+    };
+    fetchData();
+  }, []);
 
   /**
-   * Memoización de los datos de tratamientos
-   * Asegura que los tratamientos sean un array
+   * Obtiene las mascotas desde el API
    */
-  const treatmentsData = useMemo(() => {
-    console.log('Raw treatments:', treatments);
-    return Array.isArray(treatments) ? treatments : (treatments?.data || []);
-  }, [treatments]);
-  
-  /**
-   * Memoización de las mascotas del usuario
-   * Filtra las mascotas que pertenecen al usuario actual
-   */
+  const fetchPets = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setSnackbar({
+          open: true,
+          message: 'No hay token de autenticación',
+          severity: 'error'
+        });
+        return;
+      }
+
+      const response = await fetch('https://vetcareclinica.com/api/mascotas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const petsArray = Array.isArray(data) ? data : (data.data || []);
+        setPets(petsArray);
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Error al cargar las mascotas',
+          severity: 'error'
+        });
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Error al cargar las mascotas',
+        severity: 'error'
+      });
+    }
+  };
+
+  // Filter pets that belong to the current user
   const userPets = useMemo(() => {
-    console.log('Raw pets:', pets);
-    return pets.filter(pet => pet.usuario?.id_usuario === user?.id_usuario);
-  }, [pets, user]);
+    const id = user.id_usuario;
+    const filtered = pets.filter(
+      pet =>
+        pet.usuario?.id_usuario === id ||
+        pet.id_usuario === id
+    );
+    return filtered;
+  }, [pets, user.id_usuario]);
 
-  /**
-   * Memoización de los tratamientos organizados por mascota
-   * Agrupa los tratamientos según la mascota a la que pertenecen
-   */
-  const treatmentsByPet = useMemo(() => {
-    console.log('Treatments data:', treatmentsData);
-    console.log('User pets:', userPets);
-    
-    const organized = {};
-    userPets.forEach(pet => {
-      organized[pet.id_mascota] = {
-        pet,
-        treatments: treatmentsData.filter(t => t.cita?.mascota?.id_mascota === pet.id_mascota)
-      };
+  // Filter treatments that belong to the user's pets
+  const userTreatments = useMemo(() => {
+    const filteredTreatments = treatments.filter(treatment => {
+      const belongsToUserPet = userPets.some(pet => pet.id_mascota === treatment.cita?.mascota?.id_mascota);
+      return belongsToUserPet;
     });
-    console.log('Organized treatments:', organized);
-    return organized;
-  }, [userPets, treatmentsData]);
+    return filteredTreatments;
+  }, [treatments, userPets]);
 
-  // Mostrar indicador de carga si los datos no están disponibles
+  // Mostrar un indicador de carga mientras se obtienen los datos
   if (!Array.isArray(treatments) || !Array.isArray(pets)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -113,6 +157,32 @@ const Treatments = () => {
       </Box>
     );
   }
+
+  /**
+   * Memoización de los datos de tratamientos
+   * Asegura que los tratamientos sean un array
+   */
+  const treatmentsData = useMemo(() => {
+    const organized = {};
+    userPets.forEach(pet => {
+      const petTreatments = userTreatments.filter(treatment => 
+        treatment.cita?.mascota?.id_mascota === pet.id_mascota
+      );
+      organized[pet.id_mascota] = {
+        pet,
+        treatments: petTreatments
+      };
+    });
+    return organized;
+  }, [userPets, userTreatments]);
+  
+  /**
+   * Memoización de los tratamientos organizados por mascota
+   * Agrupa los tratamientos según la mascota a la que pertenecen
+   */
+  const treatmentsByPet = useMemo(() => {
+    return treatmentsData;
+  }, [treatmentsData]);
 
   /**
    * Obtiene el color correspondiente al estado del tratamiento
@@ -207,18 +277,39 @@ const Treatments = () => {
    */
   const fetchTreatments = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setSnackbar({
+          open: true,
+          message: 'No hay token de autenticación',
+          severity: 'error'
+        });
+        return;
+      }
+
       const response = await fetch('https://vetcareclinica.com/api/tratamientos', {
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
         }
       });
       if (response.ok) {
         const data = await response.json();
-        setTreatments(Array.isArray(data) ? data : (data.data || []));
+        const treatmentsArray = Array.isArray(data) ? data : (data.data || []);
+        setTreatments(treatmentsArray);
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Error al cargar los tratamientos',
+          severity: 'error'
+        });
       }
     } catch (error) {
-      console.error('Error fetching treatments:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al cargar los tratamientos',
+        severity: 'error'
+      });
     }
   };
 

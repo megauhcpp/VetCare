@@ -135,31 +135,25 @@ const Pets = () => {
    * Maneja el envío del formulario de mascota
    * Realiza una petición POST o PUT al API según si es una nueva mascota o una edición
    */
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
     try {
+      const token = localStorage.getItem('token');
       if (!token) {
-        setError('No hay token de autenticación');
+        setSnackbar({ open: true, message: 'No hay token de autenticación', severity: 'error' });
         return;
       }
 
-      if (!user) {
-        setError('No hay usuario autenticado');
-        return;
-      }
-
-      const url = selectedPet 
+      const url = selectedPet
         ? `https://vetcareclinica.com/api/mascotas/${selectedPet.id_mascota}`
         : 'https://vetcareclinica.com/api/mascotas';
       
       const method = selectedPet ? 'PUT' : 'POST';
       
-      const requestData = {
+      const dataToSend = {
         ...formData,
         id_usuario: user.id_usuario
       };
       
-      console.log('Enviando datos:', requestData);
-
       const response = await fetch(url, {
         method,
         headers: {
@@ -167,31 +161,28 @@ const Pets = () => {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(dataToSend)
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        setSnackbar({
+          open: true,
+          message: `Mascota ${selectedPet ? 'actualizada' : 'creada'} exitosamente`,
+          severity: 'success'
+        });
+        await refreshPets();
+        handleCloseDialog();
+      } else {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al guardar la mascota');
       }
-
-      const updatedPet = await response.json();
-      console.log('Pet created/updated:', updatedPet);
-
-      if (selectedPet) {
-        setPets(pets.map(p => p.id_mascota === updatedPet.id_mascota ? updatedPet : p));
-      } else {
-        setPets(prevPets => [...prevPets, updatedPet]);
-      }
-
-      await refreshPets();
-      handleCloseDialog();
-      setError('');
-      setSnackbar({ open: true, message: 'Mascota guardada correctamente', severity: 'success' });
     } catch (error) {
-      console.error('Error saving pet:', error);
-      setError(error.message || 'Error al guardar la mascota');
-      setSnackbar({ open: true, message: error.message || 'Error al guardar la mascota', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -225,7 +216,6 @@ const Pets = () => {
         setSnackbar({ open: true, message: errorData.message || 'Error al eliminar la mascota', severity: 'error' });
       }
     } catch (error) {
-      console.error('Error deleting pet:', error);
       setError('Error al eliminar la mascota');
       setSnackbar({ open: true, message: 'Error al eliminar la mascota', severity: 'error' });
     }
@@ -263,7 +253,6 @@ const Pets = () => {
         throw new Error('Error al obtener las mascotas');
       }
     } catch (error) {
-      console.error('Error al refrescar mascotas:', error);
       setSnackbar({
         open: true,
         message: 'Error al actualizar la lista de mascotas',

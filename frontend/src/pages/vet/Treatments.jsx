@@ -245,13 +245,6 @@ const Treatments = () => {
 
       const url = `/api/tratamientos/${treatment.id_tratamiento}/estado`;
 
-      console.log('Updating treatment state:', {
-        url,
-        treatmentId: treatment.id_tratamiento,
-        newState,
-        token: token.substring(0, 10) + '...' // Solo mostramos parte del token por seguridad
-      });
-
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -262,8 +255,6 @@ const Treatments = () => {
         body: JSON.stringify({ estado: newState })
       });
 
-      console.log('Server response:', await response.clone().json());
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al actualizar el estado del tratamiento');
@@ -271,11 +262,18 @@ const Treatments = () => {
 
       const updatedTreatment = await response.json();
       setTreatments(treatments.map(t => t.id_tratamiento === updatedTreatment.data.id_tratamiento ? updatedTreatment.data : t));
-      setSnackbar({ open: true, message: `Tratamiento marcado como ${newState}`, severity: 'success' });
+      setSnackbar({
+        open: true,
+        message: `Tratamiento marcado como ${newState}`,
+        severity: 'success'
+      });
       setChangingStateId(null);
     } catch (error) {
-      console.error('Error updating treatment state:', error);
-      setSnackbar({ open: true, message: error.message || 'Error al cambiar el estado', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error al cambiar el estado',
+        severity: 'error'
+      });
     }
   };
 

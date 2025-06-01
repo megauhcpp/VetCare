@@ -79,25 +79,11 @@ const Profile = () => {
       return;
     }
     try {
-      const response = await fetch('https://vetcareclinica.com/api/usuarios/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-      if (response.ok) {
-        await updateUser(formData);
-        setSuccess('Perfil actualizado correctamente');
-        setError('');
-      } else {
-        setError('Error al actualizar el perfil');
-        setSuccess('');
-      }
-    } catch (error) {
-      setError(error.message);
+      await updateUser(formData);
+      setSuccess('Perfil actualizado correctamente');
+      setError('');
+    } catch (err) {
+      setError(err.message);
       setSuccess('');
     }
   };

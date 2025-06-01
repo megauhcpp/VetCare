@@ -87,13 +87,12 @@ const AdminAppointments = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // Extraer las citas del objeto de respuesta
-  const appointmentsData = useMemo(() => {
-    console.log('Raw appointments:', appointments);
+  const appointmentsArray = useMemo(() => {
     return Array.isArray(appointments) ? appointments : (appointments?.data || []);
   }, [appointments]);
 
   // Mostrar un indicador de carga mientras se obtienen los datos
-  if (!appointmentsData) {
+  if (!appointmentsArray) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress />
@@ -335,7 +334,7 @@ const AdminAppointments = () => {
 
       if (response.ok) {
         // Actualizar el estado local inmediatamente
-        const updatedAppointments = appointmentsData.map(a => 
+        const updatedAppointments = appointmentsArray.map(a => 
           a.id_cita === appointment.id_cita 
             ? { ...a, estado: newState }
             : a
@@ -379,7 +378,7 @@ const AdminAppointments = () => {
     }
   };
 
-  const filteredAppointments = appointmentsData.filter(appointment => {
+  const filteredAppointments = appointmentsArray.filter(appointment => {
     const searchLower = searchTerm.toLowerCase();
     return (
       appointment.motivo_consulta?.toLowerCase().includes(searchLower) ||

@@ -77,8 +77,7 @@ const AdminUsers = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // Extraer los usuarios del objeto de respuesta
-  const usersData = useMemo(() => {
-    console.log('Raw users:', users);
+  const usersArray = useMemo(() => {
     return Array.isArray(users) ? users : (users?.data || []);
   }, [users]);
 
@@ -287,7 +286,7 @@ const AdminUsers = () => {
   };
 
   // Filtrar usuarios según el término de búsqueda
-  const filteredUsers = usersData.filter(user => {
+  const filteredUsers = usersArray.filter(user => {
     const searchLower = searchTerm.toLowerCase();
     return (
       user.nombre?.toLowerCase().includes(searchLower) ||
