@@ -110,21 +110,20 @@ const Profile = () => {
       return;
     }
     try {
-      const response = await fetch('https://vetcareclinica.com/api/usuarios/change-password', {
+      const response = await fetch('https://vetcareclinica.com/api/user/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(passwordData)
-      });
-      if (response.ok) {
-        await changePassword({
+        body: JSON.stringify({
           current: passwordData.current,
           new: passwordData.new,
           confirm: passwordData.confirm
-        });
+        })
+      });
+      if (response.ok) {
         setPasswordSuccess('Contraseña cambiada correctamente.');
         setPasswordMsg('');
         setPasswordData({
@@ -137,11 +136,12 @@ const Profile = () => {
         });
         setShowPasswordForm(false);
       } else {
-        setPasswordMsg('Error al cambiar la contraseña');
+        const data = await response.json();
+        setPasswordMsg(data.message || 'Error al cambiar la contraseña');
         setPasswordSuccess('');
       }
     } catch (error) {
-      setPasswordMsg(error.message);
+      setPasswordMsg(error.message || 'Error al cambiar la contraseña');
       setPasswordSuccess('');
     }
   };
