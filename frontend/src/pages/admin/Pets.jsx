@@ -542,8 +542,11 @@ const AdminPets = () => {
               onChange={e => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              inputRef={dateInputRef}
               inputProps={{
-                max: new Date().toISOString().split('T')[0]
+                max: new Date().toISOString().split('T')[0],
+                onFocus: (e) => { if (e.target.showPicker) e.target.showPicker(); },
+                onClick: (e) => { if (e.target.showPicker) e.target.showPicker(); }
               }}
               required
               InputProps={{ sx: { borderRadius: 2 } }}

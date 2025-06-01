@@ -13,7 +13,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="dashboard-layout" style={{ minHeight: '100vh', display: 'flex' }}>
+    <div className="dashboard-layout" style={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
       {/* Sidebar with responsive classes */}
       <div 
         className={`sidebar-container ${isSidebarOpen ? 'sidebar-open' : ''}`}
@@ -28,8 +28,8 @@ const AdminLayout = () => {
           flex: 1, 
           display: 'flex', 
           flexDirection: 'column', 
-          minHeight: '100vh', 
-          overflow: 'auto',
+          height: '100vh',
+          overflow: 'hidden'
         }}
       >
         <DashboardHeader isAdmin={true} onMenuClick={toggleSidebar} />
@@ -37,9 +37,9 @@ const AdminLayout = () => {
           className="dashboard-main" 
           style={{ 
             flex: '1 1 0%', 
-            overflow: 'auto', 
             padding: '1rem',
-            backgroundColor: '#f8f9fb'
+            backgroundColor: '#f8f9fb',
+            overflow: 'hidden'
           }}
         >
           <Outlet />

@@ -171,33 +171,31 @@ const Treatments = () => {
   };
 
   const handleDelete = async (treatmentId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este tratamiento?')) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('No hay token de autenticación');
-          return;
-        }
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No hay token de autenticación');
+        return;
+      }
 
-        const response = await fetch(`/api/tratamientos/${treatmentId}`, {
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          setTreatments(treatments.filter(t => t.id_tratamiento !== treatmentId));
-          setSnackbar({ open: true, message: 'Tratamiento eliminado correctamente', severity: 'success' });
-        } else {
-          console.error('Error al eliminar el tratamiento:', await response.text());
-          setSnackbar({ open: true, message: 'Error al eliminar el tratamiento', severity: 'error' });
+      const response = await fetch(`/api/tratamientos/${treatmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      } catch (error) {
-        console.error('Error deleting treatment:', error);
+      });
+
+      if (response.ok) {
+        setTreatments(treatments.filter(t => t.id_tratamiento !== treatmentId));
+        setSnackbar({ open: true, message: 'Tratamiento eliminado correctamente', severity: 'success' });
+      } else {
+        console.error('Error al eliminar el tratamiento:', await response.text());
         setSnackbar({ open: true, message: 'Error al eliminar el tratamiento', severity: 'error' });
       }
+    } catch (error) {
+      console.error('Error deleting treatment:', error);
+      setSnackbar({ open: true, message: 'Error al eliminar el tratamiento', severity: 'error' });
     }
   };
 
